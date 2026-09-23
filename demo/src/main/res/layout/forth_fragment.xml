@@ -191,6 +191,21 @@
                 app:shape_textColor="@color/white"
                 tools:ignore="HardcodedText" />
 
+            <com.hjq.shape.view.ShapeTextView
+                android:id="@+id/tv11"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/x150"
+                android:layout_marginTop="@dimen/x65"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="刷新列表基类 Demo"
+                android:textColor="@color/white"
+                android:textSize="@dimen/x45"
+                app:shape_radius="@dimen/x75"
+                app:shape_solidColor="@color/common_accent_color"
+                app:shape_textColor="@color/white"
+                tools:ignore="HardcodedText" />
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

@@ -10,6 +10,7 @@ import com.templete.project.databinding.ForthFragmentBinding;
 import com.templete.project.ui.activity.CanvasActivity;
 import com.templete.project.ui.activity.DataBusActivity;
 import com.templete.project.ui.activity.DatabindingActivity;
+import com.templete.project.ui.activity.FreshListDemoActivity;
 import com.templete.project.ui.activity.IndexActivity;
 import com.templete.project.ui.activity.PinnedActivity;
 import com.templete.project.ui.activity.NavsActivity;
@@ -63,6 +64,8 @@ public class ForthFragment extends BaseFragment<ForthFragmentBinding> {
                         clazz = DataBusActivity.class;
                     } else if (v.equals(mViewBinding.tv10)) {
                         clazz = ShimmerActivity.class;
+                    } else if (v.equals(mViewBinding.tv11)) {
+                        clazz = FreshListDemoActivity.class;
                     }
                     if (clazz != null) {
                         ((BaseActivity<?>) requireActivity()).startAty(requireActivity(), clazz);
@@ -72,7 +75,7 @@ public class ForthFragment extends BaseFragment<ForthFragmentBinding> {
                 mViewBinding.tv3, mViewBinding.tv4,
                 mViewBinding.tv5, mViewBinding.tv6,
                 mViewBinding.tv8, mViewBinding.tv9,
-                mViewBinding.tv10);
+                mViewBinding.tv10, mViewBinding.tv11);
 
         mViewBinding.tv7.setOnClickListener(v -> IntentUtil.startActivity(requireActivity(), DatabindingActivity.class));
     }
