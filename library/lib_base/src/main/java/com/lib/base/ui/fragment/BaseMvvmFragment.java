@@ -41,8 +41,7 @@ public abstract class BaseMvvmFragment<T extends ViewBinding, S extends BaseView
         if (viewModelClass == null) {
             throw new MyException("getViewModelClass() return mustn't be null!");
         }
-        mViewModel = new ViewModelProvider(userParentViewModelStoreOwner() ? requireActivity() : this,
-                new ViewModelProvider.AndroidViewModelFactory(requireActivity().getApplication())).get(viewModelClass);
+        mViewModel = new ViewModelProvider(userParentViewModelStoreOwner() ? requireActivity() : this).get(viewModelClass);
     }
 
 
@@ -59,7 +58,7 @@ public abstract class BaseMvvmFragment<T extends ViewBinding, S extends BaseView
             throw new MyException("clazz mustn't be null!");
         }
         ViewModelStoreOwner owner = userParentViewModelStoreOwner ? requireActivity() : this;
-        return new ViewModelProvider(owner, new ViewModelProvider.AndroidViewModelFactory(requireActivity().getApplication())).get(clazz);
+        return new ViewModelProvider(owner).get(clazz);
     }
 
     @Override

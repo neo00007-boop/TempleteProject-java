@@ -9,9 +9,9 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
+import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.chad.library.adapter.base.viewholder.QuickViewHolder;
 import com.lib.base.R;
-import com.lib.base.adapter.AppAdapter;
-import com.lib.base.adapter.BaseAdapter;
 import com.lib.base.ui.dialog.inject.SingleClick;
 import com.lib.base.util.Arrays;
 import com.lib.base.util.DebugUtil;
@@ -22,6 +22,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
@@ -49,6 +50,7 @@ public final class SelectDialog {
             setCustomView(R.layout.select_dialog);
             mRecyclerView = findViewById(R.id.rv_select_list);
             mRecyclerView.setItemAnimator(null);
+            mRecyclerView.setLayoutManager(new LinearLayoutManager(context));
 
             mAdapter = new SelectAdapter(getCtx());
             mRecyclerView.setAdapter(mAdapter);
@@ -68,7 +70,7 @@ public final class SelectDialog {
 
         @SuppressWarnings("all")
         public Builder setList(List data) {
-            mAdapter.setData(data);
+            mAdapter.submitList(data);
             mRecyclerView.addOnLayoutChangeListener(this);
             return this;
         }
@@ -173,8 +175,7 @@ public final class SelectDialog {
         }
     }
 
-    private static final class SelectAdapter extends AppAdapter<Object>
-            implements BaseAdapter.OnItemClickListener {
+    private static final class SelectAdapter extends BaseQuickAdapter<Object, QuickViewHolder> {
 
         /**
          * 最小选择数量
@@ -192,19 +193,19 @@ public final class SelectDialog {
         private final HashMap<Integer, Object> mSelectSet = new HashMap<>();
 
         private SelectAdapter(Context context) {
-            super(context);
-            setOnItemClickListener(this);
+            super();
+            setOnItemClickListener((adapter, view, position) -> onSelectItemClick(view, position));
         }
-
-//        @Override
-//        public int getItemType(int position) {
-//            return 0;
-//        }
 
         @NonNull
         @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new ViewHolder();
+        protected QuickViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
+            return new ViewHolder(parent);
+        }
+
+        @Override
+        protected void onBindViewHolder(@NonNull QuickViewHolder holder, int position, @Nullable Object item) {
+            ((ViewHolder) holder).onBind(position, item);
         }
 
         private void setSelect(int... positions) {
@@ -239,12 +240,7 @@ public final class SelectDialog {
             return mSelectSet;
         }
 
-        /**
-         * {@link BaseAdapter.OnItemClickListener}
-         */
-
-        @Override
-        public void onItemClick(RecyclerView recyclerView, View itemView, int position) {
+        private void onSelectItemClick(View itemView, int position) {
             if (mSelectSet.containsKey(position)) {
                 // 当前必须不是单选模式才能取消选中
                 if (!isSingleSelect()) {
@@ -261,25 +257,24 @@ public final class SelectDialog {
                     mSelectSet.put(position, getItem(position));
                     notifyItemChanged(position);
                 } else {
-                    DebugUtil.toast(String.format(getString(R.string.select_max_hint), mMaxSelect));
+                    DebugUtil.toast(String.format(itemView.getContext().getString(R.string.select_max_hint), mMaxSelect));
                 }
             }
         }
 
-        private final class ViewHolder extends AppAdapter<?>.ViewHolder {
+        private final class ViewHolder extends QuickViewHolder {
 
             private final TextView mTextView;
             private final CheckBox mCheckBox;
 
-            ViewHolder() {
-                super(R.layout.select_item);
-                mTextView = findViewById(R.id.tv_select_text);
-                mCheckBox = findViewById(R.id.tv_select_checkbox);
+            ViewHolder(@NonNull ViewGroup parent) {
+                super(R.layout.select_item, parent);
+                mTextView = getView(R.id.tv_select_text);
+                mCheckBox = getView(R.id.tv_select_checkbox);
             }
 
-            @Override
-            public void onBindView(int position) {
-                mTextView.setText(getItem(position).toString());
+            void onBind(int position, @Nullable Object item) {
+                mTextView.setText(item != null ? item.toString() : "");
                 mCheckBox.setChecked(mSelectSet.containsKey(position));
                 if (mMaxSelect == 1) {
                     mCheckBox.setClickable(false);

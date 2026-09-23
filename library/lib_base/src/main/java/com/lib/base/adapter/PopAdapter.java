@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.lib.base.bean.BtnBean;
 import com.lib.base.databinding.PopItemLayoutBinding;
 
@@ -13,55 +14,39 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-/*      mAdapter = new ImagePreviewAdapter(this);//AppAdapter
-        mAdapter.setData(images);
-        mAdapter.setOnItemClickListener(this);
-        mViewPager.setAdapter(new RecyclerPagerAdapter(mAdapter));
-        if (images.size() != 1) {
-            if (images.size() < 10) {
-                // 如果是 10 张以内的图片，那么就显示圆圈指示器
-                mCircleIndicatorView.setVisibility(View.VISIBLE);
-                mCircleIndicatorView.setViewPager(mViewPager);
-            } else {
-                // 如果超过 10 张图片，那么就显示文字指示器
-                mTextIndicatorView.setVisibility(View.VISIBLE);
-                mViewPager.addOnPageChangeListener(this);
-            }
-
-            int index = getInt(INTENT_KEY_IN_IMAGE_INDEX);
-            if (index < images.size()) {
-                mViewPager.setCurrentItem(index);
-                onPageSelected(index);
-            }
-        }*/
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * ProjectName  TempleteProject-java
  * PackageName  com.lib.base.adapter
- * @author      xwchen
+ *
+ * @author xwchen
  * Date         2021/12/30.
  */
-public class PopAdapter extends AppAdapter<BtnBean> {
+public class PopAdapter extends BaseQuickAdapter<BtnBean, PopAdapter.ViewHolder> {
     private final boolean hasSelect;
     private final boolean hasHtml;
     private int posSelect = 0;
     private boolean hasLeftRes;
 
     public PopAdapter(@NonNull Context context, boolean hasSelect, boolean hasHtml) {
-        super(context);
+        super();
         this.hasSelect = hasSelect;
         this.hasHtml = hasHtml;
     }
 
     @Override
-    public void setData(@Nullable List<BtnBean> data) {
-        checkResId(data);
-        super.setData(data);
+    public void submitList(@Nullable List<? extends BtnBean> list) {
+        checkResId(list);
+        super.submitList(list);
     }
 
-    private void checkResId(List<BtnBean> data) {
+    private void checkResId(@Nullable List<? extends BtnBean> data) {
         hasLeftRes = true;
+        if (data == null) {
+            hasLeftRes = false;
+            return;
+        }
         for (BtnBean titleBtnBean : data) {
             if (titleBtnBean.resId <= 0) {
                 hasLeftRes = false;
@@ -70,18 +55,18 @@ public class PopAdapter extends AppAdapter<BtnBean> {
         }
     }
 
-//    @Override
-//    public int getItemType(int position) {
-//        return 0;
-//    }
-
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(PopItemLayoutBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
+    protected ViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
+        return new ViewHolder(PopItemLayoutBinding.inflate(LayoutInflater.from(context), parent, false));
     }
 
-    private final class ViewHolder extends AppAdapter.ViewHolder {
+    @Override
+    protected void onBindViewHolder(@NonNull ViewHolder holder, int position, @Nullable BtnBean item) {
+        holder.bind(position, item);
+    }
+
+    final class ViewHolder extends RecyclerView.ViewHolder {
 
         private final PopItemLayoutBinding binding;
 
@@ -90,12 +75,13 @@ public class PopAdapter extends AppAdapter<BtnBean> {
             this.binding = binding;
         }
 
-        @Override
-        public void onBindView(int position) {
+        void bind(int position, @Nullable BtnBean popBean) {
             try {
-                binding.line.setVisibility(position == getData().size() - 1 ? View.INVISIBLE : View.VISIBLE);
+                binding.line.setVisibility(position == getItems().size() - 1 ? View.INVISIBLE : View.VISIBLE);
 
-                BtnBean popBean = getItem(position);
+                if (popBean == null) {
+                    return;
+                }
                 binding.tv.setText(getTxt(popBean.str));
                 if (hasLeftRes) {
                     binding.ivLeft.setVisibility(View.VISIBLE);
@@ -117,8 +103,6 @@ public class PopAdapter extends AppAdapter<BtnBean> {
 
     /**
      * 只刷新两个item状态
-     *
-     * @param position
      */
     public void notifyData(int position) {
         if (hasSelect && posSelect != position) {
@@ -126,7 +110,6 @@ public class PopAdapter extends AppAdapter<BtnBean> {
             posSelect = position;
             notifyItemChanged(temp);
             notifyItemChanged(position);
-            //notifyItemRangeChanged(Math.min(temp, position), Math.abs(temp - position) + 1);
         }
     }
 }

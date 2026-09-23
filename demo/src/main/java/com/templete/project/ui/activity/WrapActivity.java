@@ -33,10 +33,10 @@ public class WrapActivity extends BaseActivity<WrapActivityBinding> {
     public void initView() {
         mViewBinding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
         demoAdapter = new DemoAdapter(this);
-        demoAdapter.setOnItemClickListener((recyclerView, itemView, position) -> {
+        demoAdapter.setOnItemClickListener((adapter, view, position) -> {
             toast("我是item" + position);
-//            demoAdapter.removeItem(position);
-            demoAdapter.addItem(position,"添加");
+//            demoAdapter.removeAt(position);
+            demoAdapter.add(position, "添加");
         });
         mViewBinding.recyclerView.setAdapter(demoAdapter);
 
@@ -61,7 +61,7 @@ public class WrapActivity extends BaseActivity<WrapActivityBinding> {
             list.add("条目"+i);
         }
         demoAdapter.setShow(false);
-        demoAdapter.setData(list);
+        demoAdapter.submitList(list);
     }
 
     @Override

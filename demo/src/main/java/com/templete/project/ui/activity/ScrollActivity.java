@@ -46,9 +46,9 @@ public class ScrollActivity extends BaseActivity<ScrollActivityBBinding> {
     public void initView() {
         mViewBinding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
         demoAdapter = new DemoAdapter(this);
-        demoAdapter.setOnItemClickListener((recyclerView, itemView, position) -> DebugUtil.toast("click position"));
+        demoAdapter.setOnItemClickListener((adapter, view, position) -> DebugUtil.toast("click position"));
         mViewBinding.recyclerView.setAdapter(demoAdapter);
-        // demoAdapter.setHolderViewType(AppAdapter.HOLDER_TYPE_LOADING);
+        // demoAdapter.isStateViewEnable = true; // BRVAH empty/state view
 
         mViewBinding.refreshLayout.setOnMultiListener(new SimpleMultiListener() {
             @Override
@@ -107,12 +107,12 @@ public class ScrollActivity extends BaseActivity<ScrollActivityBBinding> {
         for (int i = 0; i < 100; i++) {
             list.add("条目" + i);
         }
-        mViewBinding.recyclerView.postDelayed(() -> demoAdapter.setData(list), 1000);
+        mViewBinding.recyclerView.postDelayed(() -> demoAdapter.submitList(list), 1000);
         /*mViewBinding.recyclerView.postDelayed(new Runnable() {
             @Override
             public void run() {
-                demoAdapter.setData(null);
-                demoAdapter.setHolderViewType(AppAdapter.HOLDER_TYPE_NO_DATA);
+                demoAdapter.submitList(null);
+                // demoAdapter.setStateViewLayout(...); // BRVAH empty/state view
             }
         }, 2500);*/
     }

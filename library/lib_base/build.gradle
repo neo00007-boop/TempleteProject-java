@@ -140,4 +140,5 @@ dependencies {
     api 'com.google.android.flexbox:flexbox:3.0.0'
     // unpeek-livedata
     // api 'com.kunminx.arch:unpeek-livedata:7.8.0'
+    api "io.github.cymchad:BaseRecyclerViewAdapterHelper:4.0.3"
 }

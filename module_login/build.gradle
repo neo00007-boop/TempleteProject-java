@@ -5,7 +5,6 @@ if (toapp) {
     apply plugin: 'com.android.library'
 }
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 def config = rootProject.ext
 android {
     compileSdkVersion config.android.compileSdkVersion

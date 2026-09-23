@@ -7,9 +7,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.chad.library.adapter.base.viewholder.QuickViewHolder;
 import com.lib.base.R;
-import com.lib.base.adapter.AppAdapter;
-import com.lib.base.adapter.BaseAdapter;
+
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,7 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
  * time   : 2021/02/28
  * desc   : Tab 适配器
  */
-public final class TabAdapter extends AppAdapter<String> implements BaseAdapter.OnItemClickListener {
+public final class TabAdapter extends BaseQuickAdapter<String, QuickViewHolder> {
 
     public static final int TAB_MODE_DESIGN = 1;
     public static final int TAB_MODE_SLIDING = 2;
@@ -54,35 +56,43 @@ public final class TabAdapter extends AppAdapter<String> implements BaseAdapter.
     }
 
     public TabAdapter(Context context, int tabMode, boolean fixed) {
-        super(context);
+        super();
         mTabMode = tabMode;
         mFixed = fixed;
-        setOnItemClickListener(this);
+        setOnItemClickListener((adapter, view, position) -> onTabItemClick(position));
         registerAdapterDataObserver(new TabAdapterDataObserver());
     }
 
     @Override
-    public int getItemViewType(int position) {
+    protected int getItemViewType(int position, @NonNull List<? extends String> list) {
         return mTabMode;
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    protected QuickViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
         switch (viewType) {
             case TAB_MODE_DESIGN:
-                return new DesignViewHolder();
+                return new DesignViewHolder(parent);
             case TAB_MODE_SLIDING:
-                return new SlidingViewHolder();
+                return new SlidingViewHolder(parent);
             default:
                 throw new IllegalArgumentException("are you ok?");
         }
     }
 
     @Override
-    protected RecyclerView.LayoutManager generateDefaultLayoutManager(Context context) {
+    protected void onBindViewHolder(@NonNull QuickViewHolder holder, int position, @Nullable String item) {
+        if (holder instanceof DesignViewHolder) {
+            ((DesignViewHolder) holder).onBind(position, item);
+        } else if (holder instanceof SlidingViewHolder) {
+            ((SlidingViewHolder) holder).onBind(position, item);
+        }
+    }
+
+    private RecyclerView.LayoutManager generateDefaultLayoutManager(Context context) {
         if (mFixed) {
-            int count = getCount();
+            int count = getItemCount();
             if (count < 1) {
                 count = 1;
             }
@@ -97,6 +107,9 @@ public final class TabAdapter extends AppAdapter<String> implements BaseAdapter.
         super.onAttachedToRecyclerView(recyclerView);
         // 禁用 RecyclerView 条目动画
         recyclerView.setItemAnimator(null);
+        if (recyclerView.getLayoutManager() == null) {
+            recyclerView.setLayoutManager(generateDefaultLayoutManager(recyclerView.getContext()));
+        }
     }
 
     public int getSelectedPosition() {
@@ -119,12 +132,7 @@ public final class TabAdapter extends AppAdapter<String> implements BaseAdapter.
         mListener = listener;
     }
 
-    /**
-     * {@link BaseAdapter.OnItemClickListener}
-     */
-
-    @Override
-    public void onItemClick(RecyclerView recyclerView, View itemView, int position) {
+    private void onTabItemClick(int position) {
         if (mSelectedPosition == position) {
             return;
         }
@@ -135,39 +143,42 @@ public final class TabAdapter extends AppAdapter<String> implements BaseAdapter.
             return;
         }
 
-        if (mListener.onTabSelected(recyclerView, position)) {
-            mSelectedPosition = position;
-            notifyDataSetChanged();
+        try {
+            RecyclerView recyclerView = getRecyclerView();
+            if (mListener.onTabSelected(recyclerView, position)) {
+                mSelectedPosition = position;
+                notifyDataSetChanged();
+            }
+        } catch (IllegalStateException e) {
+            // RecyclerView 尚未 attach
         }
     }
 
-    private final class DesignViewHolder extends AppAdapter<?>.ViewHolder {
+    private final class DesignViewHolder extends QuickViewHolder {
 
         private final TextView mTitleView;
         private final View mLineView;
 
-        private DesignViewHolder() {
-            super(R.layout.tab_item_design);
-            mTitleView = findViewById(R.id.tv_tab_design_title);
-            mLineView = findViewById(R.id.v_tab_design_line);
+        private DesignViewHolder(@NonNull ViewGroup parent) {
+            super(R.layout.tab_item_design, parent);
+            mTitleView = getView(R.id.tv_tab_design_title);
+            mLineView = getView(R.id.v_tab_design_line);
             if (!mFixed) {
                 return;
             }
-            View itemView = getItemView();
             ViewGroup.LayoutParams layoutParams = itemView.getLayoutParams();
             layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
             itemView.setLayoutParams(layoutParams);
         }
 
-        @Override
-        public void onBindView(int position) {
-            mTitleView.setText(getItem(position));
+        void onBind(int position, @Nullable String item) {
+            mTitleView.setText(item);
             mTitleView.setSelected(mSelectedPosition == position);
             mLineView.setVisibility(mSelectedPosition == position ? View.VISIBLE : View.INVISIBLE);
         }
     }
 
-    private final class SlidingViewHolder extends AppAdapter<?>.ViewHolder implements ValueAnimator.AnimatorUpdateListener {
+    private final class SlidingViewHolder extends QuickViewHolder implements ValueAnimator.AnimatorUpdateListener {
 
         private final int mDefaultTextSize;
         private final int mSelectedTextSize;
@@ -175,28 +186,26 @@ public final class TabAdapter extends AppAdapter<String> implements BaseAdapter.
         private final TextView mTitleView;
         private final View mLineView;
 
-        private SlidingViewHolder() {
-            super(R.layout.tab_item_sliding);
-            mTitleView = findViewById(R.id.tv_tab_sliding_title);
-            mLineView = findViewById(R.id.v_tab_sliding_line);
+        private SlidingViewHolder(@NonNull ViewGroup parent) {
+            super(R.layout.tab_item_sliding, parent);
+            mTitleView = getView(R.id.tv_tab_sliding_title);
+            mLineView = getView(R.id.v_tab_sliding_line);
 
-            mDefaultTextSize = (int) getResources().getDimension(R.dimen.x42);
-            mSelectedTextSize = (int) getResources().getDimension(R.dimen.x45);
+            mDefaultTextSize = (int) itemView.getResources().getDimension(R.dimen.x42);
+            mSelectedTextSize = (int) itemView.getResources().getDimension(R.dimen.x45);
 
             mTitleView.setTextSize(TypedValue.COMPLEX_UNIT_PX, mDefaultTextSize);
 
             if (!mFixed) {
                 return;
             }
-            View itemView = getItemView();
             ViewGroup.LayoutParams layoutParams = itemView.getLayoutParams();
             layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
             itemView.setLayoutParams(layoutParams);
         }
 
-        @Override
-        public void onBindView(int position) {
-            mTitleView.setText(getItem(position));
+        void onBind(int position, @Nullable String item) {
+            mTitleView.setText(item);
             mTitleView.setSelected(mSelectedPosition == position);
             mLineView.setVisibility(mSelectedPosition == position ? View.VISIBLE : View.INVISIBLE);
 
@@ -265,11 +274,12 @@ public final class TabAdapter extends AppAdapter<String> implements BaseAdapter.
             if (!mFixed) {
                 return;
             }
-            RecyclerView recyclerView = getRecyclerView();
-            if (recyclerView == null) {
-                return;
+            try {
+                RecyclerView recyclerView = getRecyclerView();
+                recyclerView.setLayoutManager(generateDefaultLayoutManager(recyclerView.getContext()));
+            } catch (IllegalStateException e) {
+                // RecyclerView 尚未 attach
             }
-            recyclerView.setLayoutManager(generateDefaultLayoutManager(getCtx()));
         }
     }
 

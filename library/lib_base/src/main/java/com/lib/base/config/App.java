@@ -268,7 +268,8 @@ public abstract class App extends Application implements ViewModelStoreOwner, Lo
 
     private void setViewModel() {
         globalViewModelStore = new ViewModelStore();
-        globalViewModel = new ViewModelProvider(this, new ViewModelProvider.AndroidViewModelFactory(this)).get(GlobalViewModel.class);
+        globalViewModel = new ViewModelProvider(this,
+                ViewModelProvider.AndroidViewModelFactory.getInstance(this)).get(GlobalViewModel.class);
         globalViewModel.init();
     }
 

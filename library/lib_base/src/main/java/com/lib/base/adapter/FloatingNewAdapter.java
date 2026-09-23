@@ -6,89 +6,77 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.chad.library.adapter.base.BaseMultiItemAdapter;
 import com.hjq.shape.view.NavigationBar;
 import com.lib.base.databinding.DemoLayoutBinding;
 import com.lib.base.databinding.HomeHeaderLayoutNewBinding;
 import com.lib.base.util.ViewUtil;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import androidx.annotation.NonNull;
-
-/*      mAdapter = new ImagePreviewAdapter(this);//AppAdapter
-        mAdapter.setData(images);
-        mAdapter.setOnItemClickListener(this);
-        mViewPager.setAdapter(new RecyclerPagerAdapter(mAdapter));
-        if (images.size() != 1) {
-            if (images.size() < 10) {
-                // 如果是 10 张以内的图片，那么就显示圆圈指示器
-                mCircleIndicatorView.setVisibility(View.VISIBLE);
-                mCircleIndicatorView.setViewPager(mViewPager);
-            } else {
-                // 如果超过 10 张图片，那么就显示文字指示器
-                mTextIndicatorView.setVisibility(View.VISIBLE);
-                mViewPager.addOnPageChangeListener(this);
-            }
-
-            int index = getInt(INTENT_KEY_IN_IMAGE_INDEX);
-            if (index < images.size()) {
-                mViewPager.setCurrentItem(index);
-                onPageSelected(index);
-            }
-        }*/
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * ProjectName  TempleteProject-java
- * PackageName  com.lib.base.adapter
- * @author      xwchen
- * Date         2021/12/30.
+ * 悬浮导航新版（多类型用 BRVAH BaseMultiItemAdapter）
  */
-public class FloatingNewAdapter extends AppAdapter<String> {
-    public static final String TAG = "FloatingAdapter";
+public class FloatingNewAdapter extends BaseMultiItemAdapter<String> {
+    public static final String TAG = "FloatingNewAdapter";
     public static final int TYPE_HEADER = 0;
     public static final int TYPE_ITEM = 1;
-    public static final int TYPE_TOP = 0;
-    public static final int TYPE_MIDDLE = 1;
 
-    private final Context context;
-    private final OnItemClickListener onItemClickListener;
     private FrameLayout container;
 
     public FloatingNewAdapter(@NonNull Context context, OnItemClickListener onItemClickListener) {
-        super(context);
-        this.context = context;
-        this.onItemClickListener = onItemClickListener;
-    }
+        super();
+        addItemType(TYPE_HEADER, new OnMultiItemAdapterListener<String, HeaderHolder>() {
+            @NonNull
+            @Override
+            public HeaderHolder onCreate(@NonNull Context ctx, @NonNull ViewGroup parent, int viewType) {
+                return new HeaderHolder(HomeHeaderLayoutNewBinding.inflate(LayoutInflater.from(ctx), parent, false));
+            }
 
-    @Override
-    public int getItemViewType(int position) {
-        return position == 0 ? TYPE_HEADER : TYPE_ITEM;
-    }
+            @Override
+            public void onBind(@NonNull HeaderHolder holder, int position, @Nullable String item) {
+                holder.bind();
+            }
+        });
+        addItemType(TYPE_ITEM, new OnMultiItemAdapterListener<String, ItemHolder>() {
+            @NonNull
+            @Override
+            public ItemHolder onCreate(@NonNull Context ctx, @NonNull ViewGroup parent, int viewType) {
+                return new ItemHolder(DemoLayoutBinding.inflate(LayoutInflater.from(ctx), parent, false));
+            }
 
-    @NonNull
-    @Override
-    public AppAdapter<?>.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
-        return TYPE_HEADER == viewType ?
-                new HeaderHolder(HomeHeaderLayoutNewBinding.inflate(layoutInflater, parent, false)) :
-                new ViewHolder(DemoLayoutBinding.inflate(layoutInflater, parent, false));
+            @Override
+            public void onBind(@NonNull ItemHolder holder, int position, @Nullable String item) {
+                holder.bind(item);
+            }
+        });
+        onItemViewType((position, list) -> position == 0 ? TYPE_HEADER : TYPE_ITEM);
+        if (onItemClickListener != null) {
+            setOnItemClickListener((adapter, view, position) -> onItemClickListener.itemClick(position));
+        }
     }
 
     public void addView(NavigationBar bar) {
         ViewUtil.addView(container, bar);
     }
 
-    private final class HeaderHolder extends AppAdapter<?>.ViewHolder {
-
-        private final HomeHeaderLayoutNewBinding binding;
-
-        private HeaderHolder(@NonNull HomeHeaderLayoutNewBinding binding) {
-            super(binding.getRoot());
-            this.binding = binding;
+    public void itemMove(int fromPosition, int toPosition) {
+        if (fromPosition == toPosition) {
+            return;
         }
-
-        @Override
-        public void onBindView(int position) {
-            container = binding.container;
-        }
+        int from = Math.min(fromPosition, toPosition);
+        int to = Math.max(fromPosition, toPosition);
+        List<String> list = new ArrayList<>(getItems());
+        String removeFrom = list.get(from);
+        String removeTo = list.get(to);
+        list.set(from, removeTo);
+        list.set(to, removeFrom);
+        submitList(list);
     }
 
     public int getheight() {
@@ -97,19 +85,32 @@ public class FloatingNewAdapter extends AppAdapter<String> {
         return locations[1];
     }
 
-    private final class ViewHolder extends AppAdapter<?>.ViewHolder {
+    private final class HeaderHolder extends RecyclerView.ViewHolder {
+
+        private final HomeHeaderLayoutNewBinding binding;
+
+        private HeaderHolder(@NonNull HomeHeaderLayoutNewBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
+        }
+
+        void bind() {
+            container = binding.container;
+        }
+    }
+
+    private static final class ItemHolder extends RecyclerView.ViewHolder {
 
         private final DemoLayoutBinding binding;
 
-        private ViewHolder(@NonNull DemoLayoutBinding binding) {
+        private ItemHolder(@NonNull DemoLayoutBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
 
         @SuppressLint("SetTextI18n")
-        @Override
-        public void onBindView(int position) {
-            binding.tv.setText(getItem(position));
+        void bind(@Nullable String item) {
+            binding.tv.setText(item);
         }
     }
 

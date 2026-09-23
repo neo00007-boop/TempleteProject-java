@@ -1,73 +1,75 @@
 package com.lib.base.adapter;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.lib.base.R;
 import com.lib.base.config.App;
 import com.lib.base.databinding.HomeBarItemBinding;
-import com.lib.base.rxjava.RxUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * PackageName  com.tiyu.zjwt.adapter
- * ProjectName  NumericalCodeAbilitiesPool
- * @author      xwchen
- * Date         1/7/21.
+ * 顶部横向导航条 Adapter（BRVAH4）
  */
+public class HomeTopBarAdapter extends BaseQuickAdapter<String, HomeTopBarAdapter.ViewHolder> {
 
-public class HomeTopBarAdapter extends RecyclerView.Adapter<HomeTopBarAdapter.ViewHolder> {
     private int pos;
+    private OnBarItemClickListener listener;
 
     public HomeTopBarAdapter(int pos) {
+        super();
         this.pos = pos;
+        submitList(buildDefaultTabs());
+        setOnItemClickListener((adapter, view, position) -> {
+            if (this.pos == position) {
+                return;
+            }
+            int temp = this.pos;
+            this.pos = position;
+            notifyItemChanged(temp);
+            notifyItemChanged(this.pos);
+            if (listener != null) {
+                listener.onItemClick(position, getItem(position));
+            }
+        });
+    }
+
+    private static List<String> buildDefaultTabs() {
+        List<String> list = new ArrayList<>(12);
+        for (int i = 0; i < 12; i++) {
+            list.add("导航条目" + (i + 1));
+        }
+        return list;
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        LayoutInflater layoutInflater = LayoutInflater.from(viewGroup.getContext());
-        return new ViewHolder(HomeBarItemBinding.inflate(layoutInflater, viewGroup, false));
+    protected ViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
+        return new ViewHolder(HomeBarItemBinding.inflate(LayoutInflater.from(context), parent, false));
     }
 
-    @SuppressLint({"SetTextI18n", "NotifyDataSetChanged"})
+    @SuppressLint("SetTextI18n")
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder viewHolder, @SuppressLint("RecyclerView") int i) {
-        try {
-            String str = "导航条目" + (i + 1);
-            viewHolder.itemBinding.tv.setText(str);
+    protected void onBindViewHolder(@NonNull ViewHolder holder, int position, @Nullable String item) {
+        String str = item != null ? item : "";
+        holder.binding.tv.setText(str);
 
-            FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) viewHolder.itemBinding.indicator.getLayoutParams();
-            layoutParams.width = (int) (App.getContext().getResources().getDimension(R.dimen.x55) * (str.length() - 0.5));
-            viewHolder.itemBinding.indicator.requestLayout();
-            viewHolder.itemBinding.indicator.setSelected(pos == i);
-
-            RxUtils.throwFirstClick(viewHolder.itemBinding.getRoot(), view -> {
-                if (pos == i) {
-                    return;
-                }
-                int temp = pos;
-                pos = i;
-                //notifyDataSetChanged();
-                notifyItemChanged(temp);
-                notifyItemChanged(pos);
-//                notifyItemRangeChanged(Math.min(temp, pos), Math.abs(temp - pos) + 1);
-                if (listener != null) {
-                    listener.onItemClick(i, str);
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public int getItemCount() {
-        return 12;
+        FrameLayout.LayoutParams layoutParams =
+                (FrameLayout.LayoutParams) holder.binding.indicator.getLayoutParams();
+        layoutParams.width = (int) (App.getContext().getResources().getDimension(R.dimen.x55)
+                * (str.length() - 0.5));
+        holder.binding.indicator.requestLayout();
+        holder.binding.indicator.setSelected(pos == position);
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -83,23 +85,20 @@ public class HomeTopBarAdapter extends RecyclerView.Adapter<HomeTopBarAdapter.Vi
         return pos;
     }
 
-    @SuppressLint("NonConstantResourceId")
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        HomeBarItemBinding itemBinding;
-
-        public ViewHolder(@NonNull HomeBarItemBinding itemBinding) {
-            super(itemBinding.getRoot());
-            this.itemBinding = itemBinding;
-        }
-    }
-
-    private OnItemClickListener listener;
-
-    public void setOnItemClickListener(OnItemClickListener listener) {
+    public void setOnBarItemClickListener(OnBarItemClickListener listener) {
         this.listener = listener;
     }
 
-    public interface OnItemClickListener {
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        final HomeBarItemBinding binding;
+
+        ViewHolder(@NonNull HomeBarItemBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
+        }
+    }
+
+    public interface OnBarItemClickListener {
         void onItemClick(int pos, String itemStr);
     }
 }

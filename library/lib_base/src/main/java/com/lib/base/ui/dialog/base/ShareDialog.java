@@ -8,15 +8,16 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.chad.library.adapter.base.viewholder.QuickViewHolder;
 import com.lib.base.R;
-import com.lib.base.adapter.AppAdapter;
-import com.lib.base.adapter.BaseAdapter;
 import com.lib.base.bean.Platform;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -28,7 +29,7 @@ import androidx.recyclerview.widget.RecyclerView;
  */
 public final class ShareDialog {
 
-    public static final class Builder extends BaseDialog.Builder<Builder> implements BaseAdapter.OnItemClickListener {
+    public static final class Builder extends BaseDialog.Builder<Builder> {
 
         private final RecyclerView mRecyclerView;
         private final ShareAdapter mAdapter;
@@ -53,8 +54,20 @@ public final class ShareDialog {
             mCopyLink = new ShareBean(getDrawable(R.drawable.share_link_ic), getString(R.string.share_platform_link), Platform.DEFAULTS);
 
             mAdapter = new ShareAdapter(activity);
-            mAdapter.setData(data);
-            mAdapter.setOnItemClickListener(this);
+            mAdapter.submitList(data);
+            mAdapter.setOnItemClickListener((adapter, view, position) -> {
+               /* Platform platform = mAdapter.getItem(position).sharePlatform;
+                if (platform != null) {
+                    UmengClient.share(getActivity(), platform, mShareAction, mListener);
+                } else {
+                    if (mShareAction.getShareContent().getShareType() == ShareContent.WEB_STYLE) {
+                        // 复制到剪贴板
+                        getSystemService(ClipboardManager.class).setPrimaryClip(ClipData.newPlainText("url", mShareAction.getShareContent().mMedia.toUrl()));
+                        ToastUtils.show(R.string.share_platform_copy_hint);
+                    }
+                }
+                dismiss();*/
+            });
 
             mRecyclerView = findViewById(R.id.rv_share_list);
             mRecyclerView.setLayoutManager(new GridLayoutManager(activity, data.size()));
@@ -144,75 +157,58 @@ public final class ShareDialog {
         }*/
 
         /**
-         * {@link BaseAdapter.OnItemClickListener}
-         */
-        @Override
-        public void onItemClick(RecyclerView recyclerView, View itemView, int position) {
-           /* Platform platform = mAdapter.getItem(position).sharePlatform;
-            if (platform != null) {
-                UmengClient.share(getActivity(), platform, mShareAction, mListener);
-            } else {
-                if (mShareAction.getShareContent().getShareType() == ShareContent.WEB_STYLE) {
-                    // 复制到剪贴板
-                    getSystemService(ClipboardManager.class).setPrimaryClip(ClipData.newPlainText("url", mShareAction.getShareContent().mMedia.toUrl()));
-                    ToastUtils.show(R.string.share_platform_copy_hint);
-                }
-            }
-            dismiss();*/
-        }
-
-        /**
          * 刷新分享选项
          */
         private void refreshShareOptions() {
             /*switch (mShareAction.getShareContent().getShareType()) {
                 case ShareContent.WEB_STYLE:
                     if (!mAdapter.containsItem(mCopyLink)) {
-                        mAdapter.addItem(mCopyLink);
-                        mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), mAdapter.getCount()));
+                        mAdapter.add(mCopyLink);
+                        mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), mAdapter.getItemCount()));
                     }
                     break;
                 default:
                     if (mAdapter.containsItem(mCopyLink)) {
-                        mAdapter.removeItem(mCopyLink);
-                        mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), mAdapter.getCount()));
+                        mAdapter.remove(mCopyLink);
+                        mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), mAdapter.getItemCount()));
                     }
                     break;
             }*/
         }
     }
 
-    private static class ShareAdapter extends AppAdapter<ShareBean> {
+    private static class ShareAdapter extends BaseQuickAdapter<ShareBean, QuickViewHolder> {
 
         private ShareAdapter(Context context) {
-            super(context);
+            super();
         }
-
-//        @Override
-//        public int getItemType(int position) {
-//            return 0;
-//        }
 
         @NonNull
         @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new ViewHolder();
+        protected QuickViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
+            return new ViewHolder(parent);
         }
 
-        private final class ViewHolder extends AppAdapter<?>.ViewHolder {
+        @Override
+        protected void onBindViewHolder(@NonNull QuickViewHolder holder, int position, @Nullable ShareBean item) {
+            ((ViewHolder) holder).onBind(item);
+        }
+
+        private final class ViewHolder extends QuickViewHolder {
 
             private final ImageView mImageView;
             private final TextView mTextView;
 
-            private ViewHolder() {
-                super(R.layout.share_item);
-                mImageView = findViewById(R.id.iv_share_image);
-                mTextView = findViewById(R.id.tv_share_text);
+            private ViewHolder(@NonNull ViewGroup parent) {
+                super(R.layout.share_item, parent);
+                mImageView = getView(R.id.iv_share_image);
+                mTextView = getView(R.id.tv_share_text);
             }
 
-            @Override
-            public void onBindView(int position) {
-                ShareBean bean = getItem(position);
+            void onBind(@Nullable ShareBean bean) {
+                if (bean == null) {
+                    return;
+                }
                 mImageView.setImageDrawable(bean.shareIcon);
                 mTextView.setText(bean.shareName);
             }

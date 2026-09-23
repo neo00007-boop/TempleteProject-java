@@ -11,7 +11,6 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 
 import com.lib.base.R;
-import com.lib.base.adapter.BaseAdapter;
 import com.lib.base.adapter.PopAdapter;
 import com.lib.base.bean.BtnBean;
 import com.lib.base.databinding.PopLayoutBinding;
@@ -27,7 +26,6 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * 自动判断展示位置PopupWindow:以列表形式展示.可以添加左侧icon,右侧选择状态等
@@ -37,7 +35,7 @@ import androidx.recyclerview.widget.RecyclerView;
  *
  * @author xwchen
  */
-public class PopView extends PopupWindow implements BaseAdapter.OnItemClickListener, DefaultLifecycleObserver {
+public class PopView extends PopupWindow implements DefaultLifecycleObserver {
     public static final String TAG = "PopView";
     private final Context context;
     private final PopLayoutBinding layoutBinding;
@@ -97,18 +95,15 @@ public class PopView extends PopupWindow implements BaseAdapter.OnItemClickListe
         }
         layoutBinding.recycleView.setLayoutManager(new LinearLayoutManager(context));
         popAdapter = new PopAdapter(context, hasSelect, hasHtml);
-        popAdapter.setData(popBeans);
-        popAdapter.setOnItemClickListener(this);
+        popAdapter.submitList(popBeans);
+        popAdapter.setOnItemClickListener((adapter, view, position) -> {
+            if (clickListener != null) {
+                clickListener.clickPosition(position, view);
+            }
+            popAdapter.notifyData(position);
+            dismiss();
+        });
         layoutBinding.recycleView.setAdapter(popAdapter);
-    }
-
-    @Override
-    public void onItemClick(RecyclerView recyclerView, View itemView, int position) {
-        if (clickListener != null) {
-            clickListener.clickPosition(position, itemView);
-        }
-        popAdapter.notifyData(position);
-        dismiss();
     }
 
     /**

@@ -69,7 +69,7 @@ public class FloatingActivity extends BaseActivity<FloatingActivityBinding> {
             }
         });
         adapter.initRecyclerView1();
-        adapter.setData(getList());
+        adapter.submitList(getList());
         mViewBinding.recyclerView.setAdapter(adapter);
         // scrollListener
         mViewBinding.recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {

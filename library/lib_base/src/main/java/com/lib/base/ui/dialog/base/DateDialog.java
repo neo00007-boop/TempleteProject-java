@@ -3,10 +3,10 @@ package com.lib.base.ui.dialog.base;
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
+import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.chad.library.adapter.base.viewholder.QuickViewHolder;
 import com.lib.base.R;
-import com.lib.base.adapter.AppAdapter;
 import com.lib.base.ui.dialog.inject.SingleClick;
 import com.lib.base.ui.dialog.manager.PickerLayoutManager;
 
@@ -17,6 +17,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
@@ -92,9 +93,9 @@ public final class DateDialog {
                 dayData.add(i + " " + getString(R.string.common_day));
             }
 
-            mYearAdapter.setData(yearData);
-            mMonthAdapter.setData(monthData);
-            mDayAdapter.setData(dayData);
+            mYearAdapter.submitList(yearData);
+            mMonthAdapter.submitList(monthData);
+            mDayAdapter.submitList(dayData);
 
             mYearManager = new PickerLayoutManager.Builder(context)
                     .build();
@@ -162,8 +163,8 @@ public final class DateDialog {
             int index = year - mStartYear;
             if (index < 0) {
                 index = 0;
-            } else if (index > mYearAdapter.getCount() - 1) {
-                index = mYearAdapter.getCount() - 1;
+            } else if (index > mYearAdapter.getItemCount() - 1) {
+                index = mYearAdapter.getItemCount() - 1;
             }
             mYearView.scrollToPosition(index);
             refreshMonthMaximumDay();
@@ -178,8 +179,8 @@ public final class DateDialog {
             int index = month - 1;
             if (index < 0) {
                 index = 0;
-            } else if (index > mMonthAdapter.getCount() - 1) {
-                index = mMonthAdapter.getCount() - 1;
+            } else if (index > mMonthAdapter.getItemCount() - 1) {
+                index = mMonthAdapter.getItemCount() - 1;
             }
             mMonthView.scrollToPosition(index);
             refreshMonthMaximumDay();
@@ -194,8 +195,8 @@ public final class DateDialog {
             int index = day - 1;
             if (index < 0) {
                 index = 0;
-            } else if (index > mDayAdapter.getCount() - 1) {
-                index = mDayAdapter.getCount() - 1;
+            } else if (index > mDayAdapter.getItemCount() - 1) {
+                index = mDayAdapter.getItemCount() - 1;
             }
             mDayView.scrollToPosition(index);
             refreshMonthMaximumDay();
@@ -242,12 +243,12 @@ public final class DateDialog {
             calendar.set(mStartYear + mYearManager.getPickedPosition(), mMonthManager.getPickedPosition(), 1);
 
             int day = calendar.getActualMaximum(Calendar.DATE);
-            if (mDayAdapter.getCount() != day) {
+            if (mDayAdapter.getItemCount() != day) {
                 ArrayList<String> dayData = new ArrayList<>(day);
                 for (int i = 1; i <= day; i++) {
                     dayData.add(i + " " + getString(R.string.common_day));
                 }
-                mDayAdapter.setData(dayData);
+                mDayAdapter.submitList(dayData);
             }
         }
 
@@ -259,36 +260,21 @@ public final class DateDialog {
             mYearView.post(this);
         }
 
-        private static final class PickerAdapter extends AppAdapter<String> {
+        private static final class PickerAdapter extends BaseQuickAdapter<String, QuickViewHolder> {
 
             private PickerAdapter(Context context) {
-                super(context);
+                super();
             }
-
-//            @Override
-//            public int getItemType(int position) {
-//                return 0;
-//            }
 
             @NonNull
             @Override
-            public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-                return new ViewHolder();
+            protected QuickViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
+                return new QuickViewHolder(R.layout.picker_item, parent);
             }
 
-            private final class ViewHolder extends AppAdapter<?>.ViewHolder {
-
-                private final TextView mPickerView;
-
-                ViewHolder() {
-                    super(R.layout.picker_item);
-                    mPickerView = findViewById(R.id.tv_picker_name);
-                }
-
-                @Override
-                public void onBindView(int position) {
-                    mPickerView.setText(getItem(position));
-                }
+            @Override
+            protected void onBindViewHolder(@NonNull QuickViewHolder holder, int position, @Nullable String item) {
+                holder.setText(R.id.tv_picker_name, item);
             }
         }
     }

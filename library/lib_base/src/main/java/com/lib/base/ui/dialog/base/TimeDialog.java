@@ -3,10 +3,10 @@ package com.lib.base.ui.dialog.base;
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
+import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.chad.library.adapter.base.viewholder.QuickViewHolder;
 import com.lib.base.R;
-import com.lib.base.adapter.AppAdapter;
 import com.lib.base.ui.dialog.inject.SingleClick;
 import com.lib.base.ui.dialog.manager.PickerLayoutManager;
 
@@ -75,9 +75,9 @@ public final class TimeDialog {
                 secondData.add((i < 10 ? "0" : "") + i + " " + getString(R.string.common_second));
             }
 
-            mHourAdapter.setData(hourData);
-            mMinuteAdapter.setData(minuteData);
-            mSecondAdapter.setData(secondData);
+            mHourAdapter.submitList(hourData);
+            mMinuteAdapter.submitList(minuteData);
+            mSecondAdapter.submitList(secondData);
 
             mHourManager = new PickerLayoutManager.Builder(context)
                     .build();
@@ -136,8 +136,8 @@ public final class TimeDialog {
             int index = hour;
             if (index < 0 || hour == 24) {
                 index = 0;
-            } else if (index > mHourAdapter.getCount() - 1) {
-                index = mHourAdapter.getCount() - 1;
+            } else if (index > mHourAdapter.getItemCount() - 1) {
+                index = mHourAdapter.getItemCount() - 1;
             }
             mHourView.scrollToPosition(index);
             return this;
@@ -151,8 +151,8 @@ public final class TimeDialog {
             int index = minute;
             if (index < 0) {
                 index = 0;
-            } else if (index > mMinuteAdapter.getCount() - 1) {
-                index = mMinuteAdapter.getCount() - 1;
+            } else if (index > mMinuteAdapter.getItemCount() - 1) {
+                index = mMinuteAdapter.getItemCount() - 1;
             }
             mMinuteView.scrollToPosition(index);
             return this;
@@ -166,8 +166,8 @@ public final class TimeDialog {
             int index = second;
             if (index < 0) {
                 index = 0;
-            } else if (index > mSecondAdapter.getCount() - 1) {
-                index = mSecondAdapter.getCount() - 1;
+            } else if (index > mSecondAdapter.getItemCount() - 1) {
+                index = mSecondAdapter.getItemCount() - 1;
             }
             mSecondView.scrollToPosition(index);
             return this;
@@ -193,36 +193,21 @@ public final class TimeDialog {
         }
     }
 
-    private static final class PickerAdapter extends AppAdapter<String> {
+    private static final class PickerAdapter extends BaseQuickAdapter<String, QuickViewHolder> {
 
         private PickerAdapter(Context context) {
-            super(context);
+            super();
         }
-
-//        @Override
-//        public int getItemType(int position) {
-//            return 0;
-//        }
 
         @NonNull
         @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new ViewHolder();
+        protected QuickViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
+            return new QuickViewHolder(R.layout.picker_item, parent);
         }
 
-        private final class ViewHolder extends AppAdapter<?>.ViewHolder {
-
-            private final TextView mPickerView;
-
-            ViewHolder() {
-                super(R.layout.picker_item);
-                mPickerView = findViewById(R.id.tv_picker_name);
-            }
-
-            @Override
-            public void onBindView(int position) {
-                mPickerView.setText(getItem(position));
-            }
+        @Override
+        protected void onBindViewHolder(@NonNull QuickViewHolder holder, int position, @Nullable String item) {
+            holder.setText(R.id.tv_picker_name, item);
         }
     }
 

@@ -1,7 +1,7 @@
 plugins {
-    id 'com.android.application'
+    // id 'com.android.application'
+    id 'com.android.library'
     id 'kotlin-android'
-    id 'kotlin-android-extensions'
 }
 def config = rootProject.ext
 /*configurations.all {
@@ -23,7 +23,7 @@ android {
     //buildToolsVersion config.android.buildToolsVersion
 
     defaultConfig {
-        applicationId "com.example.app"
+        // applicationId "com.example.app"
         minSdkVersion config.android.minSdkVersion
         targetSdkVersion config.android.targetSdkVersion
         versionCode config.android.versionCode
@@ -53,7 +53,7 @@ android {
         release {
             minifyEnabled true
             zipAlignEnabled true
-            shrinkResources true
+            // shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             buildConfigField("Boolean", "MOULDE_TO_APPLICATION", "${mouldeToApplication}")
 //            signingConfig signingConfigs.release
@@ -106,7 +106,7 @@ android {
 //        daoPackage 'com.datouma.newproject.db.dao'
 //    }
 
-    build {
+    /*build {
         applicationVariants.all { variant ->
             variant.outputs.all {
                 outputFileName = "xsm_${variant.productFlavors[0].name}_${variant.versionCode}_v${variant.versionName}.apk"
@@ -164,7 +164,7 @@ android {
                 manifestPlaceholders = [UMENG_CHANNEL_VALUE: "官方"]
             }
         }
-    }
+    }*/
 }
 
 dependencies {

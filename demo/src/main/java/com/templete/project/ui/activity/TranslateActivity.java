@@ -54,6 +54,6 @@ public class TranslateActivity extends BaseActivity<TranslateActivityBinding> {
             list.add("条目"+i);
         }
         demoAdapter.setShow(true);
-        demoAdapter.setData(list);
+        demoAdapter.submitList(list);
     }
 }

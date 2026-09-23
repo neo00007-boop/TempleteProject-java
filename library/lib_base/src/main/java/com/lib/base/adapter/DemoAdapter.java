@@ -6,33 +6,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.lib.base.databinding.DemoLayoutBinding;
 import com.lib.base.util.DebugUtil;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
-
-/*      mAdapter = new ImagePreviewAdapter(this);//AppAdapter
-        mAdapter.setData(images);
-        mAdapter.setOnItemClickListener(this);
-        mViewPager.setAdapter(new RecyclerPagerAdapter(mAdapter));
-        if (images.size() != 1) {
-            if (images.size() < 10) {
-                // 如果是 10 张以内的图片，那么就显示圆圈指示器
-                mCircleIndicatorView.setVisibility(View.VISIBLE);
-                mCircleIndicatorView.setViewPager(mViewPager);
-            } else {
-                // 如果超过 10 张图片，那么就显示文字指示器
-                mTextIndicatorView.setVisibility(View.VISIBLE);
-                mViewPager.addOnPageChangeListener(this);
-            }
-
-            int index = getInt(INTENT_KEY_IN_IMAGE_INDEX);
-            if (index < images.size()) {
-                mViewPager.setCurrentItem(index);
-                onPageSelected(index);
-            }
-        }*/
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * ProjectName  TempleteProject-java
@@ -41,29 +22,33 @@ import androidx.constraintlayout.widget.ConstraintLayout;
  * @author xwchen
  * Date         2021/12/30.
  */
-public class DemoAdapter extends AppAdapter<String> {
+public class DemoAdapter extends BaseQuickAdapter<String, DemoAdapter.ViewHolder> {
     private boolean show;
 
     public void setShow(boolean show) {
         this.show = show;
     }
 
-    public DemoAdapter(@NonNull Context context) {
-        super(context);
+    public DemoAdapter() {
+        super();
     }
 
-//    @Override
-//    public int getItemType(int position) {
-//        return 0;
-//    }
+    public DemoAdapter(@NonNull Context context) {
+        super();
+    }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(DemoLayoutBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
+    protected ViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
+        return new ViewHolder(DemoLayoutBinding.inflate(LayoutInflater.from(context), parent, false));
     }
 
-    private final class ViewHolder extends AppAdapter<?>.ViewHolder {
+    @Override
+    protected void onBindViewHolder(@NonNull ViewHolder holder, int position, @Nullable String item) {
+        holder.bind(item);
+    }
+
+    final class ViewHolder extends RecyclerView.ViewHolder {
 
         private final DemoLayoutBinding binding;
 
@@ -73,12 +58,11 @@ public class DemoAdapter extends AppAdapter<String> {
         }
 
         @SuppressLint("SetTextI18n")
-        @Override
-        public void onBindView(int position) {
+        void bind(@Nullable String item) {
             binding.tv1.setOnClickListener(v -> DebugUtil.toast("影藏item点击"));
             binding.tv1.setVisibility(show ? View.VISIBLE : View.GONE);
 
-            binding.tv.setText(/*"item" + position*/getItem(position));
+            binding.tv.setText(item);
             if (!show) {
                 ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) binding.tv.getLayoutParams();
                 params.matchConstraintPercentWidth = 1;

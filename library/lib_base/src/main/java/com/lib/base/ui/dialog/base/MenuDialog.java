@@ -8,9 +8,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.chad.library.adapter.base.viewholder.QuickViewHolder;
 import com.lib.base.R;
-import com.lib.base.adapter.AppAdapter;
-import com.lib.base.adapter.BaseAdapter;
 import com.lib.base.ui.dialog.inject.SingleClick;
 import com.lib.base.util.Arrays;
 
@@ -20,6 +20,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
@@ -32,8 +33,7 @@ public final class MenuDialog {
 
     public static final class Builder
             extends BaseDialog.Builder<Builder>
-            implements BaseAdapter.OnItemClickListener,
-            View.OnLayoutChangeListener, Runnable {
+            implements View.OnLayoutChangeListener, Runnable {
 
         @SuppressWarnings("rawtypes")
         @Nullable
@@ -54,8 +54,18 @@ public final class MenuDialog {
             mCancelView  = findViewById(R.id.tv_menu_cancel);
             setOnClickListener(mCancelView);
 
+            mRecyclerView.setLayoutManager(new LinearLayoutManager(context));
             mAdapter = new MenuAdapter(getCtx());
-            mAdapter.setOnItemClickListener(this);
+            mAdapter.setOnItemClickListener((adapter, view, position) -> {
+                if (mAutoDismiss) {
+                    dismiss();
+                }
+
+                if (mListener == null) {
+                    return;
+                }
+                mListener.onSelected(getDialog(), position, mAdapter.getItem(position));
+            });
             mRecyclerView.setAdapter(mAdapter);
         }
 
@@ -90,7 +100,7 @@ public final class MenuDialog {
 
         @SuppressWarnings("all")
         public Builder setList(List data) {
-            mAdapter.setData(data);
+            mAdapter.submitList(data);
             mRecyclerView.addOnLayoutChangeListener(this);
             return this;
         }
@@ -131,22 +141,6 @@ public final class MenuDialog {
         }
 
         /**
-         * {@link BaseAdapter.OnItemClickListener}
-         */
-        @SuppressWarnings("all")
-        @Override
-        public void onItemClick(RecyclerView recyclerView, View itemView, int position) {
-            if (mAutoDismiss) {
-                dismiss();
-            }
-
-            if (mListener == null) {
-                return;
-            }
-            mListener.onSelected(getDialog(), position, mAdapter.getItem(position));
-        }
-
-        /**
          * {@link View.OnLayoutChangeListener}
          */
         @Override
@@ -184,46 +178,46 @@ public final class MenuDialog {
         }
     }
 
-    private static final class MenuAdapter extends AppAdapter<Object> {
+    private static final class MenuAdapter extends BaseQuickAdapter<Object, QuickViewHolder> {
 
         private MenuAdapter(Context context) {
-            super(context);
+            super();
         }
-
-//        @Override
-//        public int getItemType(int position) {
-//            return 0;
-//        }
 
         @NonNull
         @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new ViewHolder();
+        protected QuickViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
+            return new ViewHolder(parent);
         }
 
-        private final class ViewHolder extends AppAdapter<?>.ViewHolder {
+        @Override
+        protected void onBindViewHolder(@NonNull QuickViewHolder holder, int position, @Nullable Object item) {
+            ((ViewHolder) holder).onBind(position, item);
+        }
+
+        private final class ViewHolder extends QuickViewHolder {
 
             private final TextView mTextView;
             private final View mLineView;
 
-            ViewHolder() {
-                super(R.layout.menu_item);
-                mTextView = findViewById(R.id.tv_menu_text);
-                mLineView = findViewById(R.id.v_menu_line);
+            ViewHolder(@NonNull ViewGroup parent) {
+                super(R.layout.menu_item, parent);
+                mTextView = getView(R.id.tv_menu_text);
+                mLineView = getView(R.id.v_menu_line);
             }
 
-            @Override
-            public void onBindView(int position) {
-                mTextView.setText(getItem(position).toString());
+            void onBind(int position, @Nullable Object item) {
+                mTextView.setText(item != null ? item.toString() : "");
 
+                int count = getItemCount();
                 if (position == 0) {
                     // 当前是否只有一个条目
-                    if (getCount() == 1) {
+                    if (count == 1) {
                         mLineView.setVisibility(View.GONE);
                     } else {
                         mLineView.setVisibility(View.VISIBLE);
                     }
-                } else if (position == getCount() - 1) {
+                } else if (position == count - 1) {
                     mLineView.setVisibility(View.GONE);
                 } else {
                     mLineView.setVisibility(View.VISIBLE);

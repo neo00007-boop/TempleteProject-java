@@ -73,7 +73,7 @@ public class FloatingNewActivity extends BaseActivity<FloatingActivityNewBinding
         mViewBinding.recyclerView.setLayoutManager(linearLayoutManager);
         adapter = new FloatingNewAdapter(this, position -> {
         });
-        adapter.setData(getList());
+        adapter.submitList(getList());
         mViewBinding.recyclerView.setAdapter(adapter);
         // scrollListener
         mViewBinding.recyclerView.setOnTouchListener((v, event) -> {

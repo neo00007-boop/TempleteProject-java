@@ -4,13 +4,13 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
+import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.google.android.flexbox.AlignItems;
 import com.google.android.flexbox.FlexDirection;
 import com.google.android.flexbox.FlexWrap;
 import com.google.android.flexbox.FlexboxLayoutManager;
 import com.google.android.flexbox.JustifyContent;
 import com.hjq.shape.view.FlowLayout;
-import com.lib.base.adapter.AppAdapter;
 import com.lib.base.ui.activity.BaseActivity;
 import com.templete.project.databinding.BoxItemBinding;
 import com.templete.project.databinding.FlexBoxActivityBinding;
@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Random;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * 谷歌官方流式布局,替代{@link FlowLayout}
@@ -61,7 +63,7 @@ public class FlexBoxActivity extends BaseActivity<FlexBoxActivityBinding> {
         flexboxLayoutManager.setJustifyContent(JustifyContent.FLEX_END);
 
         mViewBinding.getRoot().setLayoutManager(flexboxLayoutManager);
-        myAdapter = new MyAdapter(this);
+        myAdapter = new MyAdapter();
         mViewBinding.getRoot().setAdapter(myAdapter);
 
     }
@@ -81,29 +83,28 @@ public class FlexBoxActivity extends BaseActivity<FlexBoxActivityBinding> {
             num = num == 0 ? 1 : num;
             list.add(name.substring(0, num));
         }
-        myAdapter.setData(list);
+        myAdapter.submitList(list);
     }
 
 
-    static class MyAdapter extends AppAdapter<String> {
+    static class MyAdapter extends BaseQuickAdapter<String, MyAdapter.VH> {
 
-        public MyAdapter(@NonNull Context context) {
-            super(context);
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            return 0;
+        public MyAdapter() {
+            super();
         }
 
         @NonNull
         @Override
-        public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new VH(BoxItemBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
+        protected VH onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
+            return new VH(BoxItemBinding.inflate(LayoutInflater.from(context), parent, false));
         }
 
+        @Override
+        protected void onBindViewHolder(@NonNull VH holder, int position, @Nullable String item) {
+            holder.bind(item);
+        }
 
-        class VH extends AppAdapter<?>.ViewHolder {
+        static class VH extends RecyclerView.ViewHolder {
 
             private final BoxItemBinding binding;
 
@@ -112,9 +113,8 @@ public class FlexBoxActivity extends BaseActivity<FlexBoxActivityBinding> {
                 this.binding = binding;
             }
 
-            @Override
-            public void onBindView(int position) {
-                binding.tv.setText(getItem(position));
+            void bind(@Nullable String item) {
+                binding.tv.setText(item);
             }
         }
     }

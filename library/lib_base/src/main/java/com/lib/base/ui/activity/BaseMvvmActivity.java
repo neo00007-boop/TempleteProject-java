@@ -1,10 +1,10 @@
 package com.lib.base.ui.activity;
 
 
-import com.lib.base.mvvm.BaseViewModel;
-
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewbinding.ViewBinding;
+
+import com.lib.base.mvvm.BaseViewModel;
 
 /**
  * ProjectName  XSCat
@@ -34,7 +34,7 @@ public abstract class BaseMvvmActivity<T extends ViewBinding, S extends BaseView
         if (viewModelClass == null) {
             throw new RuntimeException("getViewModelClass() return mustn't be null!");
         }
-        mViewModel = new ViewModelProvider(this, new ViewModelProvider.AndroidViewModelFactory(getApplication())).get(viewModelClass);
+        mViewModel = new ViewModelProvider(this).get(viewModelClass);
     }
 
     /**
@@ -48,7 +48,7 @@ public abstract class BaseMvvmActivity<T extends ViewBinding, S extends BaseView
         if (clazz == null) {
             throw new RuntimeException("clazz mustn't be null!");
         }
-        return new ViewModelProvider(this, new ViewModelProvider.AndroidViewModelFactory(getApplication())).get(clazz);
+        return new ViewModelProvider(this).get(clazz);
     }
 
     @Override
