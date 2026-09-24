@@ -976,9 +976,14 @@ public class BaseDialog extends AppCompatDialog implements /*LifecycleOwner,*/
                 }
             }
 
-            // 将 Dialog 的生命周期和 Activity 绑定在一起（每个 Builder 只绑一次）
-            if (mActivity != null && mDialogLifecycle == null) {
-                mDialogLifecycle = DialogLifecycle.with(mActivity, mDialog);
+            // 将 Dialog 的生命周期和 Activity 绑定在一起
+            if (mActivity != null) {
+                if (mDialogLifecycle == null) {
+                    mDialogLifecycle = DialogLifecycle.with(mActivity, mDialog);
+                } else {
+                    // create() 可能新建 Dialog 实例，需改绑到当前对象
+                    mDialogLifecycle.attachTo(mDialog);
+                }
             }
 
             if (mCreateListener != null) {
@@ -1138,6 +1143,20 @@ public class BaseDialog extends AppCompatDialog implements /*LifecycleOwner,*/
             if (activity instanceof LifecycleOwner) {
                 mLifecycleOwner = (LifecycleOwner) activity;
             }
+            attachTo(dialog);
+        }
+
+        /** create() 重建 Dialog 时改绑监听，避免仍挂在旧实例上 */
+        void attachTo(@NonNull BaseDialog dialog) {
+            if (mDialog == dialog) {
+                return;
+            }
+            if (mDialog != null) {
+                mDialog.removeOnShowListener(this);
+                mDialog.removeOnDismissListener(this);
+            }
+            mDialog = null;
+            removeLifecycleObserver();
             dialog.addOnShowListener(this);
             dialog.addOnDismissListener(this);
         }

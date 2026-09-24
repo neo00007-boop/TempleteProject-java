@@ -57,7 +57,8 @@ public interface HandlerAction {
      * 移除全部消息回调
      */
     default void removeCallbacks() {
-        // 移除和当前对象相关的消息回调
-        HANDLER.removeCallbacksAndMessages(null);
+        // 只移除以当前对象为 token 投递的消息（与 postAtTime 一致）
+        // 切勿 removeCallbacksAndMessages(null)，会清掉主线程上所有回调
+        HANDLER.removeCallbacksAndMessages(this);
     }
 }
