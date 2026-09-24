@@ -2,17 +2,18 @@ package com.lib.base.ui.dialog.base;
 
 import android.content.Context;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.chad.library.adapter.base.BaseQuickAdapter;
-import com.chad.library.adapter.base.viewholder.QuickViewHolder;
+import com.chad.library.adapter.base.BaseMultiItemQuickAdapter;
+import com.chad.library.adapter.base.entity.MultiItemEntity;
+import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.lib.base.R;
 import com.lib.base.ui.dialog.inject.SingleClick;
 import com.hjq.shape.view.textview.PasswordView;
 import com.lib.base.util.Arrays;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -66,7 +67,7 @@ public final class PayPasswordDialog {
 
             mRecyclerView.setLayoutManager(new GridLayoutManager(context, 3));
             mAdapter = new KeyboardAdapter(getCtx());
-            mAdapter.submitList(Arrays.asList(KEYBOARD_TEXT));
+            mAdapter.setList(KeyboardAdapter.buildData(KEYBOARD_TEXT));
             mAdapter.setOnItemClickListener((adapter, view, position) -> onKeyboardItemClick(position));
             mRecyclerView.setAdapter(mAdapter);
         }
@@ -123,7 +124,10 @@ public final class PayPasswordDialog {
                     // 判断密码是否已经输入完毕
                     if (mRecordList.size() < PasswordView.PASSWORD_COUNT) {
                         // 点击数字，显示在密码行
-                        mRecordList.add(KEYBOARD_TEXT[position]);
+                        KeyboardAdapter.KeyboardItem key = mAdapter.getItem(position);
+                        if (key != null) {
+                            mRecordList.add(key.text);
+                        }
                     }
 
                     // 判断密码是否已经输入完毕
@@ -164,7 +168,7 @@ public final class PayPasswordDialog {
         }
     }
 
-    private static final class KeyboardAdapter extends BaseQuickAdapter<String, QuickViewHolder> {
+    private static final class KeyboardAdapter extends BaseMultiItemQuickAdapter<KeyboardAdapter.KeyboardItem, BaseViewHolder> {
 
         /** 数字按钮条目 */
         private static final int TYPE_NORMAL = 0;
@@ -175,51 +179,50 @@ public final class PayPasswordDialog {
 
         private KeyboardAdapter(Context context) {
             super();
+            addItemType(TYPE_NORMAL, R.layout.pay_password_normal_item);
+            addItemType(TYPE_DELETE, R.layout.pay_password_delete_item);
+            addItemType(TYPE_EMPTY, R.layout.pay_password_empty_item);
+        }
+
+        static List<KeyboardItem> buildData(String[] keys) {
+            List<KeyboardItem> list = new ArrayList<>(keys.length);
+            for (int i = 0; i < keys.length; i++) {
+                int type;
+                switch (i) {
+                    case 9:
+                        type = TYPE_EMPTY;
+                        break;
+                    case 11:
+                        type = TYPE_DELETE;
+                        break;
+                    default:
+                        type = TYPE_NORMAL;
+                        break;
+                }
+                list.add(new KeyboardItem(type, keys[i]));
+            }
+            return list;
         }
 
         @Override
-        protected int getItemViewType(int position, @NonNull List<? extends String> list) {
-            switch (position) {
-                case 9:
-                    return TYPE_EMPTY;
-                case 11:
-                    return TYPE_DELETE;
-                default:
-                    return TYPE_NORMAL;
+        protected void convert(@NonNull BaseViewHolder holder, KeyboardItem item) {
+            if (holder.getItemViewType() == TYPE_NORMAL) {
+                holder.setText(R.id.tv_pay_key, item.text);
             }
         }
 
-        @NonNull
-        @Override
-        protected QuickViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
-            switch (viewType) {
-                case TYPE_DELETE:
-                    return new QuickViewHolder(R.layout.pay_password_delete_item, parent);
-                case TYPE_EMPTY:
-                    return new QuickViewHolder(R.layout.pay_password_empty_item, parent);
-                default:
-                    return new ViewHolder(parent);
-            }
-        }
+        static final class KeyboardItem implements MultiItemEntity {
+            private final int itemType;
+            final String text;
 
-        @Override
-        protected void onBindViewHolder(@NonNull QuickViewHolder holder, int position, @Nullable String item) {
-            if (holder instanceof ViewHolder) {
-                ((ViewHolder) holder).onBind(item);
-            }
-        }
-
-        private static final class ViewHolder extends QuickViewHolder {
-
-            private final TextView mTextView;
-
-            private ViewHolder(@NonNull ViewGroup parent) {
-                super(R.layout.pay_password_normal_item, parent);
-                mTextView = (TextView) itemView;
+            KeyboardItem(int itemType, String text) {
+                this.itemType = itemType;
+                this.text = text;
             }
 
-            void onBind(@Nullable String item) {
-                mTextView.setText(item);
+            @Override
+            public int getItemType() {
+                return itemType;
             }
         }
     }

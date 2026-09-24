@@ -5,7 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
-import com.chad.library.adapter.base.viewholder.QuickViewHolder;
+import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.lib.base.R;
 import com.lib.base.ui.dialog.inject.SingleClick;
 import com.lib.base.ui.dialog.manager.PickerLayoutManager;
@@ -93,9 +93,9 @@ public final class DateDialog {
                 dayData.add(i + " " + getString(R.string.common_day));
             }
 
-            mYearAdapter.submitList(yearData);
-            mMonthAdapter.submitList(monthData);
-            mDayAdapter.submitList(dayData);
+            mYearAdapter.setList(yearData);
+            mMonthAdapter.setList(monthData);
+            mDayAdapter.setList(dayData);
 
             mYearManager = new PickerLayoutManager.Builder(context)
                     .build();
@@ -248,7 +248,7 @@ public final class DateDialog {
                 for (int i = 1; i <= day; i++) {
                     dayData.add(i + " " + getString(R.string.common_day));
                 }
-                mDayAdapter.submitList(dayData);
+                mDayAdapter.setList(dayData);
             }
         }
 
@@ -260,20 +260,14 @@ public final class DateDialog {
             mYearView.post(this);
         }
 
-        private static final class PickerAdapter extends BaseQuickAdapter<String, QuickViewHolder> {
+        private static final class PickerAdapter extends BaseQuickAdapter<String, BaseViewHolder> {
 
             private PickerAdapter(Context context) {
-                super();
-            }
-
-            @NonNull
-            @Override
-            protected QuickViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
-                return new QuickViewHolder(R.layout.picker_item, parent);
+                super(R.layout.picker_item);
             }
 
             @Override
-            protected void onBindViewHolder(@NonNull QuickViewHolder holder, int position, @Nullable String item) {
+            protected void convert(@NonNull BaseViewHolder holder, String item) {
                 holder.setText(R.id.tv_picker_name, item);
             }
         }

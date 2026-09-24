@@ -4,12 +4,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
-import com.chad.library.adapter.base.viewholder.QuickViewHolder;
+import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.lib.base.R;
 import com.lib.base.bean.Platform;
 
@@ -54,7 +52,7 @@ public final class ShareDialog {
             mCopyLink = new ShareBean(getDrawable(R.drawable.share_link_ic), getString(R.string.share_platform_link), Platform.DEFAULTS);
 
             mAdapter = new ShareAdapter(activity);
-            mAdapter.submitList(data);
+            mAdapter.setList(data);
             mAdapter.setOnItemClickListener((adapter, view, position) -> {
                /* Platform platform = mAdapter.getItem(position).sharePlatform;
                 if (platform != null) {
@@ -177,41 +175,19 @@ public final class ShareDialog {
         }
     }
 
-    private static class ShareAdapter extends BaseQuickAdapter<ShareBean, QuickViewHolder> {
+    private static class ShareAdapter extends BaseQuickAdapter<ShareBean, BaseViewHolder> {
 
         private ShareAdapter(Context context) {
-            super();
-        }
-
-        @NonNull
-        @Override
-        protected QuickViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
-            return new ViewHolder(parent);
+            super(R.layout.share_item);
         }
 
         @Override
-        protected void onBindViewHolder(@NonNull QuickViewHolder holder, int position, @Nullable ShareBean item) {
-            ((ViewHolder) holder).onBind(item);
-        }
-
-        private final class ViewHolder extends QuickViewHolder {
-
-            private final ImageView mImageView;
-            private final TextView mTextView;
-
-            private ViewHolder(@NonNull ViewGroup parent) {
-                super(R.layout.share_item, parent);
-                mImageView = getView(R.id.iv_share_image);
-                mTextView = getView(R.id.tv_share_text);
+        protected void convert(@NonNull BaseViewHolder holder, ShareBean item) {
+            if (item == null) {
+                return;
             }
-
-            void onBind(@Nullable ShareBean bean) {
-                if (bean == null) {
-                    return;
-                }
-                mImageView.setImageDrawable(bean.shareIcon);
-                mTextView.setText(bean.shareName);
-            }
+            holder.<ImageView>getView(R.id.iv_share_image).setImageDrawable(item.shareIcon);
+            holder.setText(R.id.tv_share_text, item.shareName);
         }
     }
 

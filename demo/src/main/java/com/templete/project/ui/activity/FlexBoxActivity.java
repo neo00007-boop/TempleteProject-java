@@ -1,6 +1,5 @@
 package com.templete.project.ui.activity;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -12,6 +11,7 @@ import com.google.android.flexbox.FlexboxLayoutManager;
 import com.google.android.flexbox.JustifyContent;
 import com.hjq.shape.view.FlowLayout;
 import com.lib.base.ui.activity.BaseActivity;
+import com.templete.project.R;
 import com.templete.project.databinding.BoxItemBinding;
 import com.templete.project.databinding.FlexBoxActivityBinding;
 
@@ -21,7 +21,6 @@ import java.util.Random;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * 谷歌官方流式布局,替代{@link FlowLayout}
@@ -83,28 +82,28 @@ public class FlexBoxActivity extends BaseActivity<FlexBoxActivityBinding> {
             num = num == 0 ? 1 : num;
             list.add(name.substring(0, num));
         }
-        myAdapter.submitList(list);
+        myAdapter.setList(list);
     }
 
 
     static class MyAdapter extends BaseQuickAdapter<String, MyAdapter.VH> {
 
         public MyAdapter() {
-            super();
+            super(R.layout.box_item);
         }
 
         @NonNull
         @Override
-        protected VH onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
-            return new VH(BoxItemBinding.inflate(LayoutInflater.from(context), parent, false));
+        protected VH onCreateDefViewHolder(@NonNull ViewGroup parent, int viewType) {
+            return new VH(BoxItemBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
         }
 
         @Override
-        protected void onBindViewHolder(@NonNull VH holder, int position, @Nullable String item) {
+        protected void convert(@NonNull VH holder, String item) {
             holder.bind(item);
         }
 
-        static class VH extends RecyclerView.ViewHolder {
+        static class VH extends com.chad.library.adapter.base.viewholder.BaseViewHolder {
 
             private final BoxItemBinding binding;
 

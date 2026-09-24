@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
-import com.chad.library.adapter.base.viewholder.QuickViewHolder;
+import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.lib.base.R;
 import com.lib.base.ui.dialog.inject.SingleClick;
 import com.lib.base.util.Arrays;
@@ -100,7 +100,7 @@ public final class MenuDialog {
 
         @SuppressWarnings("all")
         public Builder setList(List data) {
-            mAdapter.submitList(data);
+            mAdapter.setList(data);
             mRecyclerView.addOnLayoutChangeListener(this);
             return this;
         }
@@ -178,50 +178,24 @@ public final class MenuDialog {
         }
     }
 
-    private static final class MenuAdapter extends BaseQuickAdapter<Object, QuickViewHolder> {
+    private static final class MenuAdapter extends BaseQuickAdapter<Object, BaseViewHolder> {
 
         private MenuAdapter(Context context) {
-            super();
-        }
-
-        @NonNull
-        @Override
-        protected QuickViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
-            return new ViewHolder(parent);
+            super(R.layout.menu_item);
         }
 
         @Override
-        protected void onBindViewHolder(@NonNull QuickViewHolder holder, int position, @Nullable Object item) {
-            ((ViewHolder) holder).onBind(position, item);
-        }
-
-        private final class ViewHolder extends QuickViewHolder {
-
-            private final TextView mTextView;
-            private final View mLineView;
-
-            ViewHolder(@NonNull ViewGroup parent) {
-                super(R.layout.menu_item, parent);
-                mTextView = getView(R.id.tv_menu_text);
-                mLineView = getView(R.id.v_menu_line);
-            }
-
-            void onBind(int position, @Nullable Object item) {
-                mTextView.setText(item != null ? item.toString() : "");
-
-                int count = getItemCount();
-                if (position == 0) {
-                    // 当前是否只有一个条目
-                    if (count == 1) {
-                        mLineView.setVisibility(View.GONE);
-                    } else {
-                        mLineView.setVisibility(View.VISIBLE);
-                    }
-                } else if (position == count - 1) {
-                    mLineView.setVisibility(View.GONE);
-                } else {
-                    mLineView.setVisibility(View.VISIBLE);
-                }
+        protected void convert(@NonNull BaseViewHolder holder, Object item) {
+            holder.setText(R.id.tv_menu_text, item != null ? item.toString() : "");
+            View lineView = holder.getView(R.id.v_menu_line);
+            int position = holder.getBindingAdapterPosition();
+            int count = getItemCount();
+            if (position == 0) {
+                lineView.setVisibility(count == 1 ? View.GONE : View.VISIBLE);
+            } else if (position == count - 1) {
+                lineView.setVisibility(View.GONE);
+            } else {
+                lineView.setVisibility(View.VISIBLE);
             }
         }
     }

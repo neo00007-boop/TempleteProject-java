@@ -1,6 +1,5 @@
 package com.templete.project.ui.activity;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -60,7 +59,7 @@ public class DatabindingActivity extends AppCompatActivity {
         for (int i = 0; i < 20; i++) {
             list.add(new DemoBean());
         }
-        myAdapter.submitList(list);
+        myAdapter.setList(list);
 
         viewDataBinding.getRoot().postDelayed(() -> {
             demoViewModel.setDarks(1);
@@ -70,22 +69,22 @@ public class DatabindingActivity extends AppCompatActivity {
     class MyAdapter extends BaseQuickAdapter<DemoBean, MyAdapter.ViewHolder> {
 
         public MyAdapter() {
-            super();
+            super(R.layout.dynamic_item1);
         }
 
         @NonNull
         @Override
-        protected ViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
-            DynamicItem1Binding itemBinding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.dynamic_item1, parent, false);
+        protected ViewHolder onCreateDefViewHolder(@NonNull ViewGroup parent, int viewType) {
+            DynamicItem1Binding itemBinding = DataBindingUtil.inflate(LayoutInflater.from(parent.getContext()), R.layout.dynamic_item1, parent, false);
             return new ViewHolder(itemBinding);
         }
 
         @Override
-        protected void onBindViewHolder(@NonNull ViewHolder holder, int position, @Nullable DemoBean item) {
+        protected void convert(@NonNull ViewHolder holder, DemoBean item) {
             holder.bind();
         }
 
-        class ViewHolder extends RecyclerView.ViewHolder {
+        class ViewHolder extends com.chad.library.adapter.base.viewholder.BaseViewHolder {
             DynamicItem1Binding binding;
 
             public ViewHolder(DynamicItem1Binding binding) {

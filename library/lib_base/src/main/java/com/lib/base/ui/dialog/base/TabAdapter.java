@@ -3,15 +3,14 @@ package com.lib.base.ui.dialog.base;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
-import com.chad.library.adapter.base.viewholder.QuickViewHolder;
+import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.lib.base.R;
-
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,7 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
  * time   : 2021/02/28
  * desc   : Tab 适配器
  */
-public final class TabAdapter extends BaseQuickAdapter<String, QuickViewHolder> {
+public final class TabAdapter extends BaseQuickAdapter<String, BaseViewHolder> {
 
     public static final int TAB_MODE_DESIGN = 1;
     public static final int TAB_MODE_SLIDING = 2;
@@ -56,37 +55,31 @@ public final class TabAdapter extends BaseQuickAdapter<String, QuickViewHolder> 
     }
 
     public TabAdapter(Context context, int tabMode, boolean fixed) {
-        super();
+        super(tabMode == TAB_MODE_DESIGN ? R.layout.tab_item_design : R.layout.tab_item_sliding);
         mTabMode = tabMode;
         mFixed = fixed;
         setOnItemClickListener((adapter, view, position) -> onTabItemClick(position));
         registerAdapterDataObserver(new TabAdapterDataObserver());
     }
 
-    @Override
-    protected int getItemViewType(int position, @NonNull List<? extends String> list) {
-        return mTabMode;
-    }
-
     @NonNull
     @Override
-    protected QuickViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
-        switch (viewType) {
-            case TAB_MODE_DESIGN:
-                return new DesignViewHolder(parent);
-            case TAB_MODE_SLIDING:
-                return new SlidingViewHolder(parent);
-            default:
-                throw new IllegalArgumentException("are you ok?");
+    protected BaseViewHolder onCreateDefViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (mTabMode == TAB_MODE_DESIGN) {
+            return new DesignViewHolder(parent);
         }
+        if (mTabMode == TAB_MODE_SLIDING) {
+            return new SlidingViewHolder(parent);
+        }
+        throw new IllegalArgumentException("are you ok?");
     }
 
     @Override
-    protected void onBindViewHolder(@NonNull QuickViewHolder holder, int position, @Nullable String item) {
+    protected void convert(@NonNull BaseViewHolder holder, String item) {
         if (holder instanceof DesignViewHolder) {
-            ((DesignViewHolder) holder).onBind(position, item);
+            ((DesignViewHolder) holder).onBind(holder.getBindingAdapterPosition(), item);
         } else if (holder instanceof SlidingViewHolder) {
-            ((SlidingViewHolder) holder).onBind(position, item);
+            ((SlidingViewHolder) holder).onBind(holder.getBindingAdapterPosition(), item);
         }
     }
 
@@ -154,13 +147,13 @@ public final class TabAdapter extends BaseQuickAdapter<String, QuickViewHolder> 
         }
     }
 
-    private final class DesignViewHolder extends QuickViewHolder {
+    private final class DesignViewHolder extends BaseViewHolder {
 
         private final TextView mTitleView;
         private final View mLineView;
 
         private DesignViewHolder(@NonNull ViewGroup parent) {
-            super(R.layout.tab_item_design, parent);
+            super(LayoutInflater.from(parent.getContext()).inflate(R.layout.tab_item_design, parent, false));
             mTitleView = getView(R.id.tv_tab_design_title);
             mLineView = getView(R.id.v_tab_design_line);
             if (!mFixed) {
@@ -178,7 +171,7 @@ public final class TabAdapter extends BaseQuickAdapter<String, QuickViewHolder> 
         }
     }
 
-    private final class SlidingViewHolder extends QuickViewHolder implements ValueAnimator.AnimatorUpdateListener {
+    private final class SlidingViewHolder extends BaseViewHolder implements ValueAnimator.AnimatorUpdateListener {
 
         private final int mDefaultTextSize;
         private final int mSelectedTextSize;
@@ -187,7 +180,7 @@ public final class TabAdapter extends BaseQuickAdapter<String, QuickViewHolder> 
         private final View mLineView;
 
         private SlidingViewHolder(@NonNull ViewGroup parent) {
-            super(R.layout.tab_item_sliding, parent);
+            super(LayoutInflater.from(parent.getContext()).inflate(R.layout.tab_item_sliding, parent, false));
             mTitleView = getView(R.id.tv_tab_sliding_title);
             mLineView = getView(R.id.v_tab_sliding_line);
 

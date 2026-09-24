@@ -78,7 +78,7 @@ public class IndexActivity extends BaseActivity<IndexActivityBinding> {
         for (int i = 0; i < 200; i++) {
             list.add("条目"+i);
         }
-        demoAdapter.submitList(list);
+        demoAdapter.setList(list);
     }
 
     @Override

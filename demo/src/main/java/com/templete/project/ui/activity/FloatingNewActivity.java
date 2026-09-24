@@ -5,6 +5,7 @@ import android.view.MotionEvent;
 
 import com.hjq.shape.view.NavigationBar;
 import com.lib.base.adapter.FloatingNewAdapter;
+import com.lib.base.bean.FloatingItem;
 import com.lib.base.ui.activity.BaseActivity;
 import com.lib.base.util.FreshUtil;
 import com.lib.base.util.ScreenUtil;
@@ -73,7 +74,7 @@ public class FloatingNewActivity extends BaseActivity<FloatingActivityNewBinding
         mViewBinding.recyclerView.setLayoutManager(linearLayoutManager);
         adapter = new FloatingNewAdapter(this, position -> {
         });
-        adapter.submitList(getList());
+        adapter.setList(getList());
         mViewBinding.recyclerView.setAdapter(adapter);
         // scrollListener
         mViewBinding.recyclerView.setOnTouchListener((v, event) -> {
@@ -108,10 +109,11 @@ public class FloatingNewActivity extends BaseActivity<FloatingActivityNewBinding
         });
     }
 
-    private List<String> getList() {
-        List<String> list = new ArrayList<>();
+    private List<FloatingItem> getList() {
+        List<FloatingItem> list = new ArrayList<>();
+        list.add(FloatingItem.header());
         for (int i = 0; i < 200; i++) {
-            list.add("item" + i);
+            list.add(FloatingItem.content("item" + i));
         }
         return list;
     }

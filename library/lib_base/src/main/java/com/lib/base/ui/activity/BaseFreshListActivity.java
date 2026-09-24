@@ -1,6 +1,7 @@
 package com.lib.base.ui.activity;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.lib.base.databinding.BaseFreshListLayoutBinding;
 import com.lib.base.ui.widget.HolderView;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
@@ -16,7 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
  * @param <T> 列表数据类型
  * @param <A> Adapter
  */
-public abstract class BaseFreshListActivity<T, A extends BaseQuickAdapter<T, ? extends RecyclerView.ViewHolder>>
+public abstract class BaseFreshListActivity<T, A extends BaseQuickAdapter<T, ? extends BaseViewHolder>>
         extends BaseFreshActivity<BaseFreshListLayoutBinding, T, A> {
 
     @Override

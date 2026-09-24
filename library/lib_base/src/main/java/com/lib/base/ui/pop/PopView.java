@@ -95,7 +95,7 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
         }
         layoutBinding.recycleView.setLayoutManager(new LinearLayoutManager(context));
         popAdapter = new PopAdapter(context, hasSelect, hasHtml);
-        popAdapter.submitList(popBeans);
+        popAdapter.setList(popBeans);
         popAdapter.setOnItemClickListener((adapter, view, position) -> {
             if (clickListener != null) {
                 clickListener.clickPosition(position, view);

@@ -63,6 +63,6 @@ public class HorizontalFreshActivity extends BaseActivity<FreshActivityBinding> 
         for (int i = 0; i < 2; i++) {
             list.add("条目"+i);
         }
-        demoAdapter.submitList(list);
+        demoAdapter.setList(list);
     }
 }

@@ -1,12 +1,12 @@
 package com.lib.base.adapter;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.lib.base.R;
 import com.lib.base.config.App;
 import com.lib.base.databinding.HomeBarItemBinding;
@@ -15,11 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * 顶部横向导航条 Adapter（BRVAH4）
+ * 顶部横向导航条 Adapter（BRVAH 3.x）
  */
 public class HomeTopBarAdapter extends BaseQuickAdapter<String, HomeTopBarAdapter.ViewHolder> {
 
@@ -27,9 +25,9 @@ public class HomeTopBarAdapter extends BaseQuickAdapter<String, HomeTopBarAdapte
     private OnBarItemClickListener listener;
 
     public HomeTopBarAdapter(int pos) {
-        super();
+        super(R.layout.home_bar_item);
         this.pos = pos;
-        submitList(buildDefaultTabs());
+        setList(buildDefaultTabs());
         setOnItemClickListener((adapter, view, position) -> {
             if (this.pos == position) {
                 return;
@@ -54,13 +52,13 @@ public class HomeTopBarAdapter extends BaseQuickAdapter<String, HomeTopBarAdapte
 
     @NonNull
     @Override
-    protected ViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(HomeBarItemBinding.inflate(LayoutInflater.from(context), parent, false));
+    protected ViewHolder onCreateDefViewHolder(@NonNull ViewGroup parent, int viewType) {
+        return new ViewHolder(HomeBarItemBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
     }
 
     @SuppressLint("SetTextI18n")
     @Override
-    protected void onBindViewHolder(@NonNull ViewHolder holder, int position, @Nullable String item) {
+    protected void convert(@NonNull ViewHolder holder, String item) {
         String str = item != null ? item : "";
         holder.binding.tv.setText(str);
 
@@ -69,7 +67,7 @@ public class HomeTopBarAdapter extends BaseQuickAdapter<String, HomeTopBarAdapte
         layoutParams.width = (int) (App.getContext().getResources().getDimension(R.dimen.x55)
                 * (str.length() - 0.5));
         holder.binding.indicator.requestLayout();
-        holder.binding.indicator.setSelected(pos == position);
+        holder.binding.indicator.setSelected(pos == holder.getBindingAdapterPosition());
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -89,7 +87,7 @@ public class HomeTopBarAdapter extends BaseQuickAdapter<String, HomeTopBarAdapte
         this.listener = listener;
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends BaseViewHolder {
         final HomeBarItemBinding binding;
 
         ViewHolder(@NonNull HomeBarItemBinding binding) {

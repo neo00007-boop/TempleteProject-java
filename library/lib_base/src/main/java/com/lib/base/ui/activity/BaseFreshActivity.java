@@ -3,6 +3,7 @@ package com.lib.base.ui.activity;
 import android.view.View;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.lib.base.ui.widget.HolderView;
 import com.lib.base.util.FreshUtil;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
@@ -30,7 +31,7 @@ import androidx.viewbinding.ViewBinding;
  * </ul>
  * 刷新 / 加载态直接读 SmartRefreshLayout；列表替换 / 追加以 {@link #mPage} 是否为首页为准。
  */
-public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends BaseQuickAdapter<T, ? extends RecyclerView.ViewHolder>>
+public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends BaseQuickAdapter<T, ? extends BaseViewHolder>>
         extends BaseActivity<VB> {
 
     public static final String TAG = "BaseFreshActivity";
@@ -206,8 +207,8 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
 
     private void applySuccess(@NonNull List<T> list, boolean noMore) {
         if (isFreshPage()) {
-            mAdapter.submitList(new ArrayList<>(list));
-            if (mAdapter.getItems().isEmpty()) {
+            mAdapter.setList(new ArrayList<>(list));
+            if (mAdapter.getData().isEmpty()) {
                 showNoDataView();
             } else {
                 hideView();
@@ -216,7 +217,7 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
             if (list.isEmpty()) {
                 rollbackPage();
             } else {
-                mAdapter.addAll(list);
+                mAdapter.addData(list);
             }
             hideView();
         }
@@ -228,7 +229,7 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
         if (!isFreshPage()) {
             rollbackPage();
         }
-        if (isFreshPage() && mAdapter.getItems().isEmpty()) {
+        if (isFreshPage() && mAdapter.getData().isEmpty()) {
             showErrorView();
         }
         finishRefreshUi(false);
@@ -274,7 +275,7 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
 
     @Nullable
     protected T getItem(int position) {
-        if (mAdapter == null || position < 0 || position >= mAdapter.getItems().size()) {
+        if (mAdapter == null || position < 0 || position >= mAdapter.getData().size()) {
             return null;
         }
         return mAdapter.getItem(position);
@@ -282,7 +283,7 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
 
     protected void clearList() {
         if (mAdapter != null) {
-            mAdapter.submitList(Collections.emptyList());
+            mAdapter.setNewInstance(null);
         }
     }
 }

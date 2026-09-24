@@ -6,8 +6,11 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.chad.library.adapter.base.BaseMultiItemAdapter;
+import com.chad.library.adapter.base.BaseMultiItemQuickAdapter;
+import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.hjq.shape.view.NavigationBar;
+import com.lib.base.R;
+import com.lib.base.bean.FloatingItem;
 import com.lib.base.databinding.DemoLayoutBinding;
 import com.lib.base.databinding.HomeHeaderLayoutNewBinding;
 import com.lib.base.util.ViewUtil;
@@ -17,47 +20,41 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * 悬浮导航新版（多类型用 BRVAH BaseMultiItemAdapter）
+ * 悬浮导航新版（BaseMultiItemQuickAdapter）
  */
-public class FloatingNewAdapter extends BaseMultiItemAdapter<String> {
+public class FloatingNewAdapter extends BaseMultiItemQuickAdapter<FloatingItem, BaseViewHolder> {
     public static final String TAG = "FloatingNewAdapter";
-    public static final int TYPE_HEADER = 0;
-    public static final int TYPE_ITEM = 1;
+    public static final int TYPE_HEADER = FloatingItem.TYPE_HEADER;
+    public static final int TYPE_ITEM = FloatingItem.TYPE_ITEM;
 
     private FrameLayout container;
 
     public FloatingNewAdapter(@NonNull Context context, OnItemClickListener onItemClickListener) {
         super();
-        addItemType(TYPE_HEADER, new OnMultiItemAdapterListener<String, HeaderHolder>() {
-            @NonNull
-            @Override
-            public HeaderHolder onCreate(@NonNull Context ctx, @NonNull ViewGroup parent, int viewType) {
-                return new HeaderHolder(HomeHeaderLayoutNewBinding.inflate(LayoutInflater.from(ctx), parent, false));
-            }
-
-            @Override
-            public void onBind(@NonNull HeaderHolder holder, int position, @Nullable String item) {
-                holder.bind();
-            }
-        });
-        addItemType(TYPE_ITEM, new OnMultiItemAdapterListener<String, ItemHolder>() {
-            @NonNull
-            @Override
-            public ItemHolder onCreate(@NonNull Context ctx, @NonNull ViewGroup parent, int viewType) {
-                return new ItemHolder(DemoLayoutBinding.inflate(LayoutInflater.from(ctx), parent, false));
-            }
-
-            @Override
-            public void onBind(@NonNull ItemHolder holder, int position, @Nullable String item) {
-                holder.bind(item);
-            }
-        });
-        onItemViewType((position, list) -> position == 0 ? TYPE_HEADER : TYPE_ITEM);
+        addItemType(TYPE_HEADER, R.layout.home_header_layout_new);
+        addItemType(TYPE_ITEM, R.layout.demo_layout);
         if (onItemClickListener != null) {
             setOnItemClickListener((adapter, view, position) -> onItemClickListener.itemClick(position));
+        }
+    }
+
+    @NonNull
+    @Override
+    protected BaseViewHolder onCreateDefViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (viewType == TYPE_HEADER) {
+            return new HeaderHolder(HomeHeaderLayoutNewBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
+        }
+        return new ItemHolder(DemoLayoutBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
+    }
+
+    @Override
+    protected void convert(@NonNull BaseViewHolder holder, FloatingItem item) {
+        if (holder instanceof HeaderHolder) {
+            ((HeaderHolder) holder).bind();
+        } else if (holder instanceof ItemHolder) {
+            ((ItemHolder) holder).bind(item != null ? item.text : null);
         }
     }
 
@@ -71,12 +68,12 @@ public class FloatingNewAdapter extends BaseMultiItemAdapter<String> {
         }
         int from = Math.min(fromPosition, toPosition);
         int to = Math.max(fromPosition, toPosition);
-        List<String> list = new ArrayList<>(getItems());
-        String removeFrom = list.get(from);
-        String removeTo = list.get(to);
+        List<FloatingItem> list = new ArrayList<>(getData());
+        FloatingItem removeFrom = list.get(from);
+        FloatingItem removeTo = list.get(to);
         list.set(from, removeTo);
         list.set(to, removeFrom);
-        submitList(list);
+        setList(list);
     }
 
     public int getheight() {
@@ -85,7 +82,7 @@ public class FloatingNewAdapter extends BaseMultiItemAdapter<String> {
         return locations[1];
     }
 
-    private final class HeaderHolder extends RecyclerView.ViewHolder {
+    private final class HeaderHolder extends BaseViewHolder {
 
         private final HomeHeaderLayoutNewBinding binding;
 
@@ -99,7 +96,7 @@ public class FloatingNewAdapter extends BaseMultiItemAdapter<String> {
         }
     }
 
-    private static final class ItemHolder extends RecyclerView.ViewHolder {
+    private static final class ItemHolder extends BaseViewHolder {
 
         private final DemoLayoutBinding binding;
 

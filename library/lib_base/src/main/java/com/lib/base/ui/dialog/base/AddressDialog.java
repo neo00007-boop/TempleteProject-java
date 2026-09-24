@@ -1,16 +1,14 @@
 package com.lib.base.ui.dialog.base;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.text.TextUtils;
-import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.lib.base.R;
 import com.lib.base.ui.dialog.inject.SingleClick;
 
@@ -85,7 +83,7 @@ public final class AddressDialog {
             setOnClickListener(mCloseView);
 
             mTabAdapter = new TabAdapter(context, TabAdapter.TAB_MODE_SLIDING, false);
-            mTabAdapter.add(getString(R.string.address_hint));
+            mTabAdapter.addData(getString(R.string.address_hint));
             mTabAdapter.setOnTabListener(this);
             mTabView.setAdapter(mTabAdapter);
 
@@ -108,7 +106,7 @@ public final class AddressDialog {
             };
 
             // 显示省份列表
-            mAdapter.add(AddressManager.getProvinceList(getCtx()));
+            mAdapter.addData(AddressManager.getProvinceList(getCtx()));
             addOnShowListener(this);
             addOnDismissListener(this);
         }
@@ -212,11 +210,11 @@ public final class AddressDialog {
                 case 0:
                     // 记录当前选择的省份
                     mProvince = mAdapter.getItem(type).get(position).getName();
-                    mTabAdapter.set(type, mProvince);
+                    mTabAdapter.setData(type, mProvince);
 
-                    mTabAdapter.add(getString(R.string.address_hint));
+                    mTabAdapter.addData(getString(R.string.address_hint));
                     mTabAdapter.setSelectedPosition(type + 1);
-                    mAdapter.add(AddressManager.getCityList(mAdapter.getItem(type).get(position).getNext()));
+                    mAdapter.addData(AddressManager.getCityList(mAdapter.getItem(type).get(position).getNext()));
                     mViewPager.setCurrentItem(type + 1, smoothScroll);
 
                     // 如果当前选择的是直辖市，就直接跳过选择城市，直接选择区域
@@ -227,7 +225,7 @@ public final class AddressDialog {
                 case 1:
                     // 记录当前选择的城市
                     mCity = mAdapter.getItem(type).get(position).getName();
-                    mTabAdapter.set(type, mCity);
+                    mTabAdapter.setData(type, mCity);
 
                     if (mIgnoreArea) {
 
@@ -239,9 +237,9 @@ public final class AddressDialog {
                         postDelayed(this::dismiss, 300);
 
                     } else {
-                        mTabAdapter.add(getString(R.string.address_hint));
+                        mTabAdapter.addData(getString(R.string.address_hint));
                         mTabAdapter.setSelectedPosition(type + 1);
-                        mAdapter.add(AddressManager.getAreaList(mAdapter.getItem(type).get(position).getNext()));
+                        mAdapter.addData(AddressManager.getAreaList(mAdapter.getItem(type).get(position).getNext()));
                         mViewPager.setCurrentItem(type + 1, smoothScroll);
                     }
 
@@ -249,7 +247,7 @@ public final class AddressDialog {
                 case 2:
                     // 记录当前选择的区域
                     mArea = mAdapter.getItem(type).get(position).getName();
-                    mTabAdapter.set(type, mArea);
+                    mTabAdapter.setData(type, mArea);
 
                     if (mListener != null) {
                         mListener.onSelected(getDialog(), mProvince, mCity, mArea);
@@ -293,7 +291,7 @@ public final class AddressDialog {
                     mViewPager.setCurrentItem(position);
                 }
 
-                mTabAdapter.set(position, getString(R.string.address_hint));
+                mTabAdapter.setData(position, getString(R.string.address_hint));
                 switch (position) {
                     case 0:
                         mProvince = mCity = mArea = null;
@@ -351,30 +349,30 @@ public final class AddressDialog {
         private OnSelectListener mListener;
 
         private RecyclerViewAdapter(Context context) {
-            super();
+            super(R.layout.address_page_item);
         }
 
         @NonNull
         @Override
-        protected ViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
-            return new ViewHolder(context);
+        protected ViewHolder onCreateDefViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = android.view.LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.address_page_item, parent, false);
+            return new ViewHolder(view);
         }
 
         @Override
-        protected void onBindViewHolder(@NonNull ViewHolder holder, int position, @Nullable List<AddressBean> item) {
-            holder.mAdapter.submitList(item);
+        protected void convert(@NonNull ViewHolder holder, List<AddressBean> item) {
+            holder.mAdapter.setList(item);
         }
 
-        private final class ViewHolder extends RecyclerView.ViewHolder {
+        private final class ViewHolder extends BaseViewHolder {
 
             private final AddressAdapter mAdapter;
 
-            ViewHolder(Context context) {
-                super(new RecyclerView(context));
+            ViewHolder(View itemView) {
+                super(itemView);
                 RecyclerView recyclerView = (RecyclerView) itemView;
-                recyclerView.setNestedScrollingEnabled(true);
-                recyclerView.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                recyclerView.setLayoutManager(new LinearLayoutManager(context));
+                recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
                 mAdapter = new AddressAdapter();
                 mAdapter.setOnItemClickListener((adapter, view, clickPosition) -> {
                     if (mListener == null) {
@@ -400,43 +398,16 @@ public final class AddressDialog {
         }
     }
 
-    private static final class AddressAdapter extends BaseQuickAdapter<AddressBean, AddressAdapter.ViewHolder> {
+    private static final class AddressAdapter extends BaseQuickAdapter<AddressBean, BaseViewHolder> {
 
         private AddressAdapter() {
-            super();
-        }
-
-        @NonNull
-        @Override
-        protected ViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
-            Resources resources = parent.getContext().getResources();
-            TextView textView = new TextView(parent.getContext());
-            textView.setGravity(Gravity.CENTER_VERTICAL);
-            textView.setBackgroundResource(R.drawable.transparent_selector);
-            textView.setTextColor(0xFF222222);
-            textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.x42));
-            textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            textView.setPadding((int) resources.getDimension(R.dimen.x60),
-                    (int) resources.getDimension(R.dimen.x30),
-                    (int) resources.getDimension(R.dimen.x60),
-                    (int) resources.getDimension(R.dimen.x30));
-            return new ViewHolder(textView);
+            super(R.layout.address_select_item);
         }
 
         @Override
-        protected void onBindViewHolder(@NonNull ViewHolder holder, int position, @Nullable AddressBean item) {
+        protected void convert(@NonNull BaseViewHolder holder, AddressBean item) {
             if (item != null) {
-                holder.mTextView.setText(item.getName());
-            }
-        }
-
-        private static final class ViewHolder extends RecyclerView.ViewHolder {
-
-            private final TextView mTextView;
-
-            private ViewHolder(View itemView) {
-                super(itemView);
-                mTextView = (TextView) itemView;
+                holder.setText(R.id.tv_address_name, item.getName());
             }
         }
     }

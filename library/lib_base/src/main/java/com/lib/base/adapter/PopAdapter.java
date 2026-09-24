@@ -7,14 +7,16 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.chad.library.adapter.base.viewholder.BaseViewHolder;
+import com.lib.base.R;
 import com.lib.base.bean.BtnBean;
 import com.lib.base.databinding.PopItemLayoutBinding;
 
+import java.util.Collection;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * ProjectName  TempleteProject-java
@@ -30,18 +32,18 @@ public class PopAdapter extends BaseQuickAdapter<BtnBean, PopAdapter.ViewHolder>
     private boolean hasLeftRes;
 
     public PopAdapter(@NonNull Context context, boolean hasSelect, boolean hasHtml) {
-        super();
+        super(R.layout.pop_item_layout);
         this.hasSelect = hasSelect;
         this.hasHtml = hasHtml;
     }
 
     @Override
-    public void submitList(@Nullable List<? extends BtnBean> list) {
+    public void setList(@Nullable Collection<? extends BtnBean> list) {
         checkResId(list);
-        super.submitList(list);
+        super.setList(list);
     }
 
-    private void checkResId(@Nullable List<? extends BtnBean> data) {
+    private void checkResId(@Nullable Collection<? extends BtnBean> data) {
         hasLeftRes = true;
         if (data == null) {
             hasLeftRes = false;
@@ -57,16 +59,16 @@ public class PopAdapter extends BaseQuickAdapter<BtnBean, PopAdapter.ViewHolder>
 
     @NonNull
     @Override
-    protected ViewHolder onCreateViewHolder(@NonNull Context context, @NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(PopItemLayoutBinding.inflate(LayoutInflater.from(context), parent, false));
+    protected ViewHolder onCreateDefViewHolder(@NonNull ViewGroup parent, int viewType) {
+        return new ViewHolder(PopItemLayoutBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
     }
 
     @Override
-    protected void onBindViewHolder(@NonNull ViewHolder holder, int position, @Nullable BtnBean item) {
-        holder.bind(position, item);
+    protected void convert(@NonNull ViewHolder holder, BtnBean item) {
+        holder.bind(holder.getBindingAdapterPosition(), item);
     }
 
-    final class ViewHolder extends RecyclerView.ViewHolder {
+    final class ViewHolder extends BaseViewHolder {
 
         private final PopItemLayoutBinding binding;
 
@@ -77,7 +79,8 @@ public class PopAdapter extends BaseQuickAdapter<BtnBean, PopAdapter.ViewHolder>
 
         void bind(int position, @Nullable BtnBean popBean) {
             try {
-                binding.line.setVisibility(position == getItems().size() - 1 ? View.INVISIBLE : View.VISIBLE);
+                List<BtnBean> data = getData();
+                binding.line.setVisibility(position == data.size() - 1 ? View.INVISIBLE : View.VISIBLE);
 
                 if (popBean == null) {
                     return;

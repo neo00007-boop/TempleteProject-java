@@ -59,7 +59,7 @@ public class GrassFreshActivity extends BaseActivity<GrassFreshActivityBinding> 
         for (int i = 0; i < 20; i++) {
             list.add("条目"+i);
         }
-        demoAdapter.submitList(list);
+        demoAdapter.setList(list);
     }
 
     @Override

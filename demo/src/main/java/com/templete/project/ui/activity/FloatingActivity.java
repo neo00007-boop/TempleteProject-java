@@ -3,6 +3,7 @@ package com.templete.project.ui.activity;
 import android.view.View;
 
 import com.lib.base.adapter.FloatingAdapter;
+import com.lib.base.bean.FloatingItem;
 import com.lib.base.ui.activity.BaseActivity;
 import com.lib.base.util.FreshUtil;
 import com.lib.base.util.ScreenUtil;
@@ -69,7 +70,7 @@ public class FloatingActivity extends BaseActivity<FloatingActivityBinding> {
             }
         });
         adapter.initRecyclerView1();
-        adapter.submitList(getList());
+        adapter.setList(getList());
         mViewBinding.recyclerView.setAdapter(adapter);
         // scrollListener
         mViewBinding.recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -101,10 +102,11 @@ public class FloatingActivity extends BaseActivity<FloatingActivityBinding> {
         });
     }
 
-    private List<String> getList() {
-        List<String> list = new ArrayList<>();
+    private List<FloatingItem> getList() {
+        List<FloatingItem> list = new ArrayList<>();
+        list.add(FloatingItem.header());
         for (int i = 0; i < 200; i++) {
-            list.add("item" + i);
+            list.add(FloatingItem.content("item" + i));
         }
         return list;
     }

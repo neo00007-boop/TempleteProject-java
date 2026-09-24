@@ -107,11 +107,11 @@ public class ScrollActivity extends BaseActivity<ScrollActivityBBinding> {
         for (int i = 0; i < 100; i++) {
             list.add("条目" + i);
         }
-        mViewBinding.recyclerView.postDelayed(() -> demoAdapter.submitList(list), 1000);
+        mViewBinding.recyclerView.postDelayed(() -> demoAdapter.setList(list), 1000);
         /*mViewBinding.recyclerView.postDelayed(new Runnable() {
             @Override
             public void run() {
-                demoAdapter.submitList(null);
+                demoAdapter.setNewInstance(null);
                 // demoAdapter.setStateViewLayout(...); // BRVAH empty/state view
             }
         }, 2500);*/
