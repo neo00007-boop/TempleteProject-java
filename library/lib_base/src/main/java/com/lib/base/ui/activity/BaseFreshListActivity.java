@@ -48,7 +48,10 @@ public abstract class BaseFreshListActivity<T, A extends BaseQuickAdapter<T, ? e
         return mHolderView;
     }
 
-    /** loading：{@link HolderView#LOADING_SHIMMER}（默认）或 {@link HolderView#LOADING_PROGRESS} */
+    /**
+     * loading：{@link HolderView#LOADING_SHIMMER}（默认）/
+     * {@link HolderView#LOADING_PROGRESS} / {@link HolderView#LOADING_NONE}
+     */
     protected int provideLoadingMode() {
         return HolderView.LOADING_SHIMMER;
     }

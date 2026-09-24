@@ -26,6 +26,8 @@ public class HolderView extends FrameLayout {
 
     public static final int LOADING_PROGRESS = 0;
     public static final int LOADING_SHIMMER = 1;
+    /** 不展示 loading UI（静默等数据 / 仅靠下拉 Header） */
+    public static final int LOADING_NONE = 2;
 
     private static final String NO_DATA_STR = "没有找到相关的内容~";
     private static final String ERROR_STR = "网络不太给力，请稍后再试~";
@@ -112,6 +114,13 @@ public class HolderView extends FrameLayout {
     public void showLoadingView() {
         retryEnabled = false;
         hideEmptyContent();
+        if (loadingMode == LOADING_NONE) {
+            binding.shimmerView.hide();
+            binding.statePanel.setVisibility(GONE);
+            changeState(GONE);
+            cancelFresh(true);
+            return;
+        }
         if (loadingMode == LOADING_SHIMMER) {
             binding.statePanel.setVisibility(GONE);
             if (binding.shimmerView.getSkeletonLayout() == 0) {
