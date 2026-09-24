@@ -1,5 +1,6 @@
 package com.templete.project.ui.fragment;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -10,6 +11,7 @@ import com.templete.project.databinding.ForthFragmentBinding;
 import com.templete.project.ui.activity.CanvasActivity;
 import com.templete.project.ui.activity.DataBusActivity;
 import com.templete.project.ui.activity.DatabindingActivity;
+import com.templete.project.ui.activity.FreshFragmentHostActivity;
 import com.templete.project.ui.activity.FreshListDemoActivity;
 import com.templete.project.ui.activity.FreshMultiListDemoActivity;
 import com.templete.project.ui.activity.IndexActivity;
@@ -46,6 +48,18 @@ public class ForthFragment extends BaseFragment<ForthFragmentBinding> {
     @Override
     public void initEvent() {
         setOnClickListener(v -> {
+                    if (v.equals(mViewBinding.tv13)) {
+                        Intent intent = new Intent(requireActivity(), FreshFragmentHostActivity.class);
+                        intent.putExtra(FreshFragmentHostActivity.EXTRA_MULTI, false);
+                        startActivity(intent);
+                        return;
+                    }
+                    if (v.equals(mViewBinding.tv14)) {
+                        Intent intent = new Intent(requireActivity(), FreshFragmentHostActivity.class);
+                        intent.putExtra(FreshFragmentHostActivity.EXTRA_MULTI, true);
+                        startActivity(intent);
+                        return;
+                    }
                     Class<? extends BaseActivity<?>> clazz = null;
                     if (v.equals(mViewBinding.tv1)) {
                         clazz = TxtActivity.class;
@@ -78,7 +92,8 @@ public class ForthFragment extends BaseFragment<ForthFragmentBinding> {
                 mViewBinding.tv3, mViewBinding.tv4,
                 mViewBinding.tv5, mViewBinding.tv6,
                 mViewBinding.tv8, mViewBinding.tv9,
-                mViewBinding.tv10, mViewBinding.tv11, mViewBinding.tv12);
+                mViewBinding.tv10, mViewBinding.tv11, mViewBinding.tv12,
+                mViewBinding.tv13, mViewBinding.tv14);
 
         mViewBinding.tv7.setOnClickListener(v -> IntentUtil.startActivity(requireActivity(), DatabindingActivity.class));
     }

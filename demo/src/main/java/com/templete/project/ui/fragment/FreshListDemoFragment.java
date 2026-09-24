@@ -1,31 +1,30 @@
-package com.templete.project.ui.activity;
+package com.templete.project.ui.fragment;
 
 import android.view.View;
 
-import androidx.annotation.NonNull;
-
 import com.lib.base.R;
 import com.lib.base.adapter.DemoAdapter;
-import com.lib.base.ui.activity.BaseFreshListActivity;
+import com.lib.base.ui.fragment.BaseFreshListFragment;
 import com.lib.base.util.DebugUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+
 /**
- * {@link BaseFreshListActivity} 用法示例（含 childClick）
+ * {@link BaseFreshListFragment} 用法示例（与 FreshListDemoActivity 对应）
  */
-public class FreshListDemoActivity extends BaseFreshListActivity<String, DemoAdapter> {
+public class FreshListDemoFragment extends BaseFreshListFragment<String, DemoAdapter> {
 
     @Override
     public void inits() {
-        setTitleStr("刷新列表基类 Demo");
     }
 
     @NonNull
     @Override
     protected DemoAdapter createAdapter() {
-        DemoAdapter adapter = new DemoAdapter(this);
+        DemoAdapter adapter = new DemoAdapter(requireContext());
         adapter.setShow(true);
         return adapter;
     }
@@ -57,7 +56,7 @@ public class FreshListDemoActivity extends BaseFreshListActivity<String, DemoAda
         List<String> list = new ArrayList<>();
         int start = (page - 1) * pageSize();
         for (int i = 0; i < pageSize(); i++) {
-            list.add("条目 " + (start + i + 1));
+            list.add("Fragment 条目 " + (start + i + 1));
         }
         return list;
     }

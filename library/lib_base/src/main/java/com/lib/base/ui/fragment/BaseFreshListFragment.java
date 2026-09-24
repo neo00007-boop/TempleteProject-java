@@ -1,9 +1,7 @@
-package com.lib.base.ui.activity;
+package com.lib.base.ui.fragment;
 
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
@@ -12,17 +10,23 @@ import com.lib.base.ui.fresh.FreshListEmptySupport;
 import com.lib.base.ui.widget.HolderView;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
+
 /**
- * 固定「SmartRefreshLayout + RecyclerView」的刷新列表 Activity。
+ * 固定「SmartRefreshLayout + RecyclerView」的刷新列表 Fragment，
+ * 布局与 {@link com.lib.base.ui.activity.BaseFreshListActivity} 共用。
  */
-public abstract class BaseFreshListActivity<T, A extends BaseQuickAdapter<T, ? extends BaseViewHolder>>
-        extends BaseFreshActivity<BaseFreshListLayoutBinding, T, A> {
+public abstract class BaseFreshListFragment<T, A extends BaseQuickAdapter<T, ? extends BaseViewHolder>>
+        extends BaseFreshFragment<BaseFreshListLayoutBinding, T, A> {
 
     private HolderView mHolderView;
 
     @Override
-    protected BaseFreshListLayoutBinding viewBinding() {
-        return BaseFreshListLayoutBinding.inflate(getLayoutInflater());
+    protected BaseFreshListLayoutBinding viewBinding(LayoutInflater inflater, ViewGroup container) {
+        return BaseFreshListLayoutBinding.inflate(inflater, container, false);
     }
 
     @NonNull
@@ -56,7 +60,7 @@ public abstract class BaseFreshListActivity<T, A extends BaseQuickAdapter<T, ? e
     protected void setupFreshList() {
         super.setupFreshList();
         mHolderView = FreshListEmptySupport.attach(
-                this, getAdapter(), provideLoadingMode(), provideShimmerLayout());
+                requireContext(), getAdapter(), provideLoadingMode(), provideShimmerLayout());
         mHolderView.setOnRetryClickListener(v -> onHolderRetryClick());
         showLoadingView();
     }

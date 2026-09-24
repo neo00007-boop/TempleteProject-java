@@ -1,8 +1,8 @@
-package com.templete.project.ui.activity;
+package com.templete.project.ui.fragment;
 
 import android.view.View;
 
-import com.lib.base.ui.activity.BaseFreshListActivity;
+import com.lib.base.ui.fragment.BaseFreshListFragment;
 import com.lib.base.util.DebugUtil;
 import com.templete.project.adapter.MultiItemDemoAdapter;
 import com.templete.project.adapter.MultiItemDemoAdapter.Item;
@@ -13,13 +13,12 @@ import java.util.List;
 import androidx.annotation.NonNull;
 
 /**
- * {@link BaseFreshListActivity} + {@link com.chad.library.adapter.base.BaseMultiItemQuickAdapter} 用法示例
+ * {@link BaseFreshListFragment} + MultiItem 用法示例（与 FreshMultiListDemoActivity 对应）
  */
-public class FreshMultiListDemoActivity extends BaseFreshListActivity<Item, MultiItemDemoAdapter> {
+public class FreshMultiListDemoFragment extends BaseFreshListFragment<Item, MultiItemDemoAdapter> {
 
     @Override
     public void inits() {
-        setTitleStr("多类型刷新列表 Demo");
     }
 
     @NonNull
@@ -51,9 +50,9 @@ public class FreshMultiListDemoActivity extends BaseFreshListActivity<Item, Mult
     private List<Item> mockData(int page) {
         List<Item> list = new ArrayList<>();
         int start = (page - 1) * pageSize();
-        list.add(Item.title("第 " + page + " 页分组"));
+        list.add(Item.title("Fragment 第 " + page + " 页分组"));
         for (int i = 0; i < pageSize() - 1; i++) {
-            list.add(Item.content("多类型条目 " + (start + i + 1)));
+            list.add(Item.content("Fragment 多类型条目 " + (start + i + 1)));
         }
         return list;
     }

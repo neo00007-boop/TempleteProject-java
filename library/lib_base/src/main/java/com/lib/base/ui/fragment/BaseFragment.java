@@ -19,6 +19,7 @@ import com.lib.base.ui.action.ClickAction;
 import com.lib.base.ui.action.InitAction;
 import com.lib.base.ui.action.KeyboardAction;
 import com.lib.base.ui.action.LogAction;
+import com.lib.base.ui.action.StatusAction;
 import com.lib.base.ui.action.ToastAction;
 import com.lib.base.ui.action.ViewBindingFragment;
 import com.lib.base.ui.activity.BaseActivity;
@@ -31,7 +32,8 @@ import com.lib.base.ui.activity.BaseActivity;
  * Created by Dave on 2017/1/11.
  */
 public abstract class BaseFragment<T extends ViewBinding> extends ViewBindingFragment<T>
-        implements InitAction, LogAction, ToastAction, KeyboardAction, BaseAction, ClickAction, BundleAction {
+        implements InitAction, LogAction, ToastAction, KeyboardAction, BaseAction, ClickAction,
+        BundleAction, StatusAction {
     public static final String TAG = "BaseFragment";
     protected Bundle bundle;
 

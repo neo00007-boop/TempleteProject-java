@@ -1,4 +1,4 @@
-package com.lib.base.ui.activity;
+package com.lib.base.ui.fragment;
 
 import android.content.Context;
 import android.view.View;
@@ -19,12 +19,12 @@ import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import java.util.List;
 
 /**
- * 刷新列表 Activity 基类，核心逻辑见 {@link FreshListKit}。
+ * 刷新列表 Fragment 基类，核心逻辑与 Activity 共用 {@link FreshListKit}。
  */
-public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends BaseQuickAdapter<T, ? extends BaseViewHolder>>
-        extends BaseActivity<VB> {
+public abstract class BaseFreshFragment<VB extends ViewBinding, T, A extends BaseQuickAdapter<T, ? extends BaseViewHolder>>
+        extends BaseFragment<VB> {
 
-    public static final String TAG = "BaseFreshActivity";
+    public static final String TAG = "BaseFreshFragment";
 
     private final FreshListKit<T, A> fresh = new FreshListKit<>(host(), this);
 
@@ -34,98 +34,98 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
             @NonNull
             @Override
             public Context getFreshContext() {
-                return BaseFreshActivity.this;
+                return requireContext();
             }
 
             @Override
             public boolean isFreshHostAlive() {
-                return !isFinishing() && !isDestroyed();
+                return isAdded() && getView() != null && !isDetached();
             }
 
             @NonNull
             @Override
             public SmartRefreshLayout provideRefreshLayout() {
-                return BaseFreshActivity.this.provideRefreshLayout();
+                return BaseFreshFragment.this.provideRefreshLayout();
             }
 
             @NonNull
             @Override
             public RecyclerView provideRecyclerView() {
-                return BaseFreshActivity.this.provideRecyclerView();
+                return BaseFreshFragment.this.provideRecyclerView();
             }
 
             @NonNull
             @Override
             public A createAdapter() {
-                return BaseFreshActivity.this.createAdapter();
+                return BaseFreshFragment.this.createAdapter();
             }
 
             @Override
             public void onListRequest(boolean isFresh) {
-                BaseFreshActivity.this.onListRequest(isFresh);
+                BaseFreshFragment.this.onListRequest(isFresh);
             }
 
             @Override
             public boolean enableRefresh() {
-                return BaseFreshActivity.this.enableRefresh();
+                return BaseFreshFragment.this.enableRefresh();
             }
 
             @Override
             public boolean enableLoadMore() {
-                return BaseFreshActivity.this.enableLoadMore();
+                return BaseFreshFragment.this.enableLoadMore();
             }
 
             @Override
             public boolean autoRefreshOnEnter() {
-                return BaseFreshActivity.this.autoRefreshOnEnter();
+                return BaseFreshFragment.this.autoRefreshOnEnter();
             }
 
             @Override
             public int pageSize() {
-                return BaseFreshActivity.this.pageSize();
+                return BaseFreshFragment.this.pageSize();
             }
 
             @Override
             public int startPage() {
-                return BaseFreshActivity.this.startPage();
+                return BaseFreshFragment.this.startPage();
             }
 
             @NonNull
             @Override
             public RecyclerView.LayoutManager createLayoutManager() {
-                return BaseFreshActivity.this.createLayoutManager();
+                return BaseFreshFragment.this.createLayoutManager();
             }
 
             @NonNull
             @Override
             public int[] provideChildClickViewIds() {
-                return BaseFreshActivity.this.provideChildClickViewIds();
+                return BaseFreshFragment.this.provideChildClickViewIds();
             }
 
             @NonNull
             @Override
             public int[] provideChildLongClickViewIds() {
-                return BaseFreshActivity.this.provideChildLongClickViewIds();
+                return BaseFreshFragment.this.provideChildLongClickViewIds();
             }
 
             @Override
             public void onListItemClick(@NonNull A adapter, @NonNull View view, int position) {
-                BaseFreshActivity.this.onListItemClick(adapter, view, position);
+                BaseFreshFragment.this.onListItemClick(adapter, view, position);
             }
 
             @Override
             public boolean onListItemLongClick(@NonNull A adapter, @NonNull View view, int position) {
-                return BaseFreshActivity.this.onListItemLongClick(adapter, view, position);
+                return BaseFreshFragment.this.onListItemLongClick(adapter, view, position);
             }
 
             @Override
             public void onListItemChildClick(@NonNull A adapter, @NonNull View view, int position) {
-                BaseFreshActivity.this.onListItemChildClick(adapter, view, position);
+                BaseFreshFragment.this.onListItemChildClick(adapter, view, position);
             }
 
             @Override
             public boolean onListItemChildLongClick(@NonNull A adapter, @NonNull View view, int position) {
-                return BaseFreshActivity.this.onListItemChildLongClick(adapter, view, position);
+                return BaseFreshFragment.this.onListItemChildLongClick(adapter, view, position);
             }
         };
     }
@@ -182,7 +182,7 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
 
     @NonNull
     protected RecyclerView.LayoutManager createLayoutManager() {
-        return new LinearLayoutManager(this);
+        return new LinearLayoutManager(requireContext());
     }
 
     /**
