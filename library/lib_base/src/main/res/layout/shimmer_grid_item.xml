@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/x1">
+
+    <com.skydoves.androidveil.VeilLayout
+        android:id="@+id/sl1"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="561:729"
+        app:layout_constraintEnd_toStartOf="@id/sl2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:veilLayout_baseAlpha="1.0"
+        app:veilLayout_baseColor="@color/cl_aaa"
+        app:veilLayout_defaultChildVisible="true"
+        app:veilLayout_dropOff="0.5"
+        app:veilLayout_highlightAlpha="1.0"
+        app:veilLayout_highlightColor="@color/cl_eee"
+        app:veilLayout_radius="0dp"
+        app:veilLayout_shimmerEnable="true"
+        app:veilLayout_veiled="true">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </FrameLayout>
+    </com.skydoves.androidveil.VeilLayout>
+
+    <com.skydoves.androidveil.VeilLayout
+        android:id="@+id/sl2"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/x1"
+        app:layout_constraintDimensionRatio="561:729"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/sl1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:veilLayout_baseAlpha="1.0"
+        app:veilLayout_baseColor="@color/cl_aaa"
+        app:veilLayout_defaultChildVisible="true"
+        app:veilLayout_dropOff="0.5"
+        app:veilLayout_highlightAlpha="1.0"
+        app:veilLayout_highlightColor="@color/cl_eee"
+        app:veilLayout_radius="0dp"
+        app:veilLayout_shimmerEnable="true"
+        app:veilLayout_veiled="true">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </FrameLayout>
+    </com.skydoves.androidveil.VeilLayout>
+
+    <!--<androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cl1"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="@id/sl1"
+        app:layout_constraintEnd_toEndOf="@id/sl1"
+        app:layout_constraintStart_toStartOf="@id/sl1"
+        app:layout_constraintTop_toTopOf="@id/sl1">
+
+        <TextView
+            android:id="@+id/tv1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="P"
+            android:textColor="#0E0E0E"
+            android:textSize="38sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/tv2"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="HardcodedText" />
+
+        <TextView
+            android:id="@+id/tv2"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/shimmer_sel"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="站"
+            android:textColor="#171717"
+            android:textSize="38sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/tv1"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="HardcodedText" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cl2"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/x1"
+        app:layout_constraintBottom_toBottomOf="@id/sl2"
+        app:layout_constraintEnd_toEndOf="@id/sl2"
+        app:layout_constraintStart_toStartOf="@id/sl2"
+        app:layout_constraintTop_toTopOf="@id/sl2">
+
+        <TextView
+            android:id="@+id/tv3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="P"
+            android:textColor="#0E0E0E"
+            android:textSize="38sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/tv4"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="HardcodedText" />
+
+        <TextView
+            android:id="@+id/tv4"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/shimmer_sel"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="站"
+            android:textColor="#171717"
+            android:textSize="38sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/tv3"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="HardcodedText" />
+    </androidx.constraintlayout.widget.ConstraintLayout>-->
+</androidx.constraintlayout.widget.ConstraintLayout>

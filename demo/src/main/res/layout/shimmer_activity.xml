@@ -10,11 +10,13 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <com.templete.project.ui.widget.ShimmerView
+        <com.lib.base.ui.widget.ShimmerView
             android:id="@+id/shimmer_view"
             android:layout_width="match_parent"
             android:layout_height="@dimen/y1300"
-            android:visibility="visible" />
+            android:visibility="visible"
+            app:shimmerAutoStart="true"
+            app:shimmerType="grid" />
 
         <com.skydoves.androidveil.VeilLayout
             android:id="@+id/sl1"

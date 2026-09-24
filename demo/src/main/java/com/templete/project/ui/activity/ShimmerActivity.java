@@ -2,38 +2,33 @@ package com.templete.project.ui.activity;
 
 import com.lib.base.bean.BtnBean;
 import com.lib.base.ui.activity.BaseActivity;
+import com.lib.base.ui.widget.ShimmerView;
 import com.templete.project.databinding.ShimmerActivityBinding;
-import com.templete.project.ui.widget.ShimmerView;
 
 /**
- * PackageName  com.templete.project.ui.activity
- * ProjectName  TempleteProject-java
- * Date         2022/11/17.
- *
- * @author xwchen
+ * 骨架屏 Demo
  */
-
 public class ShimmerActivity extends BaseActivity<ShimmerActivityBinding> {
     @Override
     public void inits() {
         setRightClickViews((position, view) -> {
-            mViewBinding.shimmerView.init(position == 0 ? ShimmerView.TYPE_GRID : ShimmerView.TYPE_LIST);
+            mViewBinding.shimmerView.setType(position == 0 ? ShimmerView.TYPE_GRID : ShimmerView.TYPE_LIST);
+            mViewBinding.shimmerView.show();
         }, false, new BtnBean("grid"), new BtnBean("list"));
     }
 
     @Override
     public void initView() {
-        mViewBinding.shimmerView.init(ShimmerView.TYPE_GRID);
+        mViewBinding.shimmerView.setType(ShimmerView.TYPE_GRID);
+        mViewBinding.shimmerView.show();
     }
 
     @Override
     public void initEvent() {
-
     }
 
     @Override
     public void initData() {
-
     }
 
     @Override

@@ -8,6 +8,22 @@
         <attr name="strLoading" format="string" />
         <attr name="strNoData" format="string" />
         <attr name="strError" format="string" />
+        <!-- loading 样式：progress 居中转圈；shimmer 骨架屏 -->
+        <attr name="holderLoadingMode">
+            <enum name="progress" value="0" />
+            <enum name="shimmer" value="1" />
+        </attr>
+        <attr name="holderShimmerLayout" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="ShimmerView">
+        <!-- 直接指定骨架布局；优先于 shimmerType -->
+        <attr name="shimmerLayout" format="reference" />
+        <attr name="shimmerType">
+            <enum name="list" value="0" />
+            <enum name="grid" value="1" />
+        </attr>
+        <attr name="shimmerAutoStart" format="boolean" />
     </declare-styleable>
     <!--播放按钮-->
     <declare-styleable name="PlayButton">

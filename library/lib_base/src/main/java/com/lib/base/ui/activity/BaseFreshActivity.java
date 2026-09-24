@@ -2,6 +2,13 @@ package com.lib.base.ui.activity;
 
 import android.view.View;
 
+import androidx.annotation.IdRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewbinding.ViewBinding;
+
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.lib.base.ui.widget.HolderView;
@@ -13,13 +20,6 @@ import com.scwang.smart.refresh.layout.listener.OnRefreshLoadMoreListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import androidx.annotation.IdRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.viewbinding.ViewBinding;
 
 /**
  * 刷新列表基类（BaseActivity + FreshUtil + BaseQuickAdapter + item/childClick）。
@@ -73,6 +73,10 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
         return true;
     }
 
+    /**
+     * 进入页刷新方式：true=下拉 Header 动画；false=静默请求（默认，配合 shimmer）。
+     * 进入页都会请求一次。
+     */
     protected boolean autoRefreshOnEnter() {
         return false;
     }
@@ -125,6 +129,11 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
         return null;
     }
 
+    @Override
+    public void onHolderRetryClick() {
+        freshData();
+    }
+
     // ======================== 生命周期 ========================
 
     @Override
@@ -138,8 +147,10 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
 
     @Override
     public void initData() {
-        if (autoRefreshOnEnter() && enableRefresh()) {
+        if (autoRefreshOnEnter() && enableRefresh() && mRefreshLayout != null) {
             FreshUtil.autoRefresh(mRefreshLayout);
+        } else {
+            triggerRefresh();
         }
     }
 
@@ -168,6 +179,7 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
         mRefreshLayout = provideRefreshLayout();
         mRecyclerView = provideRecyclerView();
         mAdapter = createAdapter();
+        mPage = startPage();
 
         mRecyclerView.setLayoutManager(createLayoutManager());
         mRecyclerView.setAdapter(mAdapter);
@@ -177,11 +189,17 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
         mRefreshLayout.setOnRefreshLoadMoreListener(new OnRefreshLoadMoreListener() {
             @Override
             public void onRefresh(@NonNull RefreshLayout refreshLayout) {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
                 triggerRefresh();
             }
 
             @Override
             public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
                 triggerLoadMore();
             }
         });
@@ -207,15 +225,10 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
 
     // ======================== 触发 ========================
 
-    /** 下拉刷新（手势已由 SmartRefreshLayout 持有刷新态） */
+    /** 刷新（程序调用为静默；用户下拉时由 SmartRefreshLayout 自带 Header 动画） */
     protected void triggerRefresh() {
         mPage = startPage();
         onListRequest(true);
-    }
-
-    /** 静默刷新（无手势动画，结束时按 {@link #mPage} 收尾） */
-    protected void triggerRefreshSilent() {
-        triggerRefresh();
     }
 
     /** 上拉加载更多 */
@@ -243,6 +256,9 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
     }
 
     private void applySuccess(@NonNull List<T> list, boolean noMore) {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
         if (isFreshPage()) {
             mAdapter.setList(new ArrayList<>(list));
             if (mAdapter.getData().isEmpty()) {
@@ -263,6 +279,9 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
 
     /** 请求失败 */
     protected void onRequestFailure() {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
         if (!isFreshPage()) {
             rollbackPage();
         }

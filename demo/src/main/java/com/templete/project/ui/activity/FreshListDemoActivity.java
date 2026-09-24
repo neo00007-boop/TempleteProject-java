@@ -31,11 +31,6 @@ public class FreshListDemoActivity extends BaseFreshListActivity<String, DemoAda
     }
 
     @Override
-    protected boolean autoRefreshOnEnter() {
-        return true;
-    }
-
-    @Override
     protected void onListRequest(boolean isFresh) {
         mViewBinding.getRoot().postDelayed(() -> {
             if (!isFresh && mPage > 3) {

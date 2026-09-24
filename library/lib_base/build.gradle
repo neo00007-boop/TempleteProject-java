@@ -142,4 +142,6 @@ dependencies {
     // api 'com.kunminx.arch:unpeek-livedata:7.8.0'
     // 3.0.15+ 依赖 kotlin-stdlib 2.2.x，与工程 Kotlin 1.8.22 不兼容；3.0.14 API 同属 3.x
     api "io.github.cymchad:BaseRecyclerViewAdapterHelper:3.0.14"
+    // skeleton / shimmer
+    api 'com.github.skydoves:androidveil:1.1.3'
 }

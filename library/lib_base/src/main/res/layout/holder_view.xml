@@ -1,99 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/holder_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    android:gravity="center_horizontal"
-    android:orientation="vertical"
     android:visibility="gone"
     tools:visibility="visible">
 
-    <View
+    <!-- shimmer 骨架：仅 loadingMode=shimmer 时 inflate，默认不预加载 -->
+    <com.lib.base.ui.widget.ShimmerView
+        android:id="@+id/shimmer_view"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1.65" />
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:shimmerAutoStart="false" />
 
-    <View
-        android:id="@+id/holder_loading"
+    <!-- 居中状态：progress / 无数据 / 错误 -->
+    <LinearLayout
+        android:id="@+id/state_panel"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1.0" />
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1.65" />
 
-        <!--<com.hjq.shape.layout.ShapeLinearLayout
-            android:id="@+id/ll_loading"
-            android:layout_width="@dimen/x340"
+        <View
+            android:id="@+id/holder_loading"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1.0" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <include
+                android:id="@+id/loading_dialog"
+                layout="@layout/loading_dialog"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <ImageView
+                android:id="@+id/iv"
+                android:layout_width="@dimen/x800"
+                android:layout_height="@dimen/x800"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone"
+                tools:ignore="ContentDescription"
+                tools:visibility="gone" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/tv"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:paddingTop="@dimen/x15"
+            android:layout_marginTop="-30dp"
+            android:includeFontPadding="false"
+            android:text="还没有收藏呐~"
+            android:textColor="@color/cl_666"
+            android:textSize="@dimen/x50"
+            android:textStyle="normal"
             android:visibility="gone"
-            app:shape_radius="@dimen/x30"
-            app:shape_solidColor="#A6000000"
-            tools:visibility="visible">
-
-            <com.airbnb.lottie.LottieAnimationView
-                android:id="@+id/iv_loading"
-                android:layout_width="@dimen/x200"
-                android:layout_height="@dimen/x200"
-                android:layout_margin="@dimen/x20"
-                app:lottie_autoPlay="true"
-                app:lottie_loop="true"
-                app:lottie_speed="1.2" />
-
-            <TextView
-                android:id="@+id/tv_loading"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_x1"
-                android:layout_marginBottom="@dimen/x40"
-                android:gravity="center_horizontal"
-                android:includeFontPadding="false"
-                android:text="加载中..."
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                android:textStyle="normal"
-                tools:ignore="HardcodedText" />
-        </com.hjq.shape.layout.ShapeLinearLayout>-->
-        <include
-            android:id="@+id/loading_dialog"
-            layout="@layout/loading_dialog"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <ImageView
-            android:id="@+id/iv"
-            android:layout_width="@dimen/x800"
-            android:layout_height="@dimen/x800"
-            android:layout_gravity="center_horizontal"
-            android:visibility="gone"
-            tools:ignore="ContentDescription"
+            tools:ignore="HardcodedText"
             tools:visibility="gone" />
 
-    </FrameLayout>
-
-    <TextView
-        android:id="@+id/tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="-30dp"
-        android:includeFontPadding="false"
-        android:text="还没有收藏呐~"
-        android:textColor="@color/cl_666"
-        android:textSize="@dimen/x50"
-        android:textStyle="normal"
-        android:visibility="gone"
-        tools:ignore="HardcodedText"
-        tools:visibility="gone" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="3.5" />
-</LinearLayout>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="3.5" />
+    </LinearLayout>
+</FrameLayout>

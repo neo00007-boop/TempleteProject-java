@@ -23,6 +23,12 @@ public interface StatusAction {
     }
 
     /**
+     * 空数据 / 错误态点击重试。默认空实现，列表基类里会走 {@code freshData()}。
+     */
+    default void onHolderRetryClick() {
+    }
+
+    /**
      * loading
      */
     default void showLoadingView() {
@@ -38,6 +44,7 @@ public interface StatusAction {
     default void showErrorView() {
         HolderView holderView = getHolderView();
         if (holderView != null) {
+            holderView.setOnRetryClickListener(v -> onHolderRetryClick());
             holderView.showErrorView();
         }
     }
@@ -48,6 +55,7 @@ public interface StatusAction {
     default void showNoDataView() {
         HolderView holderView = getHolderView();
         if (holderView != null) {
+            holderView.setOnRetryClickListener(v -> onHolderRetryClick());
             holderView.showNoDataView();
         }
     }

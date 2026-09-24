@@ -29,11 +29,6 @@ public class FreshMultiListDemoActivity extends BaseFreshListActivity<Item, Mult
     }
 
     @Override
-    protected boolean autoRefreshOnEnter() {
-        return true;
-    }
-
-    @Override
     protected void onListRequest(boolean isFresh) {
         mViewBinding.getRoot().postDelayed(() -> {
             if (!isFresh && mPage > 3) {

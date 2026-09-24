@@ -63,7 +63,12 @@ public class MvpActivity extends BaseMvpActivity<ActivityDemoBinding, DemoContra
 
     @Override
     public void initView() {
-        //mViewBinding.refreshLayout.getRoot().setFresh(true);//允许刷新
+    }
+
+    @Override
+    public void onHolderRetryClick() {
+        showLoadingView();
+        mPresenter.loadData();
     }
 
     @Override
