@@ -8,6 +8,7 @@ import com.templete.project.bean.NavBean;
 import com.templete.project.databinding.NavsActivityBinding;
 import com.templete.project.ui.fragment.ContainerFragment;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,81 +50,50 @@ public class NavsActivity extends BaseActivity<NavsActivityBinding> {
 
     @Override
     public void initData() {
-        NavBean nav1 = new NavBean("张大三", "data", true, null);
-        NavBean nav11 = new NavBean("张一", "data", true, null);
-        NavBean nav12 = new NavBean("张二", "data", false, null);
-        NavBean nav13 = new NavBean("张三", "data", false, null);
-        NavBean nav14 = new NavBean("张四", "data", false, null);
-        NavBean nav15 = new NavBean("张五", "data", false, null);
-        NavBean nav16 = new NavBean("张六", "data", false, null);
-        NavBean nav17 = new NavBean("张七", "data", false, null);
-        nav1.navs = Arrays.asList(nav11, nav12, nav13, nav14, nav15, nav16, nav17);
+        // 一级 → 二级 → 三级；叶子无子节点时展示 ContentFragment
+        navs = Arrays.asList(
+                buildFamily("张", "大三", true),
+                buildFamily("李", "大四", false),
+                buildFamily("王", "大五", false),
+                buildFamily("赵", "大六", false),
+                buildFamily("孙", "大七", false),
+                buildFamily("周", "大八", false)
+        );
+        bindIndexPair(navs, -1);
 
-        NavBean nav2 = new NavBean("李大四", "data", false, null);
-        NavBean nav21 = new NavBean("李一", "data", true, null);
-        NavBean nav22 = new NavBean("李二", "data", false, null);
-        NavBean nav23 = new NavBean("李三", "data", false, null);
-        NavBean nav24 = new NavBean("李四", "data", false, null);
-        NavBean nav25 = new NavBean("李五", "data", false, null);
-        NavBean nav26 = new NavBean("李六", "data", false, null);
-        NavBean nav27 = new NavBean("李七", "data", false, null);
-        nav2.navs = Arrays.asList(nav21, nav22, nav23, nav24, nav25, nav26, nav27);
-
-        NavBean nav3 = new NavBean("王大五", "data", false, null);
-        NavBean nav31 = new NavBean("王一", "data", true, null);
-        NavBean nav32 = new NavBean("王二", "data", false, null);
-        NavBean nav33 = new NavBean("王三", "data", false, null);
-        NavBean nav34 = new NavBean("王四", "data", false, null);
-        NavBean nav35 = new NavBean("王五", "data", false, null);
-        NavBean nav36 = new NavBean("王六", "data", false, null);
-        NavBean nav37 = new NavBean("王七", "data", false, null);
-        nav3.navs = Arrays.asList(nav31, nav32, nav33, nav34, nav35, nav36, nav37);
-
-        NavBean nav4 = new NavBean("赵大六", "data", false, null);
-        NavBean nav41 = new NavBean("赵一", "data", true, null);
-        NavBean nav42 = new NavBean("赵二", "data", false, null);
-        NavBean nav43 = new NavBean("赵三", "data", false, null);
-        NavBean nav44 = new NavBean("赵四", "data", false, null);
-        NavBean nav45 = new NavBean("赵五", "data", false, null);
-        NavBean nav46 = new NavBean("赵六", "data", false, null);
-        NavBean nav47 = new NavBean("赵七", "data", false, null);
-        nav4.navs = Arrays.asList(nav41, nav42, nav43, nav44, nav45, nav46, nav47);
-
-        NavBean nav5 = new NavBean("孙大七", "data", false, null);
-        NavBean nav51 = new NavBean("孙一", "data", true, null);
-        NavBean nav52 = new NavBean("孙二", "data", false, null);
-        NavBean nav53 = new NavBean("孙三", "data", false, null);
-        NavBean nav54 = new NavBean("孙四", "data", false, null);
-        NavBean nav55 = new NavBean("孙五", "data", false, null);
-        NavBean nav56 = new NavBean("孙六", "data", false, null);
-        NavBean nav57 = new NavBean("孙七", "data", false, null);
-        nav5.navs = Arrays.asList(nav51, nav52, nav53, nav54, nav55, nav56, nav57);
-
-        NavBean nav6 = new NavBean("周大八", "data", false, null);
-        NavBean nav61 = new NavBean("周一", "data", true, null);
-        NavBean nav62 = new NavBean("周二", "data", false, null);
-        NavBean nav63 = new NavBean("周三", "data", false, null);
-        NavBean nav64 = new NavBean("周四", "data", false, null);
-        NavBean nav65 = new NavBean("周五", "data", false, null);
-        NavBean nav66 = new NavBean("周六", "data", false, null);
-        NavBean nav67 = new NavBean("周七", "data", false, null);
-        nav6.navs = Arrays.asList(nav61, nav62, nav63, nav64, nav65, nav66, nav67);
-
-        navs = Arrays.asList(nav1, nav2, nav3, nav4, nav5, nav6);
-        for (int i = 0; i < navs.size(); i++) {
-            NavBean beanOut = navs.get(i);
-            beanOut.indexPair = new Pair<>(-1, i);
-            if (beanOut.navs != null && !beanOut.navs.isEmpty()) {
-                for (int j = 0; j < beanOut.navs.size(); j++) {
-                    NavBean beanIn = beanOut.navs.get(j);
-                    beanIn.indexPair = new Pair<>(i, j);
-                }
-            }
-        }
-
-        // containerFragment = ContainerFragment.newInstance(navs, false);
-        containerFragment = ContainerFragment.newInstance(navs, true);
+        containerFragment = ContainerFragment.newInstance(navs, false);
         getSupportFragmentManager().beginTransaction().replace(R.id.fl_container, containerFragment).commitNow();
+    }
+
+    /** 一级：姓+排行；二级：姓+一~七；三级：二级名+甲乙丙 */
+    private NavBean buildFamily(String surname, String rank, boolean select) {
+        NavBean root = new NavBean(surname + rank, "data", select, null);
+        String[] seconds = {"一", "二", "三", "四", "五", "六", "七"};
+        String[] thirds = {"甲", "乙", "丙"};
+        List<NavBean> level2 = new ArrayList<>(seconds.length);
+        for (int i = 0; i < seconds.length; i++) {
+            String l2Name = surname + seconds[i];
+            NavBean l2 = new NavBean(l2Name, "data", i == 0, null);
+            List<NavBean> level3 = new ArrayList<>(thirds.length);
+            for (int j = 0; j < thirds.length; j++) {
+                level3.add(new NavBean(l2Name + thirds[j], "data", j == 0, null));
+            }
+            l2.navs = level3;
+            level2.add(l2);
+        }
+        root.navs = level2;
+        return root;
+    }
+
+    private void bindIndexPair(List<NavBean> list, int parentIndex) {
+        if (list == null) {
+            return;
+        }
+        for (int i = 0; i < list.size(); i++) {
+            NavBean bean = list.get(i);
+            bean.indexPair = new Pair<>(parentIndex, i);
+            bindIndexPair(bean.navs, i);
+        }
     }
 
     public NavBean getDefaultFirstNav() {

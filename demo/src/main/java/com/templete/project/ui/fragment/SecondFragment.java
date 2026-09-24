@@ -71,7 +71,7 @@ public class SecondFragment extends BaseFragment<SecondFragmentBinding> {
                     } */ else if (v.equals(mViewBinding.tv10)) {
                         VideoBuilder.newBuilder()
                                 .setVideoTitle("速度与激情特别行动")
-                                .setVideoSource("http://vfx.mtime.cn/Video/2019/06/29/mp4/190629004821240734.mp4")
+                                .setVideoSource("https://media.w3.org/2010/05/sintel/trailer.mp4")
                                 //.setActivityOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
                                 .setActivityOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
                                 .start(requireActivity());

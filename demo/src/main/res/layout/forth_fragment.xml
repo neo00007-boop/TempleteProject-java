@@ -86,7 +86,7 @@
                 app:shape_textColor="@color/white"
                 tools:ignore="HardcodedText" />
 
-            <com.hjq.shape.view.ShapeTextView
+            <!--<com.hjq.shape.view.ShapeTextView
                 android:id="@+id/tv5"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/x150"
@@ -99,7 +99,7 @@
                 app:shape_radius="@dimen/x75"
                 app:shape_solidColor="@color/common_accent_color"
                 app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />
+                tools:ignore="HardcodedText" />-->
 
             <com.hjq.shape.view.ShapeTextView
                 android:id="@+id/tv6"

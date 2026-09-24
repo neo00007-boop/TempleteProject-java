@@ -15,12 +15,11 @@ import com.templete.project.ui.activity.FreshFragmentHostActivity;
 import com.templete.project.ui.activity.FreshListDemoActivity;
 import com.templete.project.ui.activity.FreshMultiListDemoActivity;
 import com.templete.project.ui.activity.IndexActivity;
-import com.templete.project.ui.activity.PinnedActivity;
 import com.templete.project.ui.activity.NavsActivity;
+import com.templete.project.ui.activity.PinnedActivity;
 import com.templete.project.ui.activity.ShimmerActivity;
 import com.templete.project.ui.activity.SoftActivity;
 import com.templete.project.ui.activity.TxtActivity;
-import com.templete.project.ui.activity.WrapActivity;
 
 /**
  * PackageName  com.templete.project.ui.fragment
@@ -69,8 +68,8 @@ public class ForthFragment extends BaseFragment<ForthFragmentBinding> {
                         clazz = SoftActivity.class;
                     } else if (v.equals(mViewBinding.tv4)) {
                         clazz = CanvasActivity.class;
-                    } else if (v.equals(mViewBinding.tv5)) {
-                        clazz = WrapActivity.class;
+//                    } else if (v.equals(mViewBinding.tv5)) {
+//                        clazz = WrapActivity.class;
                     } else if (v.equals(mViewBinding.tv6)) {
                         clazz = NavsActivity.class;
                     } else if (v.equals(mViewBinding.tv8)) {
@@ -90,7 +89,7 @@ public class ForthFragment extends BaseFragment<ForthFragmentBinding> {
                 },
                 mViewBinding.tv1, mViewBinding.tv2,
                 mViewBinding.tv3, mViewBinding.tv4,
-                mViewBinding.tv5, mViewBinding.tv6,
+                /*mViewBinding.tv5,*/ mViewBinding.tv6,
                 mViewBinding.tv8, mViewBinding.tv9,
                 mViewBinding.tv10, mViewBinding.tv11, mViewBinding.tv12,
                 mViewBinding.tv13, mViewBinding.tv14);
