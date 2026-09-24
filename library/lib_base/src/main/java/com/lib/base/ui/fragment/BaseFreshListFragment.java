@@ -3,17 +3,17 @@ package com.lib.base.ui.fragment;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.lib.base.databinding.BaseFreshListLayoutBinding;
 import com.lib.base.ui.fresh.FreshListEmptySupport;
 import com.lib.base.ui.widget.HolderView;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
-
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * 固定「SmartRefreshLayout + RecyclerView」的刷新列表 Fragment，
@@ -53,7 +53,7 @@ public abstract class BaseFreshListFragment<T, A extends BaseQuickAdapter<T, ? e
 
     @LayoutRes
     protected int provideShimmerLayout() {
-        return FreshListEmptySupport.defaultShimmerLayout();
+        return FreshListEmptySupport.defaultShimmerLayoutGrid();
     }
 
     @Override

@@ -3,14 +3,14 @@ package com.lib.base.ui.fresh;
 import android.content.Context;
 import android.view.ViewGroup;
 
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.lib.base.R;
 import com.lib.base.ui.widget.HolderView;
 import com.lib.base.ui.widget.ShimmerView;
-
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
 
 /**
  * 固定布局刷新列表：组装 emptyView（HolderView + shimmer）。
@@ -45,5 +45,11 @@ public final class FreshListEmptySupport {
     @LayoutRes
     public static int defaultShimmerLayout() {
         return R.layout.viewholder_shimmer_list;
+    }
+
+
+    @LayoutRes
+    public static int defaultShimmerLayoutGrid() {
+        return R.layout.viewholder_shimmer_grid;
     }
 }
