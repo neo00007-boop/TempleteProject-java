@@ -7,10 +7,10 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.chad.library.adapter.base.BaseMultiItemQuickAdapter;
+import com.chad.library.adapter.base.entity.MultiItemEntity;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.hjq.shape.view.recyclerList.CenterLayoutManager;
 import com.lib.base.R;
-import com.lib.base.bean.FloatingItem;
 import com.lib.base.databinding.DemoLayoutBinding;
 import com.lib.base.databinding.HomeHeaderLayoutBinding;
 import com.lib.base.util.OUtil;
@@ -27,7 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 /**
  * 悬浮导航 + 列表（BaseMultiItemQuickAdapter）
  */
-public class FloatingAdapter extends BaseMultiItemQuickAdapter<FloatingItem, BaseViewHolder> {
+public class FloatingAdapter extends BaseMultiItemQuickAdapter<FloatingAdapter.FloatingItem, BaseViewHolder> {
     public static final String TAG = "FloatingAdapter";
     public static final int TYPE_HEADER = FloatingItem.TYPE_HEADER;
     public static final int TYPE_ITEM = FloatingItem.TYPE_ITEM;
@@ -203,5 +203,32 @@ public class FloatingAdapter extends BaseMultiItemQuickAdapter<FloatingItem, Bas
         void middleBarClick(int position);
 
         void itemClick(int position);
+    }
+
+    /** 悬浮列表多类型 item（header / content） */
+    public static class FloatingItem implements MultiItemEntity {
+        public static final int TYPE_HEADER = 0;
+        public static final int TYPE_ITEM = 1;
+
+        private final int itemType;
+        public final String text;
+
+        public FloatingItem(int itemType, String text) {
+            this.itemType = itemType;
+            this.text = text;
+        }
+
+        public static FloatingItem header() {
+            return new FloatingItem(TYPE_HEADER, "");
+        }
+
+        public static FloatingItem content(String text) {
+            return new FloatingItem(TYPE_ITEM, text);
+        }
+
+        @Override
+        public int getItemType() {
+            return itemType;
+        }
     }
 }

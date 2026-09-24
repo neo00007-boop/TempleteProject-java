@@ -10,7 +10,7 @@ import com.chad.library.adapter.base.BaseMultiItemQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.hjq.shape.view.NavigationBar;
 import com.lib.base.R;
-import com.lib.base.bean.FloatingItem;
+import com.lib.base.adapter.FloatingAdapter.FloatingItem;
 import com.lib.base.databinding.DemoLayoutBinding;
 import com.lib.base.databinding.HomeHeaderLayoutNewBinding;
 import com.lib.base.util.ViewUtil;

@@ -3,7 +3,7 @@ package com.templete.project.ui.activity;
 import android.view.View;
 
 import com.lib.base.adapter.FloatingAdapter;
-import com.lib.base.bean.FloatingItem;
+import com.lib.base.adapter.FloatingAdapter.FloatingItem;
 import com.lib.base.ui.activity.BaseActivity;
 import com.lib.base.util.FreshUtil;
 import com.lib.base.util.ScreenUtil;

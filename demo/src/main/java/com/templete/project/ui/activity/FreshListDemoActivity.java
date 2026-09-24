@@ -2,14 +2,14 @@ package com.templete.project.ui.activity;
 
 import android.view.View;
 
+import androidx.annotation.NonNull;
+
 import com.lib.base.adapter.DemoAdapter;
 import com.lib.base.ui.activity.BaseFreshListActivity;
 import com.lib.base.util.DebugUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.annotation.NonNull;
 
 /**
  * {@link BaseFreshListActivity} 用法示例
@@ -37,10 +37,12 @@ public class FreshListDemoActivity extends BaseFreshListActivity<String, DemoAda
         // TODO: 替换为真实接口，结束后 onRequestSuccess / onRequestFailure
         mViewBinding.getRoot().postDelayed(() -> {
             if (!isFresh && mPage > 3) {
-                onRequestSuccess(new ArrayList<>(), true);
+//                onRequestSuccess(new ArrayList<>(), true);
                 return;
             }
-            onRequestSuccess(mockData(mPage));
+//            onRequestSuccess(mockData(mPage));
+//            onRequestFailure();
+            onRequestSuccess(null);
         }, 800);
     }
 

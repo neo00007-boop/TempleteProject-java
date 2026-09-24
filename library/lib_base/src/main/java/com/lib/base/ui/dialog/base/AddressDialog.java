@@ -349,15 +349,13 @@ public final class AddressDialog {
         private OnSelectListener mListener;
 
         private RecyclerViewAdapter(Context context) {
-            super(R.layout.address_page_item);
+            super(android.R.layout.simple_list_item_1);
         }
 
         @NonNull
         @Override
         protected ViewHolder onCreateDefViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = android.view.LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.address_page_item, parent, false);
-            return new ViewHolder(view);
+            return new ViewHolder(parent.getContext());
         }
 
         @Override
@@ -369,10 +367,13 @@ public final class AddressDialog {
 
             private final AddressAdapter mAdapter;
 
-            ViewHolder(View itemView) {
-                super(itemView);
+            ViewHolder(Context context) {
+                super(new RecyclerView(context));
                 RecyclerView recyclerView = (RecyclerView) itemView;
-                recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
+                recyclerView.setNestedScrollingEnabled(true);
+                recyclerView.setLayoutParams(new RecyclerView.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                recyclerView.setLayoutManager(new LinearLayoutManager(context));
                 mAdapter = new AddressAdapter();
                 mAdapter.setOnItemClickListener((adapter, view, clickPosition) -> {
                     if (mListener == null) {
@@ -398,16 +399,43 @@ public final class AddressDialog {
         }
     }
 
-    private static final class AddressAdapter extends BaseQuickAdapter<AddressBean, BaseViewHolder> {
+    private static final class AddressAdapter extends BaseQuickAdapter<AddressBean, AddressAdapter.ViewHolder> {
 
         private AddressAdapter() {
-            super(R.layout.address_select_item);
+            super(android.R.layout.simple_list_item_1);
+        }
+
+        @NonNull
+        @Override
+        protected ViewHolder onCreateDefViewHolder(@NonNull ViewGroup parent, int viewType) {
+            android.content.res.Resources resources = parent.getContext().getResources();
+            TextView textView = new TextView(parent.getContext());
+            textView.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            textView.setBackgroundResource(R.drawable.transparent_selector);
+            textView.setTextColor(0xFF222222);
+            textView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.x42));
+            textView.setLayoutParams(new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            textView.setPadding((int) resources.getDimension(R.dimen.x60),
+                    (int) resources.getDimension(R.dimen.x30),
+                    (int) resources.getDimension(R.dimen.x60),
+                    (int) resources.getDimension(R.dimen.x30));
+            return new ViewHolder(textView);
         }
 
         @Override
-        protected void convert(@NonNull BaseViewHolder holder, AddressBean item) {
+        protected void convert(@NonNull ViewHolder holder, AddressBean item) {
             if (item != null) {
-                holder.setText(R.id.tv_address_name, item.getName());
+                holder.mTextView.setText(item.getName());
+            }
+        }
+
+        private static final class ViewHolder extends BaseViewHolder {
+            private final TextView mTextView;
+
+            private ViewHolder(View itemView) {
+                super(itemView);
+                mTextView = (TextView) itemView;
             }
         }
     }

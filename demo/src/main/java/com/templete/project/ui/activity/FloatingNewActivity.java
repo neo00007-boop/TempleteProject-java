@@ -5,7 +5,7 @@ import android.view.MotionEvent;
 
 import com.hjq.shape.view.NavigationBar;
 import com.lib.base.adapter.FloatingNewAdapter;
-import com.lib.base.bean.FloatingItem;
+import com.lib.base.adapter.FloatingAdapter.FloatingItem;
 import com.lib.base.ui.activity.BaseActivity;
 import com.lib.base.util.FreshUtil;
 import com.lib.base.util.ScreenUtil;
