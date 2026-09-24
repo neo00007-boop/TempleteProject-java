@@ -185,6 +185,10 @@
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />
         <activity
+            android:name=".ui.activity.FreshMultiListDemoActivity"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
             android:name=".ui.activity.GrassFreshActivity"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />

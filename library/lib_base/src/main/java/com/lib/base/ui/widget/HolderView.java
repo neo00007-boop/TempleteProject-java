@@ -37,6 +37,11 @@ public class HolderView extends FrameLayout {
     private final String strNoData;
     private final String strError;
     private boolean cancelFresh;
+    /**
+     * 为 true 时，loading/空/错态会拦截触摸（适合盖在内容上的容器模式）。
+     * 作为 BRVAH emptyView 时应设为 false，否则空态下无法下拉刷新。
+     */
+    private boolean blockTouch = true;
 
     public HolderView(@NonNull Context context) {
         this(context, null);
@@ -58,6 +63,13 @@ public class HolderView extends FrameLayout {
         strNoData = a.getString(R.styleable.HolderView_strNoData);
         strError = a.getString(R.styleable.HolderView_strError);
         a.recycle();
+    }
+
+    /**
+     * @param blockTouch true=容器遮罩模式拦截触摸；false=emptyView 模式放行手势
+     */
+    public void setBlockTouch(boolean blockTouch) {
+        this.blockTouch = blockTouch;
     }
 
     public void showLoadingView() {
@@ -147,7 +159,7 @@ public class HolderView extends FrameLayout {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        if (!cancelFresh) {
+        if (blockTouch && !cancelFresh) {
             return true;
         }
         return super.onInterceptTouchEvent(ev);

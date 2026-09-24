@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -21,7 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 
 /**
- * 刷新列表基类（BaseActivity + FreshUtil + BaseQuickAdapter + itemClick）。
+ * 刷新列表基类（BaseActivity + FreshUtil + BaseQuickAdapter + item/childClick）。
  * <p>
  * 业务只需实现：
  * <ul>
@@ -29,7 +30,8 @@ import androidx.viewbinding.ViewBinding;
  *   <li>{@link #onListRequest(boolean)} —— 刷新 / 加载更多统一入口（isFresh=true 为刷新）</li>
  *   <li>请求结束后调用 {@link #onRequestSuccess(List)} 或 {@link #onRequestFailure()}</li>
  * </ul>
- * 刷新 / 加载态直接读 SmartRefreshLayout；列表替换 / 追加以 {@link #mPage} 是否为首页为准。
+ * 子 View 点击：在 Adapter 里 {@code addChildClickViewIds}，或重写 {@link #provideChildClickViewIds()}；
+ * 回调 {@link #onListItemChildClick}。
  */
 public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends BaseQuickAdapter<T, ? extends BaseViewHolder>>
         extends BaseActivity<VB> {
@@ -88,10 +90,32 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
         return new LinearLayoutManager(this);
     }
 
+    /**
+     * 需要子 View 点击时返回 id；也可在 Adapter 构造里自行 {@link BaseQuickAdapter#addChildClickViewIds}。
+     */
+    @IdRes
+    @NonNull
+    protected int[] provideChildClickViewIds() {
+        return new int[0];
+    }
+
+    @IdRes
+    @NonNull
+    protected int[] provideChildLongClickViewIds() {
+        return new int[0];
+    }
+
     protected void onListItemClick(@NonNull A adapter, @NonNull View view, int position) {
     }
 
     protected boolean onListItemLongClick(@NonNull A adapter, @NonNull View view, int position) {
+        return false;
+    }
+
+    protected void onListItemChildClick(@NonNull A adapter, @NonNull View view, int position) {
+    }
+
+    protected boolean onListItemChildLongClick(@NonNull A adapter, @NonNull View view, int position) {
         return false;
     }
 
@@ -162,10 +186,23 @@ public abstract class BaseFreshActivity<VB extends ViewBinding, T, A extends Bas
             }
         });
 
+        int[] childClickIds = provideChildClickViewIds();
+        if (childClickIds.length > 0) {
+            mAdapter.addChildClickViewIds(childClickIds);
+        }
+        int[] childLongClickIds = provideChildLongClickViewIds();
+        if (childLongClickIds.length > 0) {
+            mAdapter.addChildLongClickViewIds(childLongClickIds);
+        }
+
         mAdapter.setOnItemClickListener((adapter, view, position) ->
                 onListItemClick(mAdapter, view, position));
         mAdapter.setOnItemLongClickListener((adapter, view, position) ->
                 onListItemLongClick(mAdapter, view, position));
+        mAdapter.setOnItemChildClickListener((adapter, view, position) ->
+                onListItemChildClick(mAdapter, view, position));
+        mAdapter.setOnItemChildLongClickListener((adapter, view, position) ->
+                onListItemChildLongClick(mAdapter, view, position));
     }
 
     // ======================== 触发 ========================

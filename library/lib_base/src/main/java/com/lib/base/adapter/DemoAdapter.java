@@ -9,7 +9,6 @@ import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.lib.base.R;
 import com.lib.base.databinding.DemoLayoutBinding;
-import com.lib.base.util.DebugUtil;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -30,10 +29,12 @@ public class DemoAdapter extends BaseQuickAdapter<String, DemoAdapter.ViewHolder
 
     public DemoAdapter() {
         super(R.layout.demo_layout);
+        addChildClickViewIds(R.id.tv1);
     }
 
     public DemoAdapter(@NonNull Context context) {
         super(R.layout.demo_layout);
+        addChildClickViewIds(R.id.tv1);
     }
 
     @NonNull
@@ -58,7 +59,6 @@ public class DemoAdapter extends BaseQuickAdapter<String, DemoAdapter.ViewHolder
 
         @SuppressLint("SetTextI18n")
         void bind(String item) {
-            binding.tv1.setOnClickListener(v -> DebugUtil.toast("影藏item点击"));
             binding.tv1.setVisibility(show ? android.view.View.VISIBLE : android.view.View.GONE);
 
             binding.tv.setText(item);

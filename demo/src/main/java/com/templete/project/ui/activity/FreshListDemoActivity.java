@@ -4,6 +4,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 
+import com.lib.base.R;
 import com.lib.base.adapter.DemoAdapter;
 import com.lib.base.ui.activity.BaseFreshListActivity;
 import com.lib.base.util.DebugUtil;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@link BaseFreshListActivity} 用法示例
+ * {@link BaseFreshListActivity} 用法示例（含 childClick）
  */
 public class FreshListDemoActivity extends BaseFreshListActivity<String, DemoAdapter> {
 
@@ -24,7 +25,9 @@ public class FreshListDemoActivity extends BaseFreshListActivity<String, DemoAda
     @NonNull
     @Override
     protected DemoAdapter createAdapter() {
-        return new DemoAdapter(this);
+        DemoAdapter adapter = new DemoAdapter(this);
+        adapter.setShow(true);
+        return adapter;
     }
 
     @Override
@@ -34,21 +37,25 @@ public class FreshListDemoActivity extends BaseFreshListActivity<String, DemoAda
 
     @Override
     protected void onListRequest(boolean isFresh) {
-        // TODO: 替换为真实接口，结束后 onRequestSuccess / onRequestFailure
         mViewBinding.getRoot().postDelayed(() -> {
             if (!isFresh && mPage > 3) {
-//                onRequestSuccess(new ArrayList<>(), true);
+                onRequestSuccess(new ArrayList<>(), true);
                 return;
             }
-//            onRequestSuccess(mockData(mPage));
-//            onRequestFailure();
-            onRequestSuccess(null);
+            onRequestSuccess(mockData(mPage));
         }, 800);
     }
 
     @Override
     protected void onListItemClick(@NonNull DemoAdapter adapter, @NonNull View view, int position) {
-        DebugUtil.toast("click: " + getItem(position));
+        DebugUtil.toast("item: " + getItem(position));
+    }
+
+    @Override
+    protected void onListItemChildClick(@NonNull DemoAdapter adapter, @NonNull View view, int position) {
+        if (view.getId() == R.id.tv1) {
+            DebugUtil.toast("child tv1: " + getItem(position));
+        }
     }
 
     private List<String> mockData(int page) {
