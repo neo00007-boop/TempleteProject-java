@@ -174,5 +174,6 @@ public class ShimmerView extends FrameLayout {
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         stop();
+        veilLayouts.clear();
     }
 }

@@ -232,7 +232,13 @@ public class HolderView extends FrameLayout {
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        retryEnabled = false;
+        retryClickListener = null;
         stopLoadingUi();
-        binding.shimmerView.stop();
+        binding.shimmerView.hide();
+        if (binding.loadingDialog.ivPro != null) {
+            binding.loadingDialog.ivPro.setImageDrawable(null);
+        }
+        progressDrawable = null;
     }
 }

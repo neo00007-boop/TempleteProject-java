@@ -2,11 +2,9 @@ package com.lib.base.ui.dialog.base;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.SparseArray;
 import android.view.Gravity;
@@ -33,6 +31,9 @@ import androidx.annotation.StringRes;
 import androidx.annotation.StyleRes;
 import androidx.appcompat.app.AppCompatDialog;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleEventObserver;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.lib.base.R;
 import com.lib.base.ui.action.ActivityAction;
@@ -1109,10 +1110,10 @@ public class BaseDialog extends AppCompatDialog implements /*LifecycleOwner,*/
     }
 
     /**
-     * Dialog 生命周期绑定
+     * 将 Dialog 生命周期绑定到宿主 Activity 的 {@link Lifecycle}（仅监听该组件，不走 Application 全局回调）。
      */
     private static final class DialogLifecycle implements
-            Application.ActivityLifecycleCallbacks,
+            LifecycleEventObserver,
             OnShowListener,
             OnDismissListener {
 
@@ -1121,39 +1122,51 @@ public class BaseDialog extends AppCompatDialog implements /*LifecycleOwner,*/
             return new DialogLifecycle(activity, dialog);
         }
 
+        @Nullable
         private BaseDialog mDialog;
-        private Activity mActivity;
-
-        /**
-         * Dialog 动画样式（避免 Dialog 从后台返回到前台后再次触发动画效果）
-         */
+        @Nullable
+        private LifecycleOwner mLifecycleOwner;
+        /** Dialog 动画样式（避免从后台回前台再次触发进场动画） */
         private int mDialogAnim;
+        /**
+         * addObserver 会同步补发到当前 Lifecycle 状态；旧 ActivityLifecycleCallbacks 不会。
+         * 补发期间忽略，避免刚 show 时误走 ON_RESUME 把动画改成未初始化的默认值。
+         */
+        private boolean mIgnoreLifecycleSync;
 
         private DialogLifecycle(Activity activity, BaseDialog dialog) {
-            mActivity = activity;
+            if (activity instanceof LifecycleOwner) {
+                mLifecycleOwner = (LifecycleOwner) activity;
+            }
             dialog.addOnShowListener(this);
             dialog.addOnDismissListener(this);
         }
 
         @Override
-        public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle savedInstanceState) {
-        }
-
-        @Override
-        public void onActivityStarted(@NonNull Activity activity) {
-        }
-
-        @Override
-        public void onActivityResumed(@NonNull Activity activity) {
-            if (mActivity != activity) {
+        public void onStateChanged(@NonNull LifecycleOwner source, @NonNull Lifecycle.Event event) {
+            if (mIgnoreLifecycleSync) {
                 return;
             }
+            switch (event) {
+                case ON_RESUME:
+                    onHostResume();
+                    break;
+                case ON_PAUSE:
+                    onHostPause();
+                    break;
+                case ON_DESTROY:
+                    onHostDestroy();
+                    break;
+                default:
+                    break;
+            }
+        }
 
+        private void onHostResume() {
             if (mDialog == null || !mDialog.isShowing()) {
                 return;
             }
-
-            // 还原 Dialog 动画样式（这里必须要使用延迟设置，否则还是有一定几率会出现）
+            // 还原 Dialog 动画样式（延迟设置，避免仍有几率闪一下进场动画）
             mDialog.postDelayed(() -> {
                 if (mDialog == null || !mDialog.isShowing()) {
                     return;
@@ -1162,38 +1175,17 @@ public class BaseDialog extends AppCompatDialog implements /*LifecycleOwner,*/
             }, 100);
         }
 
-        @Override
-        public void onActivityPaused(@NonNull Activity activity) {
-            if (mActivity != activity) {
-                return;
-            }
-
+        private void onHostPause() {
             if (mDialog == null || !mDialog.isShowing()) {
                 return;
             }
-
-            // 获取 Dialog 动画样式
             mDialogAnim = mDialog.getWindowAnimations();
-            // 设置 Dialog 无动画效果
             mDialog.setWindowAnimations(BaseDialog.ANIM_EMPTY);
         }
 
-        @Override
-        public void onActivityStopped(@NonNull Activity activity) {
-        }
-
-        @Override
-        public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle outState) {
-        }
-
-        @Override
-        public void onActivityDestroyed(@NonNull Activity activity) {
-            if (mActivity != activity) {
-                return;
-            }
-
-            unregisterActivityLifecycleCallbacks();
-            mActivity = null;
+        private void onHostDestroy() {
+            removeLifecycleObserver();
+            mLifecycleOwner = null;
 
             if (mDialog == null) {
                 return;
@@ -1209,43 +1201,33 @@ public class BaseDialog extends AppCompatDialog implements /*LifecycleOwner,*/
         @Override
         public void onShow(BaseDialog dialog) {
             mDialog = dialog;
-            registerActivityLifecycleCallbacks();
+            addLifecycleObserver();
         }
 
         @Override
         public void onDismiss(BaseDialog dialog) {
             mDialog = null;
-            unregisterActivityLifecycleCallbacks();
+            removeLifecycleObserver();
         }
 
-        /**
-         * 注册 Activity 生命周期监听
-         */
-        private void registerActivityLifecycleCallbacks() {
-            if (mActivity == null) {
+        private void addLifecycleObserver() {
+            if (mLifecycleOwner == null) {
                 return;
             }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                mActivity.registerActivityLifecycleCallbacks(this);
-            } else {
-                mActivity.getApplication().registerActivityLifecycleCallbacks(this);
+            Lifecycle lifecycle = mLifecycleOwner.getLifecycle();
+            if (lifecycle.getCurrentState() == Lifecycle.State.DESTROYED) {
+                return;
             }
+            mIgnoreLifecycleSync = true;
+            lifecycle.addObserver(this);
+            mIgnoreLifecycleSync = false;
         }
 
-        /**
-         * 反注册 Activity 生命周期监听
-         */
-        private void unregisterActivityLifecycleCallbacks() {
-            if (mActivity == null) {
+        private void removeLifecycleObserver() {
+            if (mLifecycleOwner == null) {
                 return;
             }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                mActivity.unregisterActivityLifecycleCallbacks(this);
-            } else {
-                mActivity.getApplication().unregisterActivityLifecycleCallbacks(this);
-            }
+            mLifecycleOwner.getLifecycle().removeObserver(this);
         }
     }
 
