@@ -238,7 +238,8 @@ public abstract class BaseFreshFragment<VB extends ViewBinding, T, A extends Bas
 
     @Override
     public void onHolderRetryClick() {
-        freshData();
+        // freshData();
+        triggerRefresh();
     }
 
     @Override
@@ -255,7 +256,7 @@ public abstract class BaseFreshFragment<VB extends ViewBinding, T, A extends Bas
         fresh.enterLoad();
     }
 
-    @Override
+    /*@Override
     public void requestData(boolean isFresh) {
         if (isFresh) {
             triggerRefresh();
@@ -272,7 +273,7 @@ public abstract class BaseFreshFragment<VB extends ViewBinding, T, A extends Bas
     @Override
     public void loadData() {
         triggerLoadMore();
-    }
+    }*/
 
     protected void setupFreshList() {
         fresh.setup();
