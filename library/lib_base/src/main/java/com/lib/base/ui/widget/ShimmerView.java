@@ -8,15 +8,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.lib.base.R;
 import com.skydoves.androidveil.VeilLayout;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * 骨架屏容器：inflate 任意含 {@link VeilLayout} 的布局，自动收集并控制 veil/unVeil。
@@ -30,8 +30,10 @@ public class ShimmerView extends FrameLayout {
     public static final int TYPE_GRID = 1;
 
     private final List<VeilLayout> veilLayouts = new ArrayList<>();
+
     @LayoutRes
     private int layoutRes;
+
     private boolean autoStart = true;
 
     public ShimmerView(@NonNull Context context) {
@@ -42,18 +44,44 @@ public class ShimmerView extends FrameLayout {
         this(context, attrs, 0);
     }
 
-    public ShimmerView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public ShimmerView(
+            @NonNull Context context,
+            @Nullable AttributeSet attrs,
+            int defStyleAttr
+    ) {
         super(context, attrs, defStyleAttr);
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.ShimmerView);
-        autoStart = a.getBoolean(R.styleable.ShimmerView_shimmerAutoStart, true);
-        boolean hasLayout = a.hasValue(R.styleable.ShimmerView_shimmerLayout);
-        boolean hasType = a.hasValue(R.styleable.ShimmerView_shimmerType);
+
+        TypedArray a = context.obtainStyledAttributes(
+                attrs,
+                R.styleable.ShimmerView
+        );
+
+        autoStart = a.getBoolean(
+                R.styleable.ShimmerView_shimmerAutoStart,
+                true
+        );
+
+        boolean hasLayout =
+                a.hasValue(R.styleable.ShimmerView_shimmerLayout);
+        boolean hasType =
+                a.hasValue(R.styleable.ShimmerView_shimmerType);
+
         if (hasLayout) {
-            layoutRes = a.getResourceId(R.styleable.ShimmerView_shimmerLayout, 0);
+            layoutRes = a.getResourceId(
+                    R.styleable.ShimmerView_shimmerLayout,
+                    0
+            );
         } else if (hasType) {
-            layoutRes = resolveTypeLayout(a.getInt(R.styleable.ShimmerView_shimmerType, TYPE_LIST));
+            layoutRes = resolveTypeLayout(
+                    a.getInt(
+                            R.styleable.ShimmerView_shimmerType,
+                            TYPE_LIST
+                    )
+            );
         }
+
         a.recycle();
+
         if (layoutRes != 0) {
             rebuild();
         }
@@ -73,14 +101,19 @@ public class ShimmerView extends FrameLayout {
         if (layoutRes == 0) {
             return;
         }
+
         if (this.layoutRes == layoutRes && getChildCount() > 0) {
             if (getVisibility() == VISIBLE) {
                 start();
             }
             return;
         }
+
         this.layoutRes = layoutRes;
         rebuild();
+        if (autoStart && getVisibility() == VISIBLE) {
+            start();
+        }
     }
 
     @LayoutRes
@@ -90,6 +123,7 @@ public class ShimmerView extends FrameLayout {
 
     public void start() {
         ensureLayout();
+
         for (VeilLayout veil : veilLayouts) {
             veil.veil();
         }
@@ -103,13 +137,13 @@ public class ShimmerView extends FrameLayout {
 
     public void show() {
         ensureLayout();
-        setVisibility(VISIBLE);
+        super.setVisibility(VISIBLE);
         start();
     }
 
     public void hide() {
         stop();
-        setVisibility(GONE);
+        super.setVisibility(GONE);
     }
 
     /** 未配置布局时默认 list 骨架，避免空 show */
@@ -117,26 +151,32 @@ public class ShimmerView extends FrameLayout {
         if (layoutRes == 0) {
             layoutRes = resolveTypeLayout(TYPE_LIST);
         }
+
         if (getChildCount() == 0) {
             rebuild();
+        } else if (veilLayouts.isEmpty()) {
+            // child 仍然存在，但 veilLayouts 可能在生命周期变化后为空。
+            collectVeils(this);
         }
     }
 
     private void rebuild() {
         stop();
+
         removeAllViews();
         veilLayouts.clear();
+
         if (layoutRes == 0) {
             return;
         }
-        LayoutInflater.from(getContext()).inflate(layoutRes, this, true);
+
+        LayoutInflater.from(getContext()).inflate(
+                layoutRes,
+                this,
+                true
+        );
+
         collectVeils(this);
-        // 不在此处再调 start()，避免与 ensureLayout↔rebuild 互相递归；由 show()/setVisibility 驱动
-        if (autoStart && getVisibility() == VISIBLE) {
-            for (VeilLayout veil : veilLayouts) {
-                veil.veil();
-            }
-        }
     }
 
     private void collectVeils(@NonNull View view) {
@@ -144,8 +184,10 @@ public class ShimmerView extends FrameLayout {
             veilLayouts.add((VeilLayout) view);
             return;
         }
+
         if (view instanceof ViewGroup) {
             ViewGroup group = (ViewGroup) view;
+
             for (int i = 0; i < group.getChildCount(); i++) {
                 collectVeils(group.getChildAt(i));
             }
@@ -154,16 +196,20 @@ public class ShimmerView extends FrameLayout {
 
     @LayoutRes
     private static int resolveTypeLayout(int type) {
-        return type == TYPE_GRID ? R.layout.viewholder_shimmer_grid : R.layout.viewholder_shimmer_list;
+        return type == TYPE_GRID
+                ? R.layout.viewholder_shimmer_grid
+                : R.layout.viewholder_shimmer_list;
     }
 
     @Override
     public void setVisibility(int visibility) {
         super.setVisibility(visibility);
+
         if (visibility != VISIBLE) {
             stop();
         } else if (autoStart) {
             ensureLayout();
+
             if (!veilLayouts.isEmpty()) {
                 start();
             }
@@ -171,9 +217,22 @@ public class ShimmerView extends FrameLayout {
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        // detach 时不清空 veilLayouts，但这里做一次兜底。
+        if (getChildCount() > 0 && veilLayouts.isEmpty()) {
+            collectVeils(this);
+        }
+
+        if (autoStart && getVisibility() == VISIBLE) {
+            start();
+        }
+    }
+
+    @Override
     protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
         stop();
-        veilLayouts.clear();
+        super.onDetachedFromWindow();
     }
 }
