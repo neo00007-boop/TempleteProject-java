@@ -25,6 +25,8 @@ public class LoadingDialog extends Dialog implements /*LifecycleObserver*/Defaul
     public static final String TAG = "LoadingDialog";
     private ProgressDrawable progressDrawable;
     private final LoadingDialogBinding binding;
+    private LifecycleOwner lifecycleOwner;
+    private boolean observed;
 
     public LoadingDialog(@NonNull Context context, int resourceId, String loadingInfo) {
         super(context, R.style.dialog);
@@ -44,9 +46,22 @@ public class LoadingDialog extends Dialog implements /*LifecycleObserver*/Defaul
     }
 
     private void addObserver(Context context) {
-        LifecycleOwner lifecycleOwner = ContextUtil.getLifecycleOwnerByContext(context);
+        if (observed) {
+            return;
+        }
+        if (lifecycleOwner == null) {
+            lifecycleOwner = ContextUtil.getLifecycleOwnerByContext(context);
+        }
         if (lifecycleOwner != null) {
             lifecycleOwner.getLifecycle().addObserver(this);
+            observed = true;
+        }
+    }
+
+    private void removeObserver() {
+        if (lifecycleOwner != null && observed) {
+            lifecycleOwner.getLifecycle().removeObserver(this);
+            observed = false;
         }
     }
 
@@ -55,6 +70,8 @@ public class LoadingDialog extends Dialog implements /*LifecycleObserver*/Defaul
         DebugUtil.logD(TAG, "pop onDestroy");
         if (isShowing()) {
             dismiss();
+        } else {
+            removeObserver();
         }
     }
 
@@ -71,6 +88,7 @@ public class LoadingDialog extends Dialog implements /*LifecycleObserver*/Defaul
 
     @Override
     public void show() {
+        addObserver(getContext());
         super.show();
         if (progressDrawable != null) {
             progressDrawable.start();
@@ -83,6 +101,7 @@ public class LoadingDialog extends Dialog implements /*LifecycleObserver*/Defaul
             progressDrawable.stop();
         }
         super.dismiss();
+        removeObserver();
     }
 
     @Override

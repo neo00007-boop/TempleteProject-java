@@ -22,6 +22,8 @@ import androidx.lifecycle.LifecycleOwner;
 public class ConfirmDialog extends Dialog implements DefaultLifecycleObserver {
     public static final String TAG = "ConfirmDialog";
     private final ConfirmDialogBinding binding;
+    private LifecycleOwner lifecycleOwner;
+    private boolean observed;
     private int index = 0;
 
     public ConfirmDialog(@NonNull Context context, String loadingInfo) {
@@ -45,9 +47,22 @@ public class ConfirmDialog extends Dialog implements DefaultLifecycleObserver {
     }
 
     private void addObserver(Context context) {
-        LifecycleOwner lifecycleOwner = ContextUtil.getLifecycleOwnerByContext(context);
+        if (observed) {
+            return;
+        }
+        if (lifecycleOwner == null) {
+            lifecycleOwner = ContextUtil.getLifecycleOwnerByContext(context);
+        }
         if (lifecycleOwner != null) {
             lifecycleOwner.getLifecycle().addObserver(this);
+            observed = true;
+        }
+    }
+
+    private void removeObserver() {
+        if (lifecycleOwner != null && observed) {
+            lifecycleOwner.getLifecycle().removeObserver(this);
+            observed = false;
         }
     }
 
@@ -56,13 +71,22 @@ public class ConfirmDialog extends Dialog implements DefaultLifecycleObserver {
         DebugUtil.logD(TAG, "pop onDestroy");
         if (isShowing()) {
             dismiss();
+        } else {
+            removeObserver();
         }
     }
 
     @Override
     public void show() {
+        addObserver(getContext());
         super.show();
         binding.getRoot().post(runnable);
+    }
+
+    @Override
+    public void dismiss() {
+        super.dismiss();
+        removeObserver();
     }
 
     private final Runnable runnable = new Runnable() {

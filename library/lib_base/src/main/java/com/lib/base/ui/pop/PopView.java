@@ -1,5 +1,6 @@
 package com.lib.base.ui.pop;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -7,6 +8,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 
@@ -41,6 +43,8 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
     private final PopLayoutBinding layoutBinding;
     private final TitleBar.OnRightViewsClickListener clickListener;
     private PopAdapter popAdapter;
+    private LifecycleOwner lifecycleOwner;
+    private boolean observed;
 
     public PopView(Context context, TitleBar.OnRightViewsClickListener clickListener) {
         super(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -57,10 +61,29 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
     }
 
     private void addObserver(Context context) {
-        LifecycleOwner lifecycleOwner = ContextUtil.getLifecycleOwnerByContext(context);
+        if (observed) {
+            return;
+        }
+        if (lifecycleOwner == null) {
+            lifecycleOwner = ContextUtil.getLifecycleOwnerByContext(context);
+        }
         if (lifecycleOwner != null) {
             lifecycleOwner.getLifecycle().addObserver(this);
+            observed = true;
         }
+    }
+
+    private void removeObserver() {
+        if (lifecycleOwner != null && observed) {
+            lifecycleOwner.getLifecycle().removeObserver(this);
+            observed = false;
+        }
+    }
+
+    @Override
+    public void dismiss() {
+        super.dismiss();
+        removeObserver();
     }
 
     @Override
@@ -68,6 +91,8 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
         DebugUtil.logD(TAG, "pop onDestroy");
         if (isShowing()) {
             dismiss();
+        } else {
+            removeObserver();
         }
     }
 
@@ -112,6 +137,10 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
      * @param locationView
      */
     public void show(View locationView) {
+        if (!canShow(locationView)) {
+            return;
+        }
+        addObserver(context);
         int[] location = new int[2];
         locationView.getLocationOnScreen(location);
         int viewWidthHalf = locationView.getWidth() / 2;
@@ -124,49 +153,84 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
         int emptyY = ScreenUtil.getScreenHei() - location[1] - locationView.getHeight() - 5;//下面有足够空间弹出pop
         boolean isTop = measuredHeight < emptyY;
         float dimensionX10 = context.getResources().getDimension(R.dimen.x5);//尖叫距离view距离
-        float dimensionX25 = context.getResources().getDimension(R.dimen.x25);//尖叫距离最近边距离
-        int sanjiaoWidthTop = layoutBinding.ivTop.getMeasuredWidth();
-        int sanjiaoWidthBottom = layoutBinding.ivBottom.getMeasuredWidth();
-        int sanjiaoWidthHalfTop = sanjiaoWidthTop / 2;
-        int sanjiaoWidthHalfBottom = sanjiaoWidthBottom / 2;
+        int edge = (int) context.getResources().getDimension(R.dimen.x25);//尖叫距离最近边距离
         //左上区域
         if (viewMiddlePositionX <= middleScreenX && /*viewMiddlePositionY <= middleScreenY*/isTop) {
             setAnimationStyle(R.style.pop_anim1);
-            layoutBinding.ivBottom.setVisibility(View.GONE);
-            ((LinearLayout.LayoutParams) layoutBinding.ivTop.getLayoutParams()).leftMargin = (int) dimensionX25;
-            layoutBinding.ivTop.requestLayout();
-            //这种方式还有bug
-            //showAsDropDown(locationView, viewWidthHalf - (int) dimensionX25 - sanjiaoWidthHalfTop, (int) dimensionX10);
-            showAtLocation(locationView, Gravity.NO_GRAVITY,
-                    (int) (location[0] + viewWidthHalf - sanjiaoWidthHalfTop - dimensionX25),
+            int arrowHalf = layoutArrow(layoutBinding.ivTop, layoutBinding.ivBottom, edge);
+            showAt(locationView,
+                    location[0] + viewWidthHalf - arrowHalf - edge,
                     (int) (location[1] + locationView.getHeight() + dimensionX10));
         } else if (viewMiddlePositionX > middleScreenX && /*viewMiddlePositionY <= middleScreenY*/isTop) {
             //右上区域
             setAnimationStyle(R.style.pop_anim2);
-            layoutBinding.ivBottom.setVisibility(View.GONE);
-            ((LinearLayout.LayoutParams) layoutBinding.ivTop.getLayoutParams()).leftMargin = measuredWidth - (int) dimensionX25 - sanjiaoWidthTop;
-            layoutBinding.ivTop.requestLayout();
-            //这种方式还有bug
-            //showAsDropDown(locationView, -measuredWidth + viewWidthHalf + (int) dimensionX25 + sanjiaoWidthHalfTop, (int) dimensionX10);
-            showAtLocation(locationView, Gravity.NO_GRAVITY,
-                    //(int) (location[0]+viewWidthHalf-sanjiaoWidthHalfTop-(measuredWidth-sanjiaoWidthTop-dimensionX25)),
-                    //简化写法
-                    (int) (location[0] + viewWidthHalf + sanjiaoWidthHalfTop - measuredWidth + dimensionX25),
+            int[] arrow = layoutArrowEnd(layoutBinding.ivTop, layoutBinding.ivBottom, edge, measuredWidth);
+            showAt(locationView,
+                    (int) (location[0] + viewWidthHalf + arrow[0] - arrow[1] + edge),
                     (int) (location[1] + locationView.getHeight() + dimensionX10));
         } else if (viewMiddlePositionX <= middleScreenX) {
             //左下区域
             setAnimationStyle(R.style.pop_anim3);
-            layoutBinding.ivTop.setVisibility(View.GONE);
-            ((LinearLayout.LayoutParams) layoutBinding.ivBottom.getLayoutParams()).leftMargin = (int) dimensionX25;
-            layoutBinding.ivBottom.requestLayout();
-            showAtLocation(locationView, Gravity.NO_GRAVITY, location[0] + viewWidthHalf - (int) dimensionX25 - sanjiaoWidthHalfBottom, location[1] - measuredHeight - (int) dimensionX10);
+            int arrowHalf = layoutArrow(layoutBinding.ivBottom, layoutBinding.ivTop, edge);
+            showAt(locationView,
+                    location[0] + viewWidthHalf - edge - arrowHalf,
+                    location[1] - measuredHeight - (int) dimensionX10);
         } else {
             //右下区域
             setAnimationStyle(R.style.pop_anim4);
-            layoutBinding.ivTop.setVisibility(View.GONE);
-            ((LinearLayout.LayoutParams) layoutBinding.ivBottom.getLayoutParams()).leftMargin = measuredWidth - (int) dimensionX25 - sanjiaoWidthBottom;
-            layoutBinding.ivBottom.requestLayout();
-            showAtLocation(locationView, Gravity.NO_GRAVITY, location[0] + viewWidthHalf + (int) dimensionX25 + sanjiaoWidthHalfBottom - measuredWidth, location[1] - measuredHeight - (int) dimensionX10);
+            int[] arrow = layoutArrowEnd(layoutBinding.ivBottom, layoutBinding.ivTop, edge, measuredWidth);
+            showAt(locationView,
+                    location[0] + viewWidthHalf + edge + arrow[0] - arrow[1],
+                    location[1] - measuredHeight - (int) dimensionX10);
+        }
+    }
+
+    /** 显示 show、隐藏 hide，尖角贴起始边。返回尖角半宽。 */
+    private int layoutArrow(View show, View hide, int edge) {
+        show.setVisibility(View.VISIBLE);
+        hide.setVisibility(View.GONE);
+        LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) show.getLayoutParams();
+        lp.setMarginStart(edge);
+        show.setLayoutParams(lp);
+        getMeasuredWidth();
+        return show.getMeasuredWidth() / 2;
+    }
+
+    /**
+     * 显示 show、隐藏 hide，尖角贴末尾边。边距按测量宽度计算，变宽后再量一次。
+     *
+     * @return [尖角半宽, 最终弹窗宽度]
+     */
+    private int[] layoutArrowEnd(View show, View hide, int edge, int measuredWidth) {
+        show.setVisibility(View.VISIBLE);
+        hide.setVisibility(View.GONE);
+        int arrowWidth = Math.max(show.getMeasuredWidth(), show.getLayoutParams().width);
+        int margin = Math.max(0, measuredWidth - edge - arrowWidth);
+        LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) show.getLayoutParams();
+        lp.setMarginStart(margin);
+        show.setLayoutParams(lp);
+        int resized = getMeasuredWidth();
+        if (resized != measuredWidth) {
+            arrowWidth = Math.max(show.getMeasuredWidth(), arrowWidth);
+            lp.setMarginStart(Math.max(0, resized - edge - arrowWidth));
+            show.setLayoutParams(lp);
+            resized = getMeasuredWidth();
+        }
+        return new int[]{arrowWidth / 2, resized};
+    }
+
+    private boolean canShow(View locationView) {
+        if (locationView == null || !locationView.isAttachedToWindow()) {
+            return false;
+        }
+        Activity activity = ContextUtil.getActivityByContext(context);
+        return activity == null || (!activity.isFinishing() && !activity.isDestroyed());
+    }
+
+    private void showAt(View anchor, int x, int y) {
+        try {
+            showAtLocation(anchor, Gravity.NO_GRAVITY, x, y);
+        } catch (WindowManager.BadTokenException ignored) {
         }
     }
 

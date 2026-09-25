@@ -27,6 +27,8 @@ import androidx.lifecycle.LifecycleOwner;
 public class PopMenuView extends PopupWindow implements DefaultLifecycleObserver {
     public static final String TAG = "PopMenuView";
     private final View locationView;
+    private LifecycleOwner lifecycleOwner;
+    private boolean observed;
 
     public PopMenuView(View contentView, View locationView) {
         this(contentView, locationView, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -51,14 +53,34 @@ public class PopMenuView extends PopupWindow implements DefaultLifecycleObserver
     }
 
     private void addObserver(Context context) {
-        LifecycleOwner lifecycleOwner = ContextUtil.getLifecycleOwnerByContext(context);
+        if (observed) {
+            return;
+        }
+        if (lifecycleOwner == null) {
+            lifecycleOwner = ContextUtil.getLifecycleOwnerByContext(context);
+        }
         if (lifecycleOwner != null) {
             lifecycleOwner.getLifecycle().addObserver(this);
+            observed = true;
+        }
+    }
+
+    private void removeObserver() {
+        if (lifecycleOwner != null && observed) {
+            lifecycleOwner.getLifecycle().removeObserver(this);
+            observed = false;
         }
     }
 
     public void show() {
+        addObserver(locationView.getContext());
         showAsDropDown(locationView);
+    }
+
+    @Override
+    public void dismiss() {
+        super.dismiss();
+        removeObserver();
     }
 
     @Override
@@ -66,6 +88,8 @@ public class PopMenuView extends PopupWindow implements DefaultLifecycleObserver
         DebugUtil.logD(TAG, "pop onDestroy");
         if (isShowing()) {
             dismiss();
+        } else {
+            removeObserver();
         }
     }
 }
