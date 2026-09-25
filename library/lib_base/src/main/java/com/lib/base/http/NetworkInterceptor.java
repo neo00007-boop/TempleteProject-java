@@ -17,6 +17,7 @@ import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import okhttp3.CacheControl;
+import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -130,15 +131,28 @@ public class NetworkInterceptor implements Interceptor {
 
     @NotNull
     private Request buildRequest(@NotNull Chain chain) {
-        return chain
-                .request()
+        Request request = chain.request();
+        Request.Builder builder = request
                 .newBuilder()
                 .cacheControl(new CacheControl.Builder().noCache().build())
-                .addHeader("token", SPUtil.getString(AppConfig.USER_TOKEN))
                 .addHeader("client_type", "android")
                 .addHeader("version_code", String.valueOf(AppUtil.getVersionCode(App.getContext())))
-                .addHeader("version_name", AppUtil.getVersionName(App.getContext()))
-                .build();
+                .addHeader("version_name", AppUtil.getVersionName(App.getContext()));
+        if (isOwnApi(request.url())) {
+            builder.addHeader("token", SPUtil.getString(AppConfig.USER_TOKEN));
+        }
+        return builder.build();
+    }
+
+    /** 只给自己的接口带 token，图片和第三方域名不带 */
+    private boolean isOwnApi(HttpUrl url) {
+        return sameHost(url, AppConfig.API_BASE_URL_FINAL1)
+                || sameHost(url, AppConfig.API_BASE_URL_FINAL2);
+    }
+
+    private boolean sameHost(HttpUrl url, String base) {
+        HttpUrl api = HttpUrl.parse(base);
+        return api != null && url.host().equals(api.host());
     }
 
     /**

@@ -35,11 +35,12 @@ public class RetryInterceptor implements Interceptor {
     @Override
     public Response intercept(@NonNull Chain chain) throws IOException {
         Request request = chain.request();
+        boolean idempotent = "GET".equals(request.method()) || "HEAD".equals(request.method());
         //假如设置为2次重试的话，则最大可能请求3次（默认1次+2次重试）
         int retryNum = 0;
         Response response = chain.proceed(request);
         DebugUtil.logD(TAG, "retryNum=" + retryNum + ",maxRetry=" + maxRetry);
-        while (!response.isSuccessful() && retryNum < maxRetry) {
+        while (idempotent && !response.isSuccessful() && retryNum < maxRetry) {
             retryNum++;
             DebugUtil.logD(TAG, "retryNum=" + retryNum + ",maxRetry=" + maxRetry);
             response.close();

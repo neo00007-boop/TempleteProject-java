@@ -18,6 +18,7 @@ import com.alibaba.android.arouter.launcher.ARouter;
 import com.lib.base.aroute.ArouteConfig;
 import com.lib.base.ui.activity.TitleBarTheme;
 import com.lib.base.ui.activity.BaseMvvmActivity;
+import com.lib.base.util.LoginUtil;
 import com.module.login.R;
 import com.module.login.databinding.MlLoginActivityBinding;
 import com.module.login.mvvm.LoginViewModel;
@@ -183,6 +184,14 @@ public class LoginActivity extends BaseMvvmActivity<MlLoginActivityBinding, Logi
     @Override
     public void onClick(View v) {
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (isFinishing()) {
+            LoginUtil.onLoginFinished();
+        }
+        super.onDestroy();
     }
 
     /*@Override

@@ -67,7 +67,9 @@ public class RetrofitHelper {
     @NonNull
     private Interceptor getLogInterceptor() {
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message -> DebugUtil.logD("OK_LOG", "data = " + message));
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        loggingInterceptor.setLevel(DebugUtil.isDebug
+                ? HttpLoggingInterceptor.Level.BODY
+                : HttpLoggingInterceptor.Level.NONE);
         return loggingInterceptor;
     }
 
