@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/black30"
+    android:layout_height="wrap_content"
     android:orientation="vertical">
 
     <com.hjq.shape.view.ShapeTextView
@@ -16,10 +15,4 @@
         android:textSize="@dimen/x60"
         app:shape_solidColor="@color/white"
         tools:ignore="HardcodedText" />
-
-    <View
-        android:id="@+id/holder"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
 </LinearLayout>

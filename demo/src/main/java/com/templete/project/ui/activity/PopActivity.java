@@ -31,15 +31,12 @@ public class PopActivity extends BaseActivity<PopActivityBinding> {
     private void togoMenu() {
         if (popMenuView == null) {
             MenuLayoutBinding binding = MenuLayoutBinding.inflate(getLayoutInflater());
-            binding.holder.setOnClickListener(v -> popMenuView.dismiss());
             popMenuView = new PopMenuView(binding.getRoot(), getTitleBar());
-            popMenuView.show();
+        }
+        if (popMenuView.isShowing()) {
+            popMenuView.dismiss();
         } else {
-            if (popMenuView.isShowing()) {
-                popMenuView.dismiss();
-            } else {
-                popMenuView.show();
-            }
+            popMenuView.show();
         }
     }
 

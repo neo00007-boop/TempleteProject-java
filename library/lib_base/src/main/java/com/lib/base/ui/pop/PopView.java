@@ -149,7 +149,11 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
         int viewMiddlePositionX = location[0] + viewWidthHalf;
         View root = locationView.getRootView();
         int middleScreenX = root.getWidth() / 2;//宽度以一半为界限
-        int emptyY = root.getHeight() - location[1] - locationView.getHeight() - 5;//下面剩余高度
+        int gap = (int) context.getResources().getDimension(R.dimen.x5);
+        int emptyY = root.getHeight() - location[1] - locationView.getHeight() - gap;//下面剩余高度
+        // 上次顶到边时会留下固定宽高,先回到内容宽高再量
+        setWidth(ViewGroup.LayoutParams.WRAP_CONTENT);
+        setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
         // 先按内容量宽高。超出锚点这一侧剩余区域时,改成不超过屏幕宽、不超过这一侧剩余高,列表在里面滚
         widthSpec = View.MeasureSpec.UNSPECIFIED;
         heightSpec = View.MeasureSpec.UNSPECIFIED;
@@ -165,22 +169,21 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
             measuredWidth = getMeasuredWidth();
             measuredHeight = getMeasuredHeight();
         }
-        float dimensionX10 = context.getResources().getDimension(R.dimen.x5);//尖叫距离view距离
-        int edge = (int) context.getResources().getDimension(R.dimen.x25);//尖叫距离最近边距离
+        int edge = (int) context.getResources().getDimension(R.dimen.x25);//尖角距离最近边距离
         //左上区域
         if (viewMiddlePositionX <= middleScreenX && /*viewMiddlePositionY <= middleScreenY*/isTop) {
             setAnimationStyle(R.style.pop_anim1);
             int arrowHalf = layoutArrow(layoutBinding.ivTop, layoutBinding.ivBottom, edge);
             showAt(locationView,
                     location[0] + viewWidthHalf - arrowHalf - edge,
-                    (int) (location[1] + locationView.getHeight() + dimensionX10));
+                    location[1] + locationView.getHeight() + gap);
         } else if (viewMiddlePositionX > middleScreenX && /*viewMiddlePositionY <= middleScreenY*/isTop) {
             //右上区域
             setAnimationStyle(R.style.pop_anim2);
             int[] arrow = layoutArrowEnd(layoutBinding.ivTop, layoutBinding.ivBottom, edge, measuredWidth);
             showAt(locationView,
                     (int) (location[0] + viewWidthHalf + arrow[0] - arrow[1] + edge),
-                    (int) (location[1] + locationView.getHeight() + dimensionX10));
+                    location[1] + locationView.getHeight() + gap);
         } else if (viewMiddlePositionX <= middleScreenX) {
             //左下区域
             setAnimationStyle(R.style.pop_anim3);
@@ -188,7 +191,7 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
             measuredHeight = getContentView().getMeasuredHeight();
             showAt(locationView,
                     location[0] + viewWidthHalf - edge - arrowHalf,
-                    location[1] - measuredHeight - (int) dimensionX10);
+                    location[1] - measuredHeight - gap);
         } else {
             //右下区域
             setAnimationStyle(R.style.pop_anim4);
@@ -196,7 +199,7 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
             measuredHeight = getContentView().getMeasuredHeight();
             showAt(locationView,
                     location[0] + viewWidthHalf + edge + arrow[0] - arrow[1],
-                    location[1] - measuredHeight - (int) dimensionX10);
+                    location[1] - measuredHeight - gap);
         }
     }
 
