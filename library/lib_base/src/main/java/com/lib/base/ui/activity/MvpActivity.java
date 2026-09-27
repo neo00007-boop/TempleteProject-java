@@ -40,25 +40,36 @@ public class MvpActivity extends BaseMvpActivity<ActivityDemoBinding, DemoContra
     public void inits() {
         setTitleStr("mvp activity");
         setRightClickViews((position, view) -> {
-                    switch (position) {
-                        case 0:
-                            showLoadingView();
-                            break;
-                        case 1:
-                            showNoDataView();
-                            break;
-                        case 2:
-                            showErrorView();
-                            break;
-                        default:
-                            hideView();
-                            break;
-                    }
-                }, true,
-                new BtnBean("加载\u3000", R.drawable.ic_pop1),
-                new BtnBean("无数据", R.drawable.ic_pop1),
-                new BtnBean("错误\u3000", R.drawable.ic_pop1),
-                new BtnBean("正常\u3000", R.drawable.ic_pop1));
+                HolderView holderView = getHolderView();
+                switch (position) {
+                    case 0:
+                        if (holderView != null) {
+                            holderView.setLoadingMode(HolderView.LOADING_PROGRESS);
+                        }
+                        showLoadingView();
+                        break;
+                    case 1:
+                        if (holderView != null) {
+                            holderView.setLoadingMode(HolderView.LOADING_SHIMMER);
+                        }
+                        showLoadingView();
+                        break;
+                    case 2:
+                        showNoDataView();
+                        break;
+                    case 3:
+                        showErrorView();
+                        break;
+                    default:
+                        hideView();
+                        break;
+                }
+            }, true,
+            new BtnBean("加载\u3000", R.drawable.ic_pop1),
+            new BtnBean("骨架\u3000", R.drawable.ic_pop1),
+            new BtnBean("无数据", R.drawable.ic_pop1),
+            new BtnBean("错误\u3000", R.drawable.ic_pop1),
+            new BtnBean("正常\u3000", R.drawable.ic_pop1));
     }
 
     @Override
