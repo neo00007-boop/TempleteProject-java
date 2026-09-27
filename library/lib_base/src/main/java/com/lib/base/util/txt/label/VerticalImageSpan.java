@@ -9,7 +9,12 @@ import android.text.style.ImageSpan;
 import androidx.annotation.NonNull;
 
 /**
- * 自定义垂直居中的ImageSpan，兼容TextView的linespace属性
+ * 图片和文字垂直居中,并且不把行间隙撑乱。
+ * <p>
+ * 行高由字体的 ascent/descent 算出来,TextView 的 lineSpacingExtra 再加在这个盒子外面。
+ * 默认 ImageSpan 会按图片边界重写这组度量,行与行之间的缝会被图片带着变。
+ * 这里把图片高出文字的部分,上下平均补进 ascent 和 descent,并且让 top=ascent、bottom=descent。
+ * 这样行盒刚好包住图片,行间隙仍按原来的 lineSpacing 走。
  * <p>
  * ProjectName  XSCat
  * PackageName  com.bigheadhorse.xscat.view.widget
@@ -22,7 +27,7 @@ public class VerticalImageSpan extends ImageSpan {
     }
 
     /**
-     * update the text line height
+     * 用图片高度重算本行的字体度量,让行盒居中包住图片,不额外拉开行间隙。
      */
     @Override
     public int getSize(@NonNull Paint paint, CharSequence text, int start, int end,
@@ -33,28 +38,20 @@ public class VerticalImageSpan extends ImageSpan {
             Paint.FontMetricsInt fmPaint = paint.getFontMetricsInt();
             int fontHeight = fmPaint.descent - fmPaint.ascent;
             int drHeight = rect.bottom - rect.top;
+            // 文字盒子的中线,图片围绕这条线上下展开
             int centerY = fmPaint.ascent + fontHeight / 2;
 
             fontMetricsInt.ascent = centerY - drHeight / 2;
+            fontMetricsInt.descent = centerY + drHeight / 2;
+            // top、bottom 不再留字体自带的内部留白,行距只剩 TextView 自己的 lineSpacing
             fontMetricsInt.top = fontMetricsInt.ascent;
-            fontMetricsInt.bottom = centerY + drHeight / 2;
-            fontMetricsInt.descent = fontMetricsInt.bottom;
+            fontMetricsInt.bottom = fontMetricsInt.descent;
         }
         return rect.right;
     }
 
     /**
-     * see detail message in android.text.TextLine
-     *
-     * @param canvas the canvas, can be null if not rendering
-     * @param text   the text to be draw
-     * @param start  the text start position
-     * @param end    the text end position
-     * @param x      the edge of the replacement closest to the leading margin
-     * @param top    the top of the line
-     * @param y      the baseline
-     * @param bottom the bottom of the line
-     * @param paint  the work paint
+     * 画的时候同样对齐文字中线,和 getSize 里撑开的行盒是同一条线。
      */
     @Override
     public void draw(Canvas canvas, CharSequence text, int start, int end,
@@ -64,6 +61,7 @@ public class VerticalImageSpan extends ImageSpan {
         canvas.save();
         Paint.FontMetricsInt fmPaint = paint.getFontMetricsInt();
         int fontHeight = fmPaint.descent - fmPaint.ascent;
+        // y 是基线。文字中线 = 基线 + descent - 半个字高
         int centerY = y + fmPaint.descent - fontHeight / 2;
         int transY = centerY - (drawable.getBounds().bottom - drawable.getBounds().top) / 2;
         canvas.translate(x, transY);
