@@ -27,13 +27,17 @@ public class TxtActivity extends BaseActivity<TxtActivityBinding> {
          */
         TxtUtil.setMultipleLabelColor(mViewBinding.tv3, "#FF0000", mViewBinding.tv3.getText().toString(), "abc", "标签");
         /**
-         * 行首增加单标签
+         * 多标签上色并加粗
          */
-        TxtUtil.addStartLabel(this, mViewBinding.tv4, mViewBinding.tv4.getText().toString(), (int) getDimen(R.dimen.x50), "标签1");
+        TxtUtil.setMultipleLabelColorBold(mViewBinding.tv14, "#FF0000", true, mViewBinding.tv14.getText().toString(), "abc", "标签");
+        /**
+         * 行首增加标签
+         */
+        TxtUtil.addStartLabels(this, mViewBinding.tv4, mViewBinding.tv4.getText().toString(), (int) getDimen(R.dimen.x50), "标签1");
         /**
          * 行首增加双标签
          */
-        TxtUtil.addDoubleStartLabel(this, mViewBinding.tv5, mViewBinding.tv5.getText().toString(), (int) getDimen(R.dimen.x50), "标签1", "标签2");
+        TxtUtil.addStartLabels(this, mViewBinding.tv5, mViewBinding.tv5.getText().toString(), (int) getDimen(R.dimen.x50), "标签1", "标签2", "标签3", "标签4");
         /**
          * 修改字体粗细,默认值0.3,注意不要跟粗体一起使用
          */
@@ -50,21 +54,17 @@ public class TxtActivity extends BaseActivity<TxtActivityBinding> {
                     // todo
                     toast("点击了第" + index + "个标签");
                 },
-                new SpanData("这是一", false),
-                new SpanData("段超级文本", true),
-                new SpanData(",有颜色的", false),
-                new SpanData("+粗体+", true),
-                new SpanData("大字号", false),
-                new SpanData("的都可以点击", true),
-                new SpanData(",可以对多个", false),
-                new SpanData("标签", true),
-                new SpanData("进行修改,就问你溜不溜", false));
+                SpanData.build("这是一", false),
+                SpanData.build("段超级文本", true),
+                SpanData.build(",有颜色的", false),
+                SpanData.build("+粗体+", true),
+                SpanData.build("大字号", false),
+                SpanData.build("的都可以点击", true),
+                SpanData.build(",可以对多个", false),
+                SpanData.build("标签", true),
+                SpanData.build("进行修改,就问你溜不溜", false));
 
-        TxtUtil.setImageSpan(mViewBinding.tv9, mViewBinding.tv9.getText().toString(), R.drawable.ic_vip_tag);
-        TxtUtil.setImageSpan(mViewBinding.tv10, mViewBinding.tv10.getText().toString(), R.drawable.ic_vip_tag);
-        TxtUtil.setImageSpan(mViewBinding.tv11, mViewBinding.tv11.getText().toString(), R.drawable.ic_vip_tag);
-        TxtUtil.setImageSpan(mViewBinding.tv12, mViewBinding.tv12.getText().toString(), R.drawable.ic_vip_tag);
-        TxtUtil.setImageSpan(mViewBinding.tv13, mViewBinding.tv13.getText().toString(), R.drawable.ic_vip_tag);
+        TxtUtil.setImageSpan(mViewBinding.tv9, mViewBinding.tv9.getText().toString(), R.drawable.ic_vip_tag, R.drawable.ic_vip_tag, R.drawable.ic_vip_tag);
     }
 
     @Override

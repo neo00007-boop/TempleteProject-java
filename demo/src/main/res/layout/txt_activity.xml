@@ -44,6 +44,17 @@
             android:textSize="@dimen/x55" />
 
         <TextView
+            android:id="@+id/tv14"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x50"
+            android:includeFontPadding="false"
+            android:maxLines="2"
+            android:text="abc我是带标签文本abcabc我是带标签文本abcabc我是带标签文本abc"
+            android:textColor="@color/cl_666"
+            android:textSize="@dimen/x55" />
+
+        <TextView
             android:id="@+id/tv4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -107,49 +118,5 @@
             android:text="这是一段超级文本,有颜色的+粗体+大字号的都可以点击,可以对多个标签进行修改,就问你溜不溜"
             android:textColor="@color/cl_666"
             android:textSize="@dimen/x55" />
-
-        <TextView
-            android:id="@+id/tv10"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/x50"
-            android:includeFontPadding="false"
-            android:lineSpacingExtra="@dimen/x10"
-            android:text="这是一段超级文本"
-            android:textColor="@color/cl_666"
-            android:textSize="@dimen/x55" />
-
-        <TextView
-            android:id="@+id/tv11"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/x50"
-            android:includeFontPadding="false"
-            android:lineSpacingExtra="@dimen/x10"
-            android:text="这是一段超级文本"
-            android:textColor="@color/cl_666"
-            android:textSize="@dimen/x35" />
-
-        <TextView
-            android:id="@+id/tv12"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/x50"
-            android:includeFontPadding="false"
-            android:lineSpacingExtra="@dimen/x10"
-            android:text="这是一段超级文本,有颜色的+粗体+大字号的都可以点击,可以对多个标签进行修改,就问你溜不溜"
-            android:textColor="@color/cl_666"
-            android:textSize="@dimen/x55" />
-
-        <TextView
-            android:id="@+id/tv13"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/x50"
-            android:includeFontPadding="false"
-            android:lineSpacingExtra="@dimen/x10"
-            android:text="这是一段超级文本,有颜色的+粗体+大字号的都可以点击,可以对多个标签进行修改,就问你溜不溜"
-            android:textColor="@color/cl_666"
-            android:textSize="@dimen/x35" />
     </LinearLayout>
 </ScrollView>

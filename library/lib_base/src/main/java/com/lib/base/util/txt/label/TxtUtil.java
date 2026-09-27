@@ -2,12 +2,16 @@ package com.lib.base.util.txt.label;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.core.content.res.ResourcesCompat;
 
 import com.lib.base.R;
 import com.lib.base.util.txt.boldSpan.FakeBoldSpan;
@@ -16,8 +20,8 @@ import com.lib.base.util.txt.superSoan.SpanClickListener;
 import com.lib.base.util.txt.superSoan.SpanData;
 import com.lib.base.util.txt.superSoan.SuperSpanUtil;
 
-import androidx.annotation.NonNull;
-import androidx.core.content.res.ResourcesCompat;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * txt工具类
@@ -40,24 +44,78 @@ public class TxtUtil {
      * @param label
      */
     public static void setMultipleLabelColor(TextView tv, String color, String content, @NonNull String... label) {
-        for (String s : label) {
-            content = content.replace(s, "<font color='" + color + "'>" + s + "</font>");
-        }
-        tv.setText(Html.fromHtml(content));
+        applyLabelHtml(tv, color, false, content, label);
     }
 
     /**
-     * 修改多个标签颜色,只支持同一个颜色
+     * 修改多个标签颜色,并用 html 加粗。
      *
+     * @param tv
      * @param color
+     * @param bold
      * @param content
      * @param label
      */
-    public static String getText(String color, String content, @NonNull String... label) {
-        for (String s : label) {
-            content = content.replace(s, "<font color='" + color + "'>" + s + "</font>");
+    public static void setMultipleLabelColorBold(TextView tv, String color, boolean bold, String content, @NonNull String... label) {
+        applyLabelHtml(tv, color, bold, content, label);
+    }
+
+    /**
+     * 给正文里的多个标签上色,可选加粗。只拼 html,不扫文本加 span。
+     * 从左往右看正文:当前位置是标签就套上 font,不是就原样留下。
+     * 长标签排前面,避免“标签”把“标签1”从中间拆开。
+     */
+    private static void applyLabelHtml(TextView tv, String color, boolean bold, String content, String... labels) {
+        if (tv == null) {
+            return;
         }
-        return content;
+        if (content == null) {
+            content = "";
+        }
+        // 丢掉空标签和重复标签
+        ArrayList<String> list = new ArrayList<>();
+        if (labels != null) {
+            for (String s : labels) {
+                if (!TextUtils.isEmpty(s) && !list.contains(s)) {
+                    list.add(s);
+                }
+            }
+        }
+        if (list.isEmpty()) {
+            tv.setText(content);
+            return;
+        }
+        // 字数多的排前面,同一个位置先配更长的词
+        Collections.sort(list, (a, b) -> b.length() - a.length());
+        // 颜色和正文都转义,避免引号、尖括号把 font 标签截断
+        String safeColor = TextUtils.htmlEncode(color == null ? "" : color);
+        String open = bold ? "<b>" : "";
+        String close = bold ? "</b>" : "";
+        StringBuilder html = new StringBuilder();
+        int i = 0;
+        while (i < content.length()) {
+            String hit = null;
+            for (String label : list) {
+                if (content.startsWith(label, i)) {
+                    hit = label;
+                    break;
+                }
+            }
+            // 普通文字原样拼上
+            if (hit == null) {
+                html.append(TextUtils.htmlEncode(content.substring(i, i + 1)));
+                i++;
+                continue;
+            }
+            // 标签整段包起来,然后跳过这几个字,不再往里面配短标签
+            html.append("<font color='").append(safeColor).append("'>")
+                    .append(open)
+                    .append(TextUtils.htmlEncode(hit))
+                    .append(close)
+                    .append("</font>");
+            i += hit.length();
+        }
+        tv.setText(Html.fromHtml(html.toString()));
     }
 
     /**
@@ -82,34 +140,42 @@ public class TxtUtil {
     }
 
     /**
-     * 文本开头添加单标签(带背景色圆角)
+     * 文本开头添加多个标签(带背景色圆角)，标签之间留一个空格。
      *
      * @param context
      * @param tv
      * @param content
      * @param size
-     * @param lable1
+     * @param labels
      */
-    public static void addStartLabel(Context context, @NonNull TextView tv, String content, int size, String lable1) {
-        SpannableString spanText = new SpannableString(" " + " " + content);
-        spanText.setSpan(new VerticalImageSpan(getDrawable(context, size, lable1)), 0, 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
-        tv.setText(spanText);
-    }
-
-    /**
-     * 文本开头添加双标签(带背景色圆角)
-     *
-     * @param context
-     * @param tv
-     * @param content
-     * @param size
-     * @param lable1
-     * @param lable2
-     */
-    public static void addDoubleStartLabel(Context context, @NonNull TextView tv, String content, int size, String lable1, String lable2) {
-        SpannableString spanText = new SpannableString(" " + " " + " " + " " + content);
-        spanText.setSpan(new VerticalImageSpan(getDrawable(context, size, lable1)), 0, 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
-        spanText.setSpan(new VerticalImageSpan(getDrawable(context, size, lable2)), 2, 3, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+    public static void addStartLabels(Context context, @NonNull TextView tv, String content, int size, String... labels) {
+        if (context == null || size <= 0 || labels == null || labels.length == 0) {
+            tv.setText(content);
+            return;
+        }
+        StringBuilder prefix = new StringBuilder();
+        int index = 0;
+        SpannableString spanText = null;
+        for (String label : labels) {
+            if (TextUtils.isEmpty(label)) {
+                continue;
+            }
+            prefix.append("  ");
+        }
+        if (prefix.length() == 0) {
+            tv.setText(content);
+            return;
+        }
+        spanText = new SpannableString(prefix + (content == null ? "" : content));
+        for (String label : labels) {
+            if (TextUtils.isEmpty(label)) {
+                continue;
+            }
+            int start = index * 2;
+            spanText.setSpan(new VerticalImageSpan(getDrawable(context, size, label)),
+                    start, start + 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+            index++;
+        }
         tv.setText(spanText);
     }
 
@@ -123,15 +189,17 @@ public class TxtUtil {
      */
     @NonNull
     private static Drawable getDrawable(@NonNull Context context, int size, @NonNull String lable1) {
+        int width = Math.max(1, (int) ((lable1.length() - 0.7f) * size));
+        int height = Math.max(1, size);
         Drawable drawable = TextDrawable.builder()
                 .beginConfig()
-                .width((int) ((lable1.length() - 0.7) * size))
-                .height(size)
+                .width(width)
+                .height(height)
                 .textColor(context.getResources().getColor(TV_COLOR))
-                .fontSize((int) (size * 0.6))
+                .fontSize(Math.max(1, (int) (size * 0.6f)))
                 .bold()
                 .endConfig()
-                .buildRoundRect(lable1, context.getResources().getColor(BG_COLOR), size / 6);
+                .buildRoundRect(lable1, context.getResources().getColor(BG_COLOR), Math.max(0, size / 6));
         drawable.setBounds(0, 0, drawable.getMinimumWidth(), drawable.getMinimumHeight());
         return drawable;
     }
@@ -152,24 +220,53 @@ public class TxtUtil {
     }
 
     /**
+     * 文本开头添加多个图片,图片之间留一个空格。
+     *
      * @param tv
      * @param title
-     * @param resId
+     * @param resIds
      */
-    public static void setImageSpan(TextView tv, String title, int resId) {
-        Drawable drawable = ResourcesCompat.getDrawable(tv.getContext().getResources(), resId, null);
-        if (drawable != null) {
-            if (TextUtils.isEmpty(title)) {
-                title = tv.getText().toString();
-            }
-            title = "  " + title;
-            // int space = (int) (tv.getLineSpacingExtra() + tv.getContext().getResources().getDimension(R.dimen.x5));
-            drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-            VerticalImageSpan imageSpan = new VerticalImageSpan(drawable/*, ImageSpanCustom.ALIGN_BOTTOM*//*, space*/);
-            SpannableString spanString = new SpannableString(title);
-            spanString.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            tv.setText(spanString);
+    public static void setImageSpan(TextView tv, String title, int... resIds) {
+        if (tv == null || resIds == null || resIds.length == 0) {
+            return;
         }
+        Drawable[] drawables = new Drawable[resIds.length];
+        int count = 0;
+        for (int resId : resIds) {
+            Drawable drawable;
+            try {
+                drawable = ResourcesCompat.getDrawable(tv.getContext().getResources(), resId, null);
+            } catch (Resources.NotFoundException e) {
+                continue;
+            }
+            if (drawable == null) {
+                continue;
+            }
+            int width = drawable.getIntrinsicWidth();
+            int height = drawable.getIntrinsicHeight();
+            if (width <= 0 || height <= 0) {
+                continue;
+            }
+            drawable.setBounds(0, 0, width, height);
+            drawables[count++] = drawable;
+        }
+        if (count == 0) {
+            return;
+        }
+        if (TextUtils.isEmpty(title)) {
+            CharSequence text = tv.getText();
+            title = text == null ? "" : text.toString();
+        }
+        StringBuilder prefix = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            prefix.append("  ");
+        }
+        SpannableString spanString = new SpannableString(prefix + title);
+        for (int i = 0; i < count; i++) {
+            int start = i * 2;
+            spanString.setSpan(new VerticalImageSpan(drawables[i]), start, start + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+        tv.setText(spanString);
     }
 
     @NonNull
