@@ -12,6 +12,11 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.DefaultLifecycleObserver;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.recyclerview.widget.LinearLayoutManager;
+
 import com.lib.base.R;
 import com.lib.base.adapter.PopAdapter;
 import com.lib.base.bean.BtnBean;
@@ -20,14 +25,8 @@ import com.lib.base.ui.widget.TitleBar;
 import com.lib.base.util.Arrays;
 import com.lib.base.util.ContextUtil;
 import com.lib.base.util.DebugUtil;
-import com.lib.base.util.ScreenUtil;
 
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.lifecycle.DefaultLifecycleObserver;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.recyclerview.widget.LinearLayoutManager;
 
 /**
  * 自动判断展示位置PopupWindow:以列表形式展示.可以添加左侧icon,右侧选择状态等
@@ -45,6 +44,8 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
     private PopAdapter popAdapter;
     private LifecycleOwner lifecycleOwner;
     private boolean observed;
+    private int widthSpec = View.MeasureSpec.UNSPECIFIED;
+    private int heightSpec = View.MeasureSpec.UNSPECIFIED;
 
     public PopView(Context context, TitleBar.OnRightViewsClickListener clickListener) {
         super(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -141,17 +142,29 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
             return;
         }
         addObserver(context);
+        // showAtLocation 的坐标相对窗口,不用屏幕坐标,否则上下都会差一个状态栏高度
         int[] location = new int[2];
-        locationView.getLocationOnScreen(location);
+        locationView.getLocationInWindow(location);
         int viewWidthHalf = locationView.getWidth() / 2;
         int viewMiddlePositionX = location[0] + viewWidthHalf;
-//        int viewMiddlePositionY = location[1] + locationView.getHeight() / 2;
-        int middleScreenX = ScreenUtil.getScreenWid() / 2;//宽度以一半为界限
-//        int middleScreenY = (int) (ScreenUtil.getScreenHei() * 0.6);//宽度以60%为界限
+        View root = locationView.getRootView();
+        int middleScreenX = root.getWidth() / 2;//宽度以一半为界限
+        int emptyY = root.getHeight() - location[1] - locationView.getHeight() - 5;//下面剩余高度
+        // 先按内容量宽高。超出锚点这一侧剩余区域时,改成不超过屏幕宽、不超过这一侧剩余高,列表在里面滚
+        widthSpec = View.MeasureSpec.UNSPECIFIED;
+        heightSpec = View.MeasureSpec.UNSPECIFIED;
         int measuredWidth = getMeasuredWidth();
         int measuredHeight = getMeasuredHeight();
-        int emptyY = ScreenUtil.getScreenHei() - location[1] - locationView.getHeight() - 5;//下面有足够空间弹出pop
-        boolean isTop = measuredHeight < emptyY;
+        // 下面放得下就在下面。两边都放不下时,剩余高度更大的一侧留下,下面更大不会改到上面
+        boolean isTop = measuredHeight < emptyY || emptyY >= location[1];
+        int limitH = isTop ? emptyY : location[1];
+        int limitW = root.getWidth();
+        if (limitH > 0 && limitW > 0 && (measuredWidth > limitW || measuredHeight > limitH)) {
+            widthSpec = View.MeasureSpec.makeMeasureSpec(limitW, View.MeasureSpec.AT_MOST);
+            heightSpec = View.MeasureSpec.makeMeasureSpec(limitH, View.MeasureSpec.AT_MOST);
+            measuredWidth = getMeasuredWidth();
+            measuredHeight = getMeasuredHeight();
+        }
         float dimensionX10 = context.getResources().getDimension(R.dimen.x5);//尖叫距离view距离
         int edge = (int) context.getResources().getDimension(R.dimen.x25);//尖叫距离最近边距离
         //左上区域
@@ -172,6 +185,7 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
             //左下区域
             setAnimationStyle(R.style.pop_anim3);
             int arrowHalf = layoutArrow(layoutBinding.ivBottom, layoutBinding.ivTop, edge);
+            measuredHeight = getContentView().getMeasuredHeight();
             showAt(locationView,
                     location[0] + viewWidthHalf - edge - arrowHalf,
                     location[1] - measuredHeight - (int) dimensionX10);
@@ -179,13 +193,16 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
             //右下区域
             setAnimationStyle(R.style.pop_anim4);
             int[] arrow = layoutArrowEnd(layoutBinding.ivBottom, layoutBinding.ivTop, edge, measuredWidth);
+            measuredHeight = getContentView().getMeasuredHeight();
             showAt(locationView,
                     location[0] + viewWidthHalf + edge + arrow[0] - arrow[1],
                     location[1] - measuredHeight - (int) dimensionX10);
         }
     }
 
-    /** 显示 show、隐藏 hide，尖角贴起始边。返回尖角半宽。 */
+    /**
+     * 显示 show、隐藏 hide，尖角贴起始边。返回尖角半宽。
+     */
     private int layoutArrow(View show, View hide, int edge) {
         show.setVisibility(View.VISIBLE);
         hide.setVisibility(View.GONE);
@@ -240,8 +257,12 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
      * @return
      */
     public int getMeasuredHeight() {
-        getContentView().measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        return getContentView().getMeasuredHeight();
+        getContentView().measure(widthSpec, heightSpec);
+        int height = getContentView().getMeasuredHeight();
+        if (View.MeasureSpec.getMode(heightSpec) != View.MeasureSpec.UNSPECIFIED) {
+            setHeight(height);
+        }
+        return height;
     }
 
     /**
@@ -250,8 +271,12 @@ public class PopView extends PopupWindow implements DefaultLifecycleObserver {
      * @return
      */
     public int getMeasuredWidth() {
-        getContentView().measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        return getContentView().getMeasuredWidth();
+        getContentView().measure(widthSpec, heightSpec);
+        int width = getContentView().getMeasuredWidth();
+        if (View.MeasureSpec.getMode(widthSpec) != View.MeasureSpec.UNSPECIFIED) {
+            setWidth(width);
+        }
+        return width;
     }
 
     public interface OnItemClickListener {
