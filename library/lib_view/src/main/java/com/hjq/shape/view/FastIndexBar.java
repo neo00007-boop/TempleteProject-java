@@ -21,9 +21,6 @@ import com.hjq.shape.R;
 
 import androidx.annotation.RequiresApi;
 
-import static android.os.VibrationEffect.DEFAULT_AMPLITUDE;
-
-
 /**
  * 1.索引条控件,默认预览是"#ABCDEFGHIJKLMNOPQRSTUVWXYZ";
  * 2.可以调用updateLettersData方法来跟新索引表内容;
@@ -178,7 +175,6 @@ public class FastIndexBar extends View {
     // 初始值应该是<0
     private int touchIndex = -1;
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -196,7 +192,6 @@ public class FastIndexBar extends View {
         return true;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     private void updateTouchIndex(int index) {
         if (touchIndex == index) {
             return;
@@ -217,15 +212,25 @@ public class FastIndexBar extends View {
         }
     }
 
-    @SuppressLint("MissingPermission")
-    @RequiresApi(api = Build.VERSION_CODES.O)
+    @SuppressLint({"MissingPermission", "deprecation"})
     private void vibrator() {
+        if (vibrator == null) {
+            return;
+        }
         try {
             vibrator.cancel();
-            vibrator.vibrate(VibrationEffect.createOneShot(15, DEFAULT_AMPLITUDE));
-        } catch (Exception e) {
-            e.printStackTrace();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrateOreo();
+            } else {
+                vibrator.vibrate(15);
+            }
+        } catch (Exception ignored) {
         }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void vibrateOreo() {
+        vibrator.vibrate(VibrationEffect.createOneShot(15, VibrationEffect.DEFAULT_AMPLITUDE));
     }
 
     private int dip2px(Context context, double dip) {
