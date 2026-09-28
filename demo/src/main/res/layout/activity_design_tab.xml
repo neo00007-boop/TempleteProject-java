@@ -11,17 +11,17 @@
         android:layout_width="wrap_content"
         android:layout_height="42dp"
         android:background="@color/transparent"
-        app:dstl_indicator_background="@drawable/ic_tab_indicator"
-        app:dstl_indicator_height="6dp"
-        app:dstl_indicator_margin_top="5dp"
-        app:dstl_indicator_width="45dp"
-        app:dstl_indicator_width_equal_title="false"
-        app:dstl_tab_padding="10dp"
-        app:dstl_textBold="SELECT"
-        app:dstl_textScale="1.25"
-        app:dstl_textSelectColor="@color/color_tab_done"
-        app:dstl_textUnselectColor="#333333"
-        app:dstl_textsize="14sp" />
+        app:tl_indicator_background="@drawable/ic_tab_indicator"
+        app:tl_indicator_height="6dp"
+        app:tl_indicator_margin_top="5dp"
+        app:tl_indicator_width="45dp"
+        app:tl_indicator_width_equal_title="false"
+        app:tl_tab_padding="10dp"
+        app:tl_textBold="SELECT"
+        app:tl_textScale="1.25"
+        app:tl_textSelectColor="@color/color_tab_done"
+        app:tl_textUnselectColor="#333333"
+        app:tl_textsize="14sp" />
 
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/vp"

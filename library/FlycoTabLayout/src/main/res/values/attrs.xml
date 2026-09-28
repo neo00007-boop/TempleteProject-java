@@ -17,7 +17,16 @@
     <!-- 设置显示器上方还是下方,只对圆角矩形有用-->
     <attr name="tl_indicator_gravity" format="enum">
         <enum name="TOP" value="48"/>
+        <enum name="CENTER" value="17"/>
         <enum name="BOTTOM" value="80"/>
+    </attr>
+    <attr name="tl_indicator_offset_x" format="dimension"/>
+    <attr name="tl_indicator_offset_y" format="dimension"/>
+    <attr name="tl_indicator_start_color" format="color"/>
+    <attr name="tl_indicator_end_color" format="color"/>
+    <attr name="tl_indicator_gradient_direction" format="enum">
+        <enum name="HORIZONTAL" value="0"/>
+        <enum name="VERTICAL" value="1"/>
     </attr>
     <!-- 设置显示器为常规|三角形|背景色块|-->
     <attr name="tl_indicator_style" format="enum">
@@ -68,8 +77,12 @@
     <attr name="tl_textSelectColor" format="color"/>
     <!-- 设置字体未选中颜色 -->
     <attr name="tl_textUnselectColor" format="color"/>
-    <!-- 设置字体加粗 -->
-    <attr name="tl_textBold" format="boolean"/>
+    <!-- 设置字体加粗。true / SELECT 选中加粗，BOTH 全部加粗，false / NONE 不加粗 -->
+    <attr name="tl_textBold" format="boolean|enum">
+        <enum name="NONE" value="0"/>
+        <enum name="SELECT" value="1"/>
+        <enum name="BOTH" value="2"/>
+    </attr>
     <!-- 设置字体全大写 -->
     <attr name="tl_textAllCaps" format="boolean"/>
 
@@ -240,53 +253,37 @@
     </declare-styleable>
 
     <declare-styleable name="GradientSlidingTabLayout">
-        <attr name="gst_indicator_start_color" format="color"/>
-        <attr name="gst_indicator_end_color" format="color"/>
-        <attr name="gst_indicator_gradient_direction" format="enum">
-            <enum name="HORIZONTAL" value="0"/>
-            <enum name="VERTICAL" value="1"/>
-        </attr>
+        <attr name="tl_indicator_start_color"/>
+        <attr name="tl_indicator_end_color"/>
+        <attr name="tl_indicator_gradient_direction"/>
     </declare-styleable>
 
     <declare-styleable name="DrawableIndicatorSlidingTabLayout">
-        <attr name="dist_indicator_drawable" format="reference"/>
-        <attr name="dist_indicator_width" format="dimension"/>
-        <attr name="dist_indicator_height" format="dimension"/>
-        <attr name="dist_indicator_gravity" format="enum">
-            <enum name="TOP" value="0"/>
-            <enum name="CENTER" value="1"/>
-            <enum name="BOTTOM" value="2"/>
-        </attr>
-        <attr name="dist_indicator_offset_x" format="dimension"/>
-        <attr name="dist_indicator_offset_y" format="dimension"/>
+        <attr name="tl_indicator_offset_x"/>
+        <attr name="tl_indicator_offset_y"/>
     </declare-styleable>
 
-    <!-- 设计稿样式 SlidingTab：底部画笔角标 + 文字角标整体垂直居中，不影响原 SlidingTabLayout -->
+    <!-- 设计稿样式。属性复用 SlidingTabLayout 的 tl_ -->
     <declare-styleable name="DesignSlidingTabLayout">
-        <attr name="dstl_indicator_height" format="dimension"/>
-        <attr name="dstl_indicator_width" format="dimension"/>
-        <attr name="dstl_indicator_margin_top" format="dimension"/>
-        <attr name="dstl_indicator_margin_bottom" format="dimension"/>
-        <attr name="dstl_indicator_width_equal_title" format="boolean"/>
-        <attr name="dstl_indicator_background" format="reference"/>
+        <attr name="tl_indicator_height"/>
+        <attr name="tl_indicator_width"/>
+        <attr name="tl_indicator_margin_top"/>
+        <attr name="tl_indicator_margin_bottom"/>
+        <attr name="tl_indicator_width_equal_title"/>
+        <attr name="tl_indicator_background"/>
 
-        <attr name="dstl_underline_color" format="color"/>
-        <attr name="dstl_underline_height" format="dimension"/>
+        <attr name="tl_underline_color"/>
+        <attr name="tl_underline_height"/>
 
-        <attr name="dstl_tab_padding" format="dimension"/>
-        <!-- 设置tab大小等分，必须要tl_indicator_width_equal_title=false -->
-        <attr name="dstl_tab_space_equal" format="boolean"/>
-        <attr name="dstl_tab_width" format="dimension"/>
+        <attr name="tl_tab_padding"/>
+        <attr name="tl_tab_space_equal"/>
+        <attr name="tl_tab_width"/>
 
-        <attr name="dstl_textsize" format="dimension"/>
-        <attr name="dstl_textSelectColor" format="color"/>
-        <attr name="dstl_textUnselectColor" format="color"/>
-        <attr name="dstl_textBold" format="enum">
-            <enum name="NONE" value="0"/>
-            <enum name="SELECT" value="1"/>
-            <enum name="BOTH" value="2"/>
-        </attr>
-        <attr name="dstl_textAllCaps" format="boolean"/>
-        <attr name="dstl_textScale" format="float"/>
+        <attr name="tl_textsize"/>
+        <attr name="tl_textSelectColor"/>
+        <attr name="tl_textUnselectColor"/>
+        <attr name="tl_textAllCaps"/>
+        <attr name="tl_textScale"/>
+        <attr name="tl_textBold"/>
     </declare-styleable>
 </resources>

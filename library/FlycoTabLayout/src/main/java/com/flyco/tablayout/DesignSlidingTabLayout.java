@@ -151,29 +151,29 @@ public class DesignSlidingTabLayout extends HorizontalScrollView implements View
     private void obtainAttributes(Context context, AttributeSet attrs) {
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.DesignSlidingTabLayout);
 
-        mIndicatorHeight = ta.getDimension(R.styleable.DesignSlidingTabLayout_dstl_indicator_height, dp2px(11));
-        mIndicatorWidth = ta.getDimension(R.styleable.DesignSlidingTabLayout_dstl_indicator_width, dp2px(-1));
-        mIndicatorMarginTop = ta.getDimension(R.styleable.DesignSlidingTabLayout_dstl_indicator_margin_top, dp2px(2));
-        mIndicatorMarginBottom = ta.getDimension(R.styleable.DesignSlidingTabLayout_dstl_indicator_margin_bottom, dp2px(0));
-        mIndicatorWidthEqualTitle = ta.getBoolean(R.styleable.DesignSlidingTabLayout_dstl_indicator_width_equal_title, true);
+        mIndicatorHeight = ta.getDimension(R.styleable.DesignSlidingTabLayout_tl_indicator_height, dp2px(11));
+        mIndicatorWidth = ta.getDimension(R.styleable.DesignSlidingTabLayout_tl_indicator_width, dp2px(-1));
+        mIndicatorMarginTop = ta.getDimension(R.styleable.DesignSlidingTabLayout_tl_indicator_margin_top, dp2px(2));
+        mIndicatorMarginBottom = ta.getDimension(R.styleable.DesignSlidingTabLayout_tl_indicator_margin_bottom, dp2px(0));
+        mIndicatorWidthEqualTitle = ta.getBoolean(R.styleable.DesignSlidingTabLayout_tl_indicator_width_equal_title, true);
         mIndicatorBackgroundResId = ta.getResourceId(
-                R.styleable.DesignSlidingTabLayout_dstl_indicator_background, R.drawable.ic_tab_indicator);
+                R.styleable.DesignSlidingTabLayout_tl_indicator_background, R.drawable.ic_tab_indicator);
 
-        mUnderlineColor = ta.getColor(R.styleable.DesignSlidingTabLayout_dstl_underline_color, Color.parseColor("#EEEEEE"));
-        mUnderlineHeight = ta.getDimension(R.styleable.DesignSlidingTabLayout_dstl_underline_height, dp2px(0.5f));
+        mUnderlineColor = ta.getColor(R.styleable.DesignSlidingTabLayout_tl_underline_color, Color.parseColor("#EEEEEE"));
+        mUnderlineHeight = ta.getDimension(R.styleable.DesignSlidingTabLayout_tl_underline_height, dp2px(0.5f));
 
-        mTextSize = ta.getDimension(R.styleable.DesignSlidingTabLayout_dstl_textsize, sp2px(16));
-        mTextSelectColor = ta.getColor(R.styleable.DesignSlidingTabLayout_dstl_textSelectColor,
+        mTextSize = ta.getDimension(R.styleable.DesignSlidingTabLayout_tl_textsize, sp2px(16));
+        mTextSelectColor = ta.getColor(R.styleable.DesignSlidingTabLayout_tl_textSelectColor,
                 Color.parseColor(DEFAULT_SELECT_COLOR));
-        mTextUnSelectColor = ta.getColor(R.styleable.DesignSlidingTabLayout_dstl_textUnselectColor,
+        mTextUnSelectColor = ta.getColor(R.styleable.DesignSlidingTabLayout_tl_textUnselectColor,
                 Color.parseColor(DEFAULT_UNSELECT_COLOR));
-        mTextBold = ta.getInt(R.styleable.DesignSlidingTabLayout_dstl_textBold, TEXT_BOLD_WHEN_SELECT);
-        mTextAllCaps = ta.getBoolean(R.styleable.DesignSlidingTabLayout_dstl_textAllCaps, false);
-        mTextScale = ta.getFloat(R.styleable.DesignSlidingTabLayout_dstl_textScale, 1.25f);
+        mTextBold = resolveTextBold(ta.getInt(R.styleable.DesignSlidingTabLayout_tl_textBold, TEXT_BOLD_WHEN_SELECT));
+        mTextAllCaps = ta.getBoolean(R.styleable.DesignSlidingTabLayout_tl_textAllCaps, false);
+        mTextScale = ta.getFloat(R.styleable.DesignSlidingTabLayout_tl_textScale, 1.25f);
 
-        mTabSpaceEqual = ta.getBoolean(R.styleable.DesignSlidingTabLayout_dstl_tab_space_equal, false);
-        mTabWidth = ta.getDimension(R.styleable.DesignSlidingTabLayout_dstl_tab_width, dp2px(-1));
-        mTabPadding = ta.getDimension(R.styleable.DesignSlidingTabLayout_dstl_tab_padding,
+        mTabSpaceEqual = ta.getBoolean(R.styleable.DesignSlidingTabLayout_tl_tab_space_equal, false);
+        mTabWidth = ta.getDimension(R.styleable.DesignSlidingTabLayout_tl_tab_width, dp2px(-1));
+        mTabPadding = ta.getDimension(R.styleable.DesignSlidingTabLayout_tl_tab_padding,
                 mTabSpaceEqual || mTabWidth > 0 ? dp2px(0) : dp2px(16));
 
         ta.recycle();
@@ -645,6 +645,17 @@ public class DesignSlidingTabLayout extends HorizontalScrollView implements View
     public void setTextBold(int textBold) {
         this.mTextBold = textBold;
         updateTabStyles();
+    }
+
+    /** true 在资源里是 -1，和 SELECT 一样，只加粗当前选中项。 */
+    private static int resolveTextBold(int value) {
+        if (value == -1 || value == TEXT_BOLD_WHEN_SELECT) {
+            return TEXT_BOLD_WHEN_SELECT;
+        }
+        if (value == TEXT_BOLD_BOTH) {
+            return TEXT_BOLD_BOTH;
+        }
+        return TEXT_BOLD_NONE;
     }
 
     public void setTextScale(float textScale) {

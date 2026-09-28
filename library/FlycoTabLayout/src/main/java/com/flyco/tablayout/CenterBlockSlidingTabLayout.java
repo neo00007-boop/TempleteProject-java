@@ -19,8 +19,8 @@ import androidx.core.content.ContextCompat;
 /**
  * 基于 {@link SlidingTabLayout} 的胶囊指示器 Tab：
  * <ul>
- *   <li>指示器仅支持纯色或背景图（{@code stl_indicator_color} / {@code stl_indicator_background}）</li>
- *   <li>支持设置宽高（{@code stl_indicator_width} / {@code stl_indicator_height}）</li>
+ *   <li>指示器仅支持纯色或背景图（{@code tl_indicator_color} / {@code tl_indicator_background}）</li>
+ *   <li>支持设置宽高（{@code tl_indicator_width} / {@code tl_indicator_height}）</li>
  *   <li>指示器与 item 文字中心对齐（在 Tab 内垂直、水平居中）</li>
  * </ul>
  * 其余行为与 API 同 {@link SlidingTabLayout}：关联页面用 {@code setViewPager}，只展示标题用 {@code setTitles}。

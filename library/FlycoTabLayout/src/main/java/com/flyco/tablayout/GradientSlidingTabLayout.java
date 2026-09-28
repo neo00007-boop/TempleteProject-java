@@ -225,9 +225,9 @@ public class GradientSlidingTabLayout extends HorizontalScrollView implements Vi
         ta.recycle();
 
         TypedArray customTa = context.obtainStyledAttributes(attrs, R.styleable.GradientSlidingTabLayout);
-        mIndicatorStartColor = customTa.getColor(R.styleable.GradientSlidingTabLayout_gst_indicator_start_color, 0);
-        mIndicatorEndColor = customTa.getColor(R.styleable.GradientSlidingTabLayout_gst_indicator_end_color, 0);
-        mIndicatorGradientDirection = customTa.getInt(R.styleable.GradientSlidingTabLayout_gst_indicator_gradient_direction, 0);
+        mIndicatorStartColor = customTa.getColor(R.styleable.GradientSlidingTabLayout_tl_indicator_start_color, 0);
+        mIndicatorEndColor = customTa.getColor(R.styleable.GradientSlidingTabLayout_tl_indicator_end_color, 0);
+        mIndicatorGradientDirection = customTa.getInt(R.styleable.GradientSlidingTabLayout_tl_indicator_gradient_direction, 0);
         customTa.recycle();
     }
 

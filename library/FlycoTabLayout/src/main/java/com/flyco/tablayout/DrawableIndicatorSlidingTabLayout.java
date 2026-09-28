@@ -64,7 +64,6 @@ public class DrawableIndicatorSlidingTabLayout extends HorizontalScrollView impl
     private Drawable mCustomIndicatorDrawable;
     private float mCustomIndicatorWidth;
     private float mCustomIndicatorHeight;
-    private int mCustomIndicatorGravity; // 0: TOP, 1: CENTER, 2: BOTTOM
     private float mCustomIndicatorOffsetX;
     private float mCustomIndicatorOffsetY;
 
@@ -225,16 +224,20 @@ public class DrawableIndicatorSlidingTabLayout extends HorizontalScrollView impl
         mTabUnSelectColor = ta.getColor(R.styleable.SlidingTabLayout_tl_tabUnSelectColor, Color.parseColor("#00000000"));
 
         mTextScale = ta.getFloat(R.styleable.SlidingTabLayout_tl_textScale, 1f);
+        boolean indicatorWidthSet = ta.hasValue(R.styleable.SlidingTabLayout_tl_indicator_width);
+        boolean indicatorHeightSet = ta.hasValue(R.styleable.SlidingTabLayout_tl_indicator_height);
 
         ta.recycle();
 
+        mCustomIndicatorWidth = indicatorWidthSet ? mIndicatorWidth : dp2px(-1);
+        mCustomIndicatorHeight = indicatorHeightSet ? mIndicatorHeight : dp2px(-1);
+        if (mIndicatorBackgroundResId != 0) {
+            mCustomIndicatorDrawable = ContextCompat.getDrawable(context, mIndicatorBackgroundResId);
+        }
+
         TypedArray dTa = context.obtainStyledAttributes(attrs, R.styleable.DrawableIndicatorSlidingTabLayout);
-        mCustomIndicatorDrawable = dTa.getDrawable(R.styleable.DrawableIndicatorSlidingTabLayout_dist_indicator_drawable);
-        mCustomIndicatorWidth = dTa.getDimension(R.styleable.DrawableIndicatorSlidingTabLayout_dist_indicator_width, dp2px(-1));
-        mCustomIndicatorHeight = dTa.getDimension(R.styleable.DrawableIndicatorSlidingTabLayout_dist_indicator_height, dp2px(-1));
-        mCustomIndicatorGravity = dTa.getInt(R.styleable.DrawableIndicatorSlidingTabLayout_dist_indicator_gravity, 2); // 2: BOTTOM
-        mCustomIndicatorOffsetX = dTa.getDimension(R.styleable.DrawableIndicatorSlidingTabLayout_dist_indicator_offset_x, dp2px(0));
-        mCustomIndicatorOffsetY = dTa.getDimension(R.styleable.DrawableIndicatorSlidingTabLayout_dist_indicator_offset_y, dp2px(0));
+        mCustomIndicatorOffsetX = dTa.getDimension(R.styleable.DrawableIndicatorSlidingTabLayout_tl_indicator_offset_x, dp2px(0));
+        mCustomIndicatorOffsetY = dTa.getDimension(R.styleable.DrawableIndicatorSlidingTabLayout_tl_indicator_offset_y, dp2px(0));
         dTa.recycle();
     }
 
@@ -609,11 +612,11 @@ public class DrawableIndicatorSlidingTabLayout extends HorizontalScrollView impl
             float left = centerX - drawWidth / 2f + mCustomIndicatorOffsetX;
             float top = 0;
             
-            if (mCustomIndicatorGravity == 0) { // TOP
+            if (mIndicatorGravity == Gravity.TOP) {
                 top = mCustomIndicatorOffsetY;
-            } else if (mCustomIndicatorGravity == 1) { // CENTER
+            } else if (mIndicatorGravity == Gravity.CENTER) {
                 top = (height - drawHeight) / 2f + mCustomIndicatorOffsetY;
-            } else if (mCustomIndicatorGravity == 2) { // BOTTOM
+            } else {
                 top = height - drawHeight - mCustomIndicatorOffsetY;
             }
             
@@ -766,8 +769,10 @@ public class DrawableIndicatorSlidingTabLayout extends HorizontalScrollView impl
     public void setGradientIndicatorDrawable(int resId){
         this.mIndicatorBackgroundResId = resId;
         mIndicatorBackgroundDrawable = null;
+        mCustomIndicatorDrawable = null;
         try {
             mIndicatorBackgroundDrawable = ContextCompat.getDrawable(getContext(), mIndicatorBackgroundResId);
+            mCustomIndicatorDrawable = mIndicatorBackgroundDrawable;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -776,11 +781,13 @@ public class DrawableIndicatorSlidingTabLayout extends HorizontalScrollView impl
 
     public void setIndicatorHeight(float indicatorHeight) {
         this.mIndicatorHeight = dp2px(indicatorHeight);
+        this.mCustomIndicatorHeight = this.mIndicatorHeight;
         invalidate();
     }
 
     public void setIndicatorWidth(float indicatorWidth) {
         this.mIndicatorWidth = dp2px(indicatorWidth);
+        this.mCustomIndicatorWidth = this.mIndicatorWidth;
         invalidate();
     }
 
