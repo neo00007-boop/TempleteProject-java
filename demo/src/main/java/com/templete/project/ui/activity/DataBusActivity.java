@@ -1,11 +1,11 @@
 package com.templete.project.ui.activity;
 
+import androidx.lifecycle.Observer;
+
 import com.lib.base.ui.activity.BaseActivity;
 import com.lib.base.util.DebugUtil;
 import com.lib.base.util.LiveDataBus;
 import com.templete.project.databinding.DataBusActivityBinding;
-
-import androidx.lifecycle.Observer;
 
 /**
  * PackageName  com.templete.project.ui.activity
@@ -54,6 +54,6 @@ public class DataBusActivity extends BaseActivity<DataBusActivityBinding> {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        LiveDataBus.get().removeLiveDataWithObserver(KEY_BUS1, observer);
+        LiveDataBus.get().removeObserver(KEY_BUS2, observer);
     }
 }

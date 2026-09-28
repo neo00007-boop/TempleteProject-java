@@ -1,32 +1,35 @@
 package com.lib.base.util;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
+import com.kunminx.architecture.domain.message.MutableResult;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
- * 系统级LiveDataBus
+ * 进程内事件总线。同一个 key 共用一条通道，新观察者收不到订阅前的旧值。
  * <p>
- * PackageName  com.lib.base.util
- * ProjectName  TempleteProject-java
- * Date         2022/10/17.
- *
- * @author xwchen
+ * {@code observe(LifecycleOwner)} 跟着页面生命周期，页面销毁时自动解绑。
+ * {@code observeForever} 不跟生命周期，不用时必须调用 {@link #removeObserver} 手动解绑，否则观察者会一直留在通道上。
+ * <p>
+ * 通道是 UnPeek 这一套，非粘性，一条消息可以被多个观察者消费。三个类按读写来分：
+ * <ul>
+ * <li>{@link com.kunminx.architecture.domain.message.MutableResult}：可写结果。
+ * 唯一可信源在业务处理完后 {@code setValue} / {@code postValue}。对外应只给出父类 {@code Result}，页面只能观察。
+ * 本总线自己就是发送方，所以通道直接存它，调用方既能发也能订。</li>
+ * <li>{@link com.kunminx.architecture.ui.callback.UnPeekLiveData}：可写事件。
+ * 语义偏向界面发起，例如按钮点击后页面自己发出去。页面内既要发又要订时用它。</li>
+ * <li>{@link com.kunminx.architecture.ui.callback.ProtectedUnPeekLiveData}：只读。
+ * {@code setValue} / {@code postValue} 不能从外部调用，页面只能 {@code observe}。
+ * 把可写对象交给界面时用这个类型。要回放旧值必须显式调用 {@code observeSticky}。</li>
+ * </ul>
  */
 public final class LiveDataBus {
 
-    private final Map<String, BusMutableLiveData<Object>> bus;
+    private final Map<String, MutableResult<Object>> bus = new ConcurrentHashMap<>();
 
     private LiveDataBus() {
-        bus = new HashMap<>();
     }
 
     private static class SingletonHolder {
@@ -37,124 +40,39 @@ public final class LiveDataBus {
         return SingletonHolder.DEFAULT_BUS;
     }
 
-    public <T> BusMutableLiveData<T> with(String key, Class<T> type) {
-        if (!bus.containsKey(key)) {
-            bus.put(key, new BusMutableLiveData<>());
-        }
-        return (BusMutableLiveData<T>) bus.get(key);
-    }
-
-    /**
-     * 调用{@link BusMutableLiveData#observeForever(androidx.lifecycle.Observer)}需要使用此方法remove Observer
-     * 调用{@link BusMutableLiveData#observe(androidx.lifecycle.LifecycleOwner, androidx.lifecycle.Observer)}直接remove Observer
-     *
-     * @param key      key
-     * @param observer observer
-     * @param <T>      T
-     */
-    public <T> void removeLiveDataWithObserver(String key, Observer<T> observer) {
-        if (bus.containsKey(key)) {
-            BusMutableLiveData<T> remove = (BusMutableLiveData<T>) bus.remove(key);
-            if (remove != null && observer != null) {
-                remove.removeObserver(observer);
-            }
-        }
-    }
-
-    public MutableLiveData<Object> with(String key) {
+    public MutableResult<Object> with(String key) {
         return with(key, Object.class);
     }
 
-    private static class ObserverWrapper<T> implements Observer<T> {
-
-        private Observer<T> observer;
-
-        public ObserverWrapper(Observer<T> observer) {
-            this.observer = observer;
+    public <T> MutableResult<T> with(String key, Class<T> type) {
+        if (key == null || type == null) {
+            throw new IllegalArgumentException("key or type is null");
         }
+        MutableResult<Object> created = new MutableResult<>();
+        MutableResult<Object> existing = bus.putIfAbsent(key, created);
+        return uncheckedCast(existing != null ? existing : created);
+    }
 
-        @Override
-        public void onChanged(@Nullable T t) {
-            if (observer != null) {
-                if (isCallOnObserve()) {
-                    return;
-                }
-                observer.onChanged(t);
-            }
+    /**
+     * {@code observeForever} 的手动解绑。只摘掉这一个观察者，通道留给其他订阅者。
+     */
+    public void removeObserver(String key, Observer<?> observer) {
+        if (key == null || observer == null) {
+            return;
         }
-
-        private boolean isCallOnObserve() {
-            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-            if (stackTrace != null && stackTrace.length > 0) {
-                for (StackTraceElement element : stackTrace) {
-                    if ("android.arch.lifecycle.LiveData".equals(element.getClassName()) && "observeForever".equals(element.getMethodName())) {
-                        return true;
-                    }
-                }
-            }
-            return false;
+        MutableResult<Object> result = bus.get(key);
+        if (result != null) {
+            result.removeObserver(castObserver(observer));
         }
     }
 
-    public static class BusMutableLiveData<T> extends MutableLiveData<T> {
+    @SuppressWarnings("unchecked")
+    private static Observer<? super Object> castObserver(Observer<?> observer) {
+        return (Observer<? super Object>) observer;
+    }
 
-        private Map<Observer, Observer> observerMap = new HashMap<>();
-
-        @Override
-        public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<? super T> observer) {
-            super.observe(owner, observer);
-            try {
-                hook((Observer<T>) observer);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void observeForever(@NonNull Observer<? super T> observer) {
-            if (!observerMap.containsKey(observer)) {
-                observerMap.put(observer, new ObserverWrapper(observer));
-            }
-            super.observeForever(observerMap.get(observer));
-        }
-
-        @Override
-        public void removeObserver(@NonNull Observer<? super T> observer) {
-            Observer realObserver = null;
-            if (observerMap.containsKey(observer)) {
-                realObserver = observerMap.remove(observer);
-            } else {
-                realObserver = observer;
-            }
-            super.removeObserver(realObserver);
-        }
-
-        private void hook(@NonNull Observer<T> observer) throws Exception {
-            //get wrapper's version
-            Class<LiveData> classLiveData = LiveData.class;
-            Field fieldObservers = classLiveData.getDeclaredField("mObservers");
-            fieldObservers.setAccessible(true);
-            Object objectObservers = fieldObservers.get(this);
-            Class<?> classObservers = objectObservers.getClass();
-            Method methodGet = classObservers.getDeclaredMethod("get", Object.class);
-            methodGet.setAccessible(true);
-            Object objectWrapperEntry = methodGet.invoke(objectObservers, observer);
-            Object objectWrapper = null;
-            if (objectWrapperEntry instanceof Map.Entry) {
-                objectWrapper = ((Map.Entry) objectWrapperEntry).getValue();
-            }
-            if (objectWrapper == null) {
-                throw new NullPointerException("Wrapper can not be bull!");
-            }
-            Class<?> classObserverWrapper = objectWrapper.getClass().getSuperclass();
-            Field fieldLastVersion = classObserverWrapper.getDeclaredField("mLastVersion");
-            fieldLastVersion.setAccessible(true);
-            //get livedata's version
-            Field fieldVersion = classLiveData.getDeclaredField("mVersion");
-            fieldVersion.setAccessible(true);
-            Object objectVersion = fieldVersion.get(this);
-            //set wrapper's version
-            fieldLastVersion.set(objectWrapper, objectVersion);
-        }
+    @SuppressWarnings("unchecked")
+    private static <T> MutableResult<T> uncheckedCast(MutableResult<Object> result) {
+        return (MutableResult<T>) result;
     }
 }
