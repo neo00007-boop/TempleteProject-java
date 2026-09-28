@@ -31,7 +31,7 @@ public class PopActivity extends BaseActivity<PopActivityBinding> {
     private void togoMenu() {
         if (popMenuView == null) {
             MenuLayoutBinding binding = MenuLayoutBinding.inflate(getLayoutInflater());
-            popMenuView = new PopMenuView(binding.getRoot(), getTitleBar());
+            popMenuView = new PopMenuView(binding.getRoot(), getTitleBar(), mViewBinding.getRoot());
         }
         if (popMenuView.isShowing()) {
             popMenuView.dismiss();
@@ -78,7 +78,7 @@ public class PopActivity extends BaseActivity<PopActivityBinding> {
             return;
         }
         if (view != null) {
-            new PopView(this, null).show(view);
+            new PopView(this, null).show(view, mViewBinding.getRoot());
         }
     }
 
@@ -103,7 +103,7 @@ public class PopActivity extends BaseActivity<PopActivityBinding> {
         if (listPopView.isShowing()) {
             listPopView.dismiss();
         } else {
-            listPopView.show(anchor);
+            listPopView.show(anchor, mViewBinding.getRoot());
         }
     }
 
