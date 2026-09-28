@@ -221,7 +221,8 @@ public class TitleBar extends FrameLayout {
             popView = new PopView(getContext(), listener);
             popView.setPopBeans(titleBtnBeans, hasSelect, false);
         }
-        popView.show(ivRight);
+        View root = getParent() instanceof View ? (View) getParent() : this;
+        popView.show(ivRight, root);
     }
 
     /**
