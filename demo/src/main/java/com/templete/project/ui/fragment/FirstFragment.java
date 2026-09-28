@@ -10,7 +10,7 @@ import com.lib.base.rxjava.RxUtils;
 import com.lib.base.ui.fragment.BaseFragment;
 import com.lib.base.util.LoginUtil;
 import com.templete.project.databinding.FirstFragmentBinding;
-import com.templete.project.ui.activity.CustomXTabActivity;
+import com.flyco.tablayoutsamples.ui.SimpleHomeActivity;
 import com.templete.project.ui.activity.DialogActivity;
 import com.templete.project.ui.activity.DoubleCacheActivity;
 import com.templete.project.ui.activity.GlideActivity;
@@ -19,7 +19,6 @@ import com.templete.project.ui.activity.PopActivity;
 import com.templete.project.ui.activity.RatioActivity;
 import com.templete.project.ui.activity.ShapeActivity;
 import com.templete.project.ui.activity.ViewActivity;
-import com.templete.project.ui.activity.XTabActivity;
 
 /**
  * PackageName  com.templete.project.ui.fragment
@@ -66,9 +65,7 @@ public class FirstFragment extends BaseFragment<FirstFragmentBinding> {
                     } else if (v.equals(mViewBinding.tv3)) {
                         clazz = DialogActivity.class;
                     } else if (v.equals(mViewBinding.tv4)) {
-                        clazz = XTabActivity.class;
-                    } else if (v.equals(mViewBinding.tv5)) {
-                        clazz = CustomXTabActivity.class;
+                        clazz = SimpleHomeActivity.class;
                     } else if (v.equals(mViewBinding.tv6)) {
                         clazz = ViewActivity.class;
                     } else if (v.equals(mViewBinding.tv7)) {
@@ -85,7 +82,7 @@ public class FirstFragment extends BaseFragment<FirstFragmentBinding> {
                     }
                 },
                 mViewBinding.tv1, mViewBinding.tv2, mViewBinding.tv3,
-                mViewBinding.tv4, mViewBinding.tv5, mViewBinding.tv6,
+                mViewBinding.tv4, mViewBinding.tv6,
                 mViewBinding.tv7, mViewBinding.tv8, mViewBinding.tv9,
                 mViewBinding.tv10);
     }

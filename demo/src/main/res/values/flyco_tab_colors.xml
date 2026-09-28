@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="color_start_tab_layout">#FFFF8A7A</color>
+    <color name="color_end_tab_layout">#FFFF4D5A</color>
+    <color name="cl_797979">#797979</color>
+    <color name="color_tab_done">#4CAF50</color>
+</resources>

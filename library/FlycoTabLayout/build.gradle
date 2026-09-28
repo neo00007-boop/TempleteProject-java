@@ -1,0 +1,20 @@
+apply plugin: 'com.android.library'
+def config = rootProject.ext
+android {
+    compileSdkVersion config.android.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion config.android.minSdkVersion
+        targetSdkVersion config.android.targetSdkVersion
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    api "androidx.appcompat:appcompat:${config.dependencies.appcompat_version}"
+    api "androidx.viewpager:viewpager:1.0.0"
+}

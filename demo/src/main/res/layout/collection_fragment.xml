@@ -136,22 +136,7 @@
             android:layout_marginTop="@dimen/x50"
             android:gravity="center"
             android:includeFontPadding="false"
-            android:text="默认XTablayout"
-            android:textColor="@color/white"
-            android:textSize="@dimen/x45"
-            app:shape_radius="@dimen/x75"
-            app:shape_solidColor="@color/common_accent_color"
-            app:shape_textColor="@color/white"
-            tools:ignore="HardcodedText" />
-
-        <com.hjq.shape.view.ShapeTextView
-            android:id="@+id/tv10"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/x150"
-            android:layout_marginTop="@dimen/x50"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:text="自定义XTablayout"
+            android:text="FlycoTabLayout"
             android:textColor="@color/white"
             android:textSize="@dimen/x45"
             app:shape_radius="@dimen/x75"

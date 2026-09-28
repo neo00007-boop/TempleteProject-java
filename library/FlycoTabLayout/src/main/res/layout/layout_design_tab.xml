@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:mv="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <!-- 文字 + 角标占位作为整体垂直居中 -->
+    <LinearLayout
+        android:id="@+id/ll_tab_content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_tab_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:singleLine="true"
+            tools:text="足球" />
+
+        <!-- 底部角标占位：仅选中 tab 设置高度，使文字+角标整体居中；未选中为 0，文字对齐选中整体中线 -->
+        <View
+            android:id="@+id/v_indicator_space"
+            android:layout_width="match_parent"
+            android:layout_height="0dp" />
+    </LinearLayout>
+
+    <com.flyco.tablayout.widget.MsgView
+        android:id="@+id/rtv_msg_tip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="#ffffff"
+        android:textSize="12sp"
+        android:visibility="gone"
+        mv:mv_backgroundColor="#FD481F"
+        mv:mv_isRadiusHalfHeight="true"
+        mv:mv_strokeColor="#ffffff"
+        mv:mv_strokeWidth="1dp" />
+
+</FrameLayout>

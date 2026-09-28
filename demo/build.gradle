@@ -3,6 +3,7 @@ apply plugin: 'kotlin-android'
 def config = rootProject.ext
 dependencies {
     implementation project(path: ':library:lib_base')
+    implementation project(path: ':library:FlycoTabLayout')
     annotationProcessor "com.alibaba:arouter-compiler:${config.dependencies.route_version}"
     implementation "androidx.multidex:multidex:${config.dependencies.multidex_version}"
     //oaid
