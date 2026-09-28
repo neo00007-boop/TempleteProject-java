@@ -3,7 +3,6 @@ package com.lib.base.ui.pop;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.view.Gravity;
 import android.view.View;
@@ -38,6 +37,7 @@ public class PopMenuView extends PopupWindow implements DefaultLifecycleObserver
     private static final int ANIM = 250;
 
     private final View locationView;
+    private final View rootView;
     private final View mask;
     private final View sheet;
     private LifecycleOwner lifecycleOwner;
@@ -45,17 +45,18 @@ public class PopMenuView extends PopupWindow implements DefaultLifecycleObserver
     private boolean closing;
     private int animToken;
 
-    public PopMenuView(View contentView, View locationView) {
-        this(contentView, locationView, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+    public PopMenuView(View contentView, View locationView, View rootView) {
+        this(contentView, locationView, rootView, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
     }
 
-    public PopMenuView(View contentView, View locationView, int width, int height) {
-        this(wrapMenu(contentView), checkAnchor(locationView), width, height);
+    public PopMenuView(View contentView, View locationView, View rootView, int width, int height) {
+        this(wrapMenu(contentView), checkAnchor(locationView), checkAnchor(rootView), width, height);
     }
 
-    private PopMenuView(MenuShell shell, View locationView, int width, int height) {
+    private PopMenuView(MenuShell shell, View locationView, View rootView, int width, int height) {
         super(shell.root, width, height);
         this.locationView = locationView;
+        this.rootView = rootView;
         this.mask = shell.mask;
         this.sheet = shell.sheet;
         shell.blank.setOnClickListener(v -> dismiss());
@@ -225,18 +226,13 @@ public class PopMenuView extends PopupWindow implements DefaultLifecycleObserver
     }
 
     /**
-     * @return [锚点在窗口里的底边, 底边到可见区域底部的高度]
+     * @return [锚点在窗口里的底边, 外面传入的根布局高度]
      */
     private int[] belowAnchor() {
         int[] location = new int[2];
         locationView.getLocationInWindow(location);
         int top = location[1] + locationView.getHeight();
-        Rect frame = new Rect();
-        locationView.getWindowVisibleDisplayFrame(frame);
-        int[] rootOnScreen = new int[2];
-        locationView.getRootView().getLocationOnScreen(rootOnScreen);
-        int bottom = frame.bottom - rootOnScreen[1];
-        return new int[]{top, bottom - top};
+        return new int[]{top, rootView.getHeight()};
     }
 
     private boolean canShow() {
