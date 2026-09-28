@@ -56,7 +56,7 @@
     <!-- tab -->
     <!-- 设置tab的paddingLeft和paddingRight -->
     <attr name="tl_tab_padding" format="dimension"/>
-    <!-- 设置tab大小等分 -->
+    <!-- 设置tab大小等分，必须要tl_indicator_width_equal_title=false -->
     <attr name="tl_tab_space_equal" format="boolean"/>
     <!-- 设置tab固定大小 -->
     <attr name="tl_tab_width" format="dimension"/>
@@ -100,6 +100,7 @@
 
         <!-- tab -->
         <attr name="tl_tab_padding"/>
+        <!-- 设置tab大小等分，必须要tl_indicator_width_equal_title=false -->
         <attr name="tl_tab_space_equal"/>
         <attr name="tl_tab_width"/>
 
@@ -156,6 +157,7 @@
 
         <!-- tab -->
         <attr name="tl_tab_padding"/>
+        <!-- 设置tab大小等分，必须要tl_indicator_width_equal_title=false -->
         <attr name="tl_tab_space_equal"/>
         <attr name="tl_tab_width"/>
 
@@ -205,6 +207,7 @@
 
         <!-- tab -->
         <attr name="tl_tab_padding"/>
+        <!-- 设置tab大小等分，必须要tl_indicator_width_equal_title=false -->
         <attr name="tl_tab_space_equal"/>
         <attr name="tl_tab_width"/>
 
@@ -271,6 +274,7 @@
         <attr name="dstl_underline_height" format="dimension"/>
 
         <attr name="dstl_tab_padding" format="dimension"/>
+        <!-- 设置tab大小等分，必须要tl_indicator_width_equal_title=false -->
         <attr name="dstl_tab_space_equal" format="boolean"/>
         <attr name="dstl_tab_width" format="dimension"/>
 
