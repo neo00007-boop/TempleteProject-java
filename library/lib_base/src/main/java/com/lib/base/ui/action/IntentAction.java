@@ -97,64 +97,34 @@ public interface IntentAction extends OverridePendingTransitionAction {
     }
 
     default void startAtyForResult(@NonNull Activity activity, @NonNull Class aClass) {
+        startAtyForResult(activity, aClass, 1000);
+    }
+
+    default void startAtyForResult(@NonNull Activity activity, @NonNull Class aClass, int requestCode) {
         error(activity, aClass);
-        Intent intent = getIntent(activity, aClass);
-        activity.startActivityForResult(intent, 1000);
+        activity.startActivityForResult(getIntent(activity, aClass), requestCode);
         startAnim(activity);
     }
 
     default void startAtyForResult(@NonNull Activity activity, @NonNull Class aClass, @NonNull IntentData... data) {
+        startAtyForResult(activity, aClass, 1000, data);
+    }
+
+    default void startAtyForResult(@NonNull Activity activity, @NonNull Class aClass, int requestCode, @NonNull IntentData... data) {
         error(activity, aClass);
         Intent intent = getIntent(activity, aClass);
         putdata(intent, data);
-        activity.startActivityForResult(intent, 1000);
+        activity.startActivityForResult(intent, requestCode);
         startAnim(activity);
     }
 
     default void putdata(Intent intent, @NonNull IntentData[] data) {
+        if (intent == null) {
+            return;
+        }
         for (IntentData datum : data) {
-            switch (datum.valueType) {
-                case IntentData.TYPE_INT:
-                    intent.putExtra(datum.key, datum.value1);
-                    break;
-                case IntentData.TYPE_LONG:
-                    intent.putExtra(datum.key, datum.value2);
-                    break;
-                case IntentData.TYPE_FLOAT:
-                    intent.putExtra(datum.key, datum.value3);
-                    break;
-                case IntentData.TYPE_DOUBLE:
-                    intent.putExtra(datum.key, datum.value4);
-                    break;
-                case IntentData.TYPE_STRING:
-                    intent.putExtra(datum.key, datum.value5);
-                    break;
-                case IntentData.TYPE_LIST_INT:
-                    intent.putIntegerArrayListExtra(datum.key, datum.value6);
-                    break;
-                case IntentData.TYPE_LIST_STRING:
-                    intent.putStringArrayListExtra(datum.key, datum.value7);
-                    break;
-                case IntentData.TYPE_PARCELABLE:
-                    intent.putExtra(datum.key, datum.value8);
-                    break;
-                case IntentData.TYPE_LIST_PARCELABLE:
-                    intent.putParcelableArrayListExtra(datum.key, datum.value9);
-                    break;
-                case IntentData.TYPE_ARR_INT:
-                    intent.putExtra(datum.key, datum.value10);
-                    break;
-                case IntentData.TYPE_ARR_LONG:
-                    intent.putExtra(datum.key, datum.value11);
-                    break;
-                case IntentData.TYPE_ARR_FLOAT:
-                    intent.putExtra(datum.key, datum.value12);
-                    break;
-                case IntentData.TYPE_ARR_DOUBLE:
-                    intent.putExtra(datum.key, datum.value13);
-                    break;
-                default:
-                    throw new RuntimeException("are you ok?");
+            if (datum != null) {
+                datum.write(intent);
             }
         }
     }
@@ -220,7 +190,7 @@ public interface IntentAction extends OverridePendingTransitionAction {
      * @param defaults
      * @return
      */
-    default long getLongExtra(String key, int defaults) {
+    default long getLongExtra(String key, long defaults) {
         Intent intent = getIntents();
         if (intent != null) {
             return intent.getLongExtra(key, defaults);
@@ -245,7 +215,7 @@ public interface IntentAction extends OverridePendingTransitionAction {
      * @param defaults
      * @return
      */
-    default float getFloatExtra(String key, int defaults) {
+    default float getFloatExtra(String key, float defaults) {
         Intent intent = getIntents();
         if (intent != null) {
             return intent.getFloatExtra(key, defaults);
@@ -270,7 +240,7 @@ public interface IntentAction extends OverridePendingTransitionAction {
      * @param defaults
      * @return
      */
-    default double getDoubleExtra(String key, int defaults) {
+    default double getDoubleExtra(String key, double defaults) {
         Intent intent = getIntents();
         if (intent != null) {
             return intent.getDoubleExtra(key, defaults);

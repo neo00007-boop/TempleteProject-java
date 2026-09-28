@@ -65,49 +65,12 @@ public class IntentUtil {
     }
 
     private static void putdata(Intent intent, @NonNull IntentData[] data) {
+        if (intent == null) {
+            return;
+        }
         for (IntentData datum : data) {
-            switch (datum.valueType) {
-                case IntentData.TYPE_INT:
-                    intent.putExtra(datum.key, datum.value1);
-                    break;
-                case IntentData.TYPE_LONG:
-                    intent.putExtra(datum.key, datum.value2);
-                    break;
-                case IntentData.TYPE_FLOAT:
-                    intent.putExtra(datum.key, datum.value3);
-                    break;
-                case IntentData.TYPE_DOUBLE:
-                    intent.putExtra(datum.key, datum.value4);
-                    break;
-                case IntentData.TYPE_STRING:
-                    intent.putExtra(datum.key, datum.value5);
-                    break;
-                case IntentData.TYPE_LIST_INT:
-                    intent.putIntegerArrayListExtra(datum.key, datum.value6);
-                    break;
-                case IntentData.TYPE_LIST_STRING:
-                    intent.putStringArrayListExtra(datum.key, datum.value7);
-                    break;
-                case IntentData.TYPE_PARCELABLE:
-                    intent.putExtra(datum.key, datum.value8);
-                    break;
-                case IntentData.TYPE_LIST_PARCELABLE:
-                    intent.putParcelableArrayListExtra(datum.key, datum.value9);
-                    break;
-                case IntentData.TYPE_ARR_INT:
-                    intent.putExtra(datum.key, datum.value10);
-                    break;
-                case IntentData.TYPE_ARR_LONG:
-                    intent.putExtra(datum.key, datum.value11);
-                    break;
-                case IntentData.TYPE_ARR_FLOAT:
-                    intent.putExtra(datum.key, datum.value12);
-                    break;
-                case IntentData.TYPE_ARR_DOUBLE:
-                    intent.putExtra(datum.key, datum.value13);
-                    break;
-                default:
-                    throw new RuntimeException("are you ok?");
+            if (datum != null) {
+                datum.write(intent);
             }
         }
     }
