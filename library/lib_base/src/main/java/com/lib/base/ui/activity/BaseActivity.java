@@ -9,6 +9,9 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import androidx.annotation.NonNull;
+import androidx.viewbinding.ViewBinding;
+
 import com.lib.base.R;
 import com.lib.base.databinding.BaseTitleLayoutBinding;
 import com.lib.base.ui.action.ClickAction;
@@ -21,9 +24,6 @@ import com.lib.base.ui.action.TitleBarAction;
 import com.lib.base.ui.action.ToastAction;
 import com.lib.base.ui.action.ViewBindingActivity;
 import com.lib.base.ui.widget.TitleBar;
-
-import androidx.annotation.NonNull;
-import androidx.viewbinding.ViewBinding;
 
 /**
  * 1.activity基类,可以选择标题栏主题样式;
@@ -120,7 +120,7 @@ public abstract class BaseActivity<T extends ViewBinding> extends ViewBindingAct
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
 //        bundle = null;
 //        titleBar = null;

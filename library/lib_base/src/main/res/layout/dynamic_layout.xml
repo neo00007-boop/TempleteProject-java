@@ -18,7 +18,6 @@
             android:layout_marginStart="@dimen/x30"
             android:layout_marginTop="@dimen/x30"
             android:layout_marginEnd="@dimen/x30"
-            android:animateLayoutChanges="true"
             android:orientation="vertical"
             android:paddingTop="@dimen/x20"
             android:paddingBottom="@dimen/x20"

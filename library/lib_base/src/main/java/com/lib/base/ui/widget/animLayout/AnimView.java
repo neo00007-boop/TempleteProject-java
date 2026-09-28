@@ -1,16 +1,18 @@
 package com.lib.base.ui.widget.animLayout;
 
 import android.animation.Animator;
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.lib.base.R;
@@ -32,7 +34,6 @@ public class AnimView extends FrameLayout {
 
     public int animType = ANIM_IDEL;
     private final DynamicLayoutBinding binding;
-    private final float dimension210;
 
     public AnimView(Context context) {
         this(context, null);
@@ -45,7 +46,8 @@ public class AnimView extends FrameLayout {
     public AnimView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         binding = DynamicLayoutBinding.inflate(LayoutInflater.from(context), this, true);
-        dimension210 = context.getResources().getDimension(R.dimen.x210);
+        binding.llContainer.setLayoutTransition(null);
+        binding.llContainer.setClipChildren(true);
         init(context);
     }
 
@@ -59,99 +61,104 @@ public class AnimView extends FrameLayout {
             return;
         }
         animType = ANIM_ING;
-        View viewChild = LayoutInflater.from(context).inflate(R.layout.dynamic_item, null);
-        int width = getMeasuredWidth(viewChild);
-        int height = getMeasuredHeight(viewChild);
-        viewChild.setOnClickListener(v -> {
-            if (animType == ANIM_ING) {
-                return;
-            }
-            animType = ANIM_ING;
-            binding.llContainer.removeViewAt(binding.llContainer.getChildCount() - 1);
-            anim(binding.llContainer, viewChild, width, height, false);
+        View viewChild = LayoutInflater.from(context).inflate(R.layout.dynamic_item, binding.llContainer, false);
+        viewChild.setOnClickListener(v -> removeItem(viewChild));
+        int itemWidth = itemContentWidth();
+        int itemHeight = measureItemHeight(viewChild, itemWidth);
+        int fromWidth = binding.llContainer.getWidth();
+        int fromHeight = binding.llContainer.getHeight();
+        rememberEmptyWidth(fromWidth);
+        binding.llContainer.addView(viewChild);
+        lockSize(fromWidth, fromHeight);
+        animateSize(fromWidth, Math.max(fromWidth, itemWidth), fromHeight, fromHeight + itemHeight, true, viewChild);
+    }
+
+    private void removeItem(View viewChild) {
+        if (animType == ANIM_ING || viewChild.getParent() != binding.llContainer) {
+            return;
+        }
+        animType = ANIM_ING;
+        int fromWidth = binding.llContainer.getWidth();
+        int fromHeight = binding.llContainer.getHeight();
+        int toWidth = binding.llContainer.getChildCount() == 1 ? emptyWidth() : fromWidth;
+        int toHeight = Math.max(0, fromHeight - viewChild.getHeight());
+        lockSize(fromWidth, fromHeight);
+        animateSize(fromWidth, toWidth, fromHeight, toHeight, false, viewChild);
+    }
+
+    private void animateSize(int fromWidth, int toWidth, int fromHeight, int toHeight, boolean isAdd, View viewChild) {
+        LinearLayout container = binding.llContainer;
+        ViewGroup.LayoutParams lp = container.getLayoutParams();
+        ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
+        animator.setDuration(DURATION_ADD);
+        animator.setInterpolator(isAdd ? new DecelerateInterpolator() : new AccelerateInterpolator());
+        animator.addUpdateListener(animation -> {
+            float fraction = (float) animation.getAnimatedValue();
+            lp.width = fromWidth + Math.round((toWidth - fromWidth) * fraction);
+            lp.height = fromHeight + Math.round((toHeight - fromHeight) * fraction);
+            container.setLayoutParams(lp);
         });
-        anim(binding.llContainer, viewChild, width, height, true);
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (!isAdd) {
+                    container.removeView(viewChild);
+                }
+                lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                if (container.getChildCount() == 0) {
+                    lp.width = emptyWidth();
+                }
+                container.setLayoutParams(lp);
+                notifyData();
+                animType = ANIM_IDEL;
+            }
+        });
+        animator.start();
     }
 
-    public int getMeasuredWidth(View viewChild) {
-        viewChild.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        return viewChild.getMeasuredWidth();
+    private void lockSize(int width, int height) {
+        ViewGroup.LayoutParams lp = binding.llContainer.getLayoutParams();
+        lp.width = width;
+        lp.height = height;
+        binding.llContainer.setLayoutParams(lp);
     }
 
-    public int getMeasuredHeight(View viewChild) {
-        viewChild.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+    private int emptyWidth = -1;
+
+    private void rememberEmptyWidth(int width) {
+        if (emptyWidth < 0 && width > 0 && binding.llContainer.getChildCount() == 0) {
+            emptyWidth = width;
+        }
+    }
+
+    private int emptyWidth() {
+        if (emptyWidth < 0) {
+            emptyWidth = getResources().getDimensionPixelSize(R.dimen.x50);
+        }
+        return emptyWidth;
+    }
+
+    private int itemContentWidth() {
+        int button = getResources().getDimensionPixelSize(R.dimen.x150);
+        int margin = getResources().getDimensionPixelSize(R.dimen.x60);
+        return button + margin * 2;
+    }
+
+    private int measureItemHeight(View viewChild, int width) {
+        viewChild.measure(
+                View.MeasureSpec.makeMeasureSpec(Math.max(width, 0), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        );
         return viewChild.getMeasuredHeight();
     }
-
-    @SuppressLint("ObjectAnimatorBinding")
-    private void anim(LinearLayout llContainer, View viewChild, int scaleWidth, int scaleHeight, boolean isAdd) {
-        ObjectAnimator animW = ObjectAnimator.ofInt(llContainer, "scaleX", llContainer.getWidth(), llContainer.getWidth() + (isAdd ? scaleWidth : -scaleWidth)).setDuration(DURATION_ADD);
-        ObjectAnimator animH = ObjectAnimator.ofInt(llContainer, "scaleY", llContainer.getHeight(), llContainer.getHeight() + (isAdd ? scaleHeight : -scaleHeight)).setDuration(DURATION_ADD);
-        animH.addUpdateListener(valueAnimator -> {
-            int animatedValue = (int) valueAnimator.getAnimatedValue();
-            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) llContainer.getLayoutParams();
-            lp.height = animatedValue;
-            llContainer.setLayoutParams(lp);
-        });
-        animW.addUpdateListener(valueAnimator -> {
-            int animatedValue = (int) valueAnimator.getAnimatedValue();
-            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) llContainer.getLayoutParams();
-            lp.width = animatedValue;
-            llContainer.setLayoutParams(lp);
-        });
-        AnimatorSet set = new AnimatorSet();
-        set.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animator) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animator) {
-                if (isAdd) {
-                    binding.llContainer.addView(viewChild);
-                    binding.getRoot().fullScroll(ScrollView.FOCUS_DOWN);
-                }
-                binding.llContainer.postDelayed(() -> {
-                    notifyData();
-                    animType = ANIM_IDEL;
-                }, 200);
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animator) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animator) {
-
-            }
-        });
-        set.playTogether(animH, animW);
-        set.setDuration(DURATION_ADD);
-        set.start();
-
-//        ObjectAnimator animH = ObjectAnimator.ofFloat(binding.llContainer, "alpha", 1, 0, 1).setDuration(DURATION_ADD);
-        /*if (pos == 0) {
-            animH = ObjectAnimator.ofFloat(binding.tvAddItem, "rotation", 0, 180).setDuration(DURATION_ADD);
-            animH.start();
-            pos = 1;
-        } else if (pos == 1) {
-            animH.reverse();
-            pos = 0;
-        }*/
-    }
-
-    private int pos = 0;
-    private ObjectAnimator anim = null;
 
     @SuppressLint("SetTextI18n")
     private void notifyData() {
         for (int i = 0; i < binding.llContainer.getChildCount(); i++) {
-            View view = binding.llContainer.getChildAt(i);
-            TextView tv = view.findViewById(R.id.tv);
-            tv.setText("条目" + (i + 1) + "(点击删除条目)");
+            TextView tv = binding.llContainer.getChildAt(i).findViewById(R.id.tv);
+            if (tv != null) {
+                tv.setText("条目" + (i + 1));
+            }
         }
     }
 }

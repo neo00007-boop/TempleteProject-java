@@ -13,7 +13,7 @@
         android:layout_marginVertical="@dimen/x30"
         android:gravity="center"
         android:includeFontPadding="false"
-        android:text="Item"
+        android:text=""
         android:textColor="@color/white"
         android:textSize="@dimen/x60"
         app:layout_constraintBottom_toBottomOf="parent"

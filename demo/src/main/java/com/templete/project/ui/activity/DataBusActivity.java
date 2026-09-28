@@ -52,7 +52,7 @@ public class DataBusActivity extends BaseActivity<DataBusActivityBinding> {
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         LiveDataBus.get().removeObserver(KEY_BUS2, observer);
     }

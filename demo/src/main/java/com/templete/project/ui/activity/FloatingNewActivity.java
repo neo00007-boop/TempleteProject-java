@@ -3,9 +3,13 @@ package com.templete.project.ui.activity;
 import android.annotation.SuppressLint;
 import android.view.MotionEvent;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.hjq.shape.view.NavigationBar;
-import com.lib.base.adapter.FloatingNewAdapter;
 import com.lib.base.adapter.FloatingAdapter.FloatingItem;
+import com.lib.base.adapter.FloatingNewAdapter;
 import com.lib.base.ui.activity.BaseActivity;
 import com.lib.base.util.FreshUtil;
 import com.lib.base.util.ScreenUtil;
@@ -16,10 +20,6 @@ import com.templete.project.databinding.FloatingActivityNewBinding;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * 比较较理想的悬浮刷新解决方案,推荐使用:
@@ -144,7 +144,7 @@ public class FloatingNewActivity extends BaseActivity<FloatingActivityNewBinding
     };
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         mViewBinding.getRoot().removeCallbacks(runnable);
     }

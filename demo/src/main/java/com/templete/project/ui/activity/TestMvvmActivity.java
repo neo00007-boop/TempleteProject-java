@@ -1,11 +1,8 @@
 package com.templete.project.ui.activity;
 
-import android.animation.LayoutTransition;
-import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.lib.base.ui.activity.BaseMvvmActivity;
 import com.templete.project.R;
@@ -21,8 +18,7 @@ import com.templete.project.mvvm.DemoViewModel;
 
 public class TestMvvmActivity extends BaseMvvmActivity<DemoMvvmActivityBinding, DemoViewModel> {
     public static final String TAG = "DemoMvvmActivity";
-    private LayoutTransition mTransitioner;
-    private float dimension210;
+    private static final int ITEM_ANIM_MS = 180;
 
     @Override
     protected DemoMvvmActivityBinding viewBinding() {
@@ -37,56 +33,78 @@ public class TestMvvmActivity extends BaseMvvmActivity<DemoMvvmActivityBinding, 
     @Override
     public void inits() {
         setTitleStr("mvvm activity");
-        dimension210 = getDimen(com.lib.base.R.dimen.x210);
     }
 
-    private int pos = 1;
-
-    @SuppressLint("InflateParams")
     @Override
     public void initView() {
-        mViewBinding.tvAdd.setOnClickListener(v -> {
-            View viewChild = LayoutInflater.from(TestMvvmActivity.this).inflate(R.layout.add_item, null);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            mViewBinding.ll.addView(viewChild, mViewBinding.ll.getChildCount(), params);
-        });
-        mViewBinding.tvDelete.setOnClickListener(v -> {
-            try {
-                if (mViewBinding.ll.getChildCount() == 0) {
-                    return;
-                }
-                mViewBinding.ll.removeViewAt(pos);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-
-        //构建LayoutTransition
-        mTransitioner = new LayoutTransition();
-        //设置给ViewGroup容器
-        mViewBinding.ll.setLayoutTransition(mTransitioner);
-        setTransition();
+        mViewBinding.ll.setLayoutTransition(null);
+        mViewBinding.tvAdd.setOnClickListener(v -> addItem());
+        mViewBinding.tvDelete.setOnClickListener(v -> removeLast());
     }
 
-    private void setTransition() {
-        //添加View时过渡动画效果
-        /*ObjectAnimator addAnimator = ObjectAnimator
-                .ofFloat(null, "transitionY", mViewBinding.ll.getHeight(), mViewBinding.ll.getHeight() + dimension210)
-                .setDuration(mTransitioner.getDuration(LayoutTransition.APPEARING));
-        mTransitioner.setAnimator(LayoutTransition.APPEARING, addAnimator);*/
+    private void addItem() {
+        View viewChild = LayoutInflater.from(this).inflate(R.layout.add_item, mViewBinding.ll, false);
+        TextView tv = viewChild.findViewById(R.id.tv);
+        tv.setText(String.valueOf(nextIndex()));
+        viewChild.setAlpha(0f);
+        viewChild.setTranslationY(tv.getTextSize());
+        mViewBinding.ll.addView(viewChild, insertIndex());
+        viewChild.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(ITEM_ANIM_MS)
+                .start();
+    }
 
-        //移除View时过渡动画效果
-        /*ObjectAnimator removeAnimator = ObjectAnimator
-                //.ofFloat(null, "transitionY", mViewBinding.ll.getHeight(), mViewBinding.ll.getHeight() - dimension210)
-//                .ofFloat(null, "transitionY", dimension210 * pos, dimension210 * (pos-1))
-//                .ofFloat(null, "transitionY", dimension210 * (pos+1), dimension210 * pos)
-                .ofFloat(null, "transitionY", dimension210 * (pos + 2), dimension210 * (pos+1))
-                .setDuration(mTransitioner.getDuration(LayoutTransition.DISAPPEARING));
-        mTransitioner.setAnimator(LayoutTransition.DISAPPEARING, removeAnimator);*/
+    private void removeLast() {
+        View child = lastStableChild();
+        if (child == null) {
+            return;
+        }
+        child.setTag(Boolean.TRUE);
+        child.animate().cancel();
+        Runnable remove = () -> {
+            if (child.getParent() == mViewBinding.ll) {
+                mViewBinding.ll.removeView(child);
+            }
+        };
+        child.animate()
+                .alpha(0f)
+                .translationY(child.getHeight() > 0 ? child.getHeight() / 3f : 40f)
+                .setDuration(ITEM_ANIM_MS)
+                .withEndAction(remove)
+                .start();
+        mViewBinding.ll.postDelayed(remove, ITEM_ANIM_MS + 40);
+    }
 
-        /*//view 动画改变时，布局中的每个子view动画的时间间隔
-        mTransitioner.setStagger(LayoutTransition.CHANGE_APPEARING, 30);
-        mTransitioner.setStagger(LayoutTransition.CHANGE_DISAPPEARING, 30);*/
+    private int nextIndex() {
+        int stable = 0;
+        for (int i = 0; i < mViewBinding.ll.getChildCount(); i++) {
+            if (!Boolean.TRUE.equals(mViewBinding.ll.getChildAt(i).getTag())) {
+                stable++;
+            }
+        }
+        return stable + 1;
+    }
+
+    private int insertIndex() {
+        int count = mViewBinding.ll.getChildCount();
+        for (int i = 0; i < count; i++) {
+            if (Boolean.TRUE.equals(mViewBinding.ll.getChildAt(i).getTag())) {
+                return i;
+            }
+        }
+        return count;
+    }
+
+    private View lastStableChild() {
+        for (int i = mViewBinding.ll.getChildCount() - 1; i >= 0; i--) {
+            View child = mViewBinding.ll.getChildAt(i);
+            if (!Boolean.TRUE.equals(child.getTag())) {
+                return child;
+            }
+        }
+        return null;
     }
 
     @Override

@@ -12,18 +12,18 @@ import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+
 import com.alibaba.android.arouter.facade.annotation.Autowired;
 import com.alibaba.android.arouter.facade.annotation.Route;
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.lib.base.aroute.ArouteConfig;
-import com.lib.base.ui.activity.TitleBarTheme;
 import com.lib.base.ui.activity.BaseMvvmActivity;
+import com.lib.base.ui.activity.TitleBarTheme;
 import com.lib.base.util.LoginUtil;
 import com.module.login.R;
 import com.module.login.databinding.MlLoginActivityBinding;
 import com.module.login.mvvm.LoginViewModel;
-
-import androidx.annotation.NonNull;
 
 /**
  * PackageName  com.bigheadhorse.xscat.view.activity
@@ -187,7 +187,7 @@ public class LoginActivity extends BaseMvvmActivity<MlLoginActivityBinding, Logi
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         if (isFinishing()) {
             LoginUtil.onLoginFinished();
         }

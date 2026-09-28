@@ -2,6 +2,10 @@ package com.templete.project.ui.activity;
 
 import android.view.View;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.lib.base.adapter.FloatingAdapter;
 import com.lib.base.adapter.FloatingAdapter.FloatingItem;
 import com.lib.base.ui.activity.BaseActivity;
@@ -12,10 +16,6 @@ import com.templete.project.databinding.FloatingActivityBinding;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * 比较笨重的悬浮刷新解决方案,作为最初的解决思路,仅供参考:
@@ -137,7 +137,7 @@ public class FloatingActivity extends BaseActivity<FloatingActivityBinding> {
     };
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         mViewBinding.getRoot().removeCallbacks(runnable);
     }
