@@ -230,16 +230,19 @@ public class ContainerFragment extends BaseFragment<ContainerFragmentBinding> {
 
     @Override
     public void onDestroyView() {
-        super.onDestroyView();
         if (viewPager != null) {
             viewPager.removeOnPageChangeListener(listener);
+            viewPager = null;
         }
         if (viewPager2 != null) {
             viewPager2.unregisterOnPageChangeCallback(callback);
+            viewPager2 = null;
         }
         if (tabLayoutMediator != null) {
             tabLayoutMediator.detach();
+            tabLayoutMediator = null;
         }
+        super.onDestroyView();
     }
 
     private class PagerAdapter extends FragmentPagerAdapter {

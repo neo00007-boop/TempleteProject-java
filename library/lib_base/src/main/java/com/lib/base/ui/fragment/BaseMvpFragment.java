@@ -2,9 +2,9 @@ package com.lib.base.ui.fragment;
 
 import android.annotation.SuppressLint;
 
-import com.lib.base.mvp.BaseContract;
-
 import androidx.viewbinding.ViewBinding;
+
+import com.lib.base.mvp.BaseContract;
 
 /**
  * fragment基类增加mvp模式。
@@ -34,6 +34,6 @@ public abstract class BaseMvpFragment<S extends ViewBinding, T extends BaseContr
     public void onDestroy() {
         super.onDestroy();
         mPresenter.detachView();
-//        mPresenter = null;
+        mPresenter = null;
     }
 }

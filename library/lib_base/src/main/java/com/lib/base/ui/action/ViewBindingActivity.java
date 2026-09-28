@@ -21,16 +21,9 @@ public abstract class ViewBindingActivity<T extends ViewBinding> extends RxjavaA
      */
     protected abstract T viewBinding();
 
-//    @Override
-//    protected void onDestroy() {
-//        super.onDestroy();
-//        try {
-//            if (mViewBinding != null) {
-//                ((ViewGroup) mViewBinding.getRoot().getParent()).removeAllViews();
-//            }
-//             mViewBinding = null;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mViewBinding = null;
+    }
 }

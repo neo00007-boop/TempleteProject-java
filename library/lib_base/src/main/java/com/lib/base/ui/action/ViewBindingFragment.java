@@ -20,15 +20,14 @@ public abstract class ViewBindingFragment<T extends ViewBinding> extends RxjavaF
     protected abstract T viewBinding(LayoutInflater inflater, ViewGroup container);
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mViewBinding = null;
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
-        try {
-            if (mViewBinding != null) {
-                ((ViewGroup) mViewBinding.getRoot().getParent()).removeAllViews();
-            }
-            mViewBinding = null;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        mViewBinding = null;
     }
 }

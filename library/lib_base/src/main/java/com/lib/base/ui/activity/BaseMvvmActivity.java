@@ -54,6 +54,6 @@ public abstract class BaseMvvmActivity<T extends ViewBinding, S extends BaseView
     @Override
     protected void onDestroy() {
         super.onDestroy();
-//        mViewModel = null;
+        mViewModel = null;
     }
 }

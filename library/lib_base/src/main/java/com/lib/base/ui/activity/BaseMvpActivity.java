@@ -2,9 +2,9 @@ package com.lib.base.ui.activity;
 
 import android.annotation.SuppressLint;
 
-import com.lib.base.mvp.BaseContract;
-
 import androidx.viewbinding.ViewBinding;
+
+import com.lib.base.mvp.BaseContract;
 
 /**
  * activity基类基础上增加mvp模式。
@@ -34,6 +34,6 @@ public abstract class BaseMvpActivity<T extends ViewBinding, S extends BaseContr
     public void onDestroy() {
         super.onDestroy();
         mPresenter.detachView();
-        //mPresenter = null;
+        mPresenter = null;
     }
 }

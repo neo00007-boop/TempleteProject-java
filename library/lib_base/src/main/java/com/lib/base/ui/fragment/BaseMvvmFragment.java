@@ -1,11 +1,11 @@
 package com.lib.base.ui.fragment;
 
-import com.lib.base.mvvm.BaseViewModel;
-import com.lib.base.util.inject.MyException;
-
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelStoreOwner;
 import androidx.viewbinding.ViewBinding;
+
+import com.lib.base.mvvm.BaseViewModel;
+import com.lib.base.util.inject.MyException;
 
 /**
  * ProjectName  XSCat
@@ -64,6 +64,6 @@ public abstract class BaseMvvmFragment<T extends ViewBinding, S extends BaseView
     @Override
     public void onDestroy() {
         super.onDestroy();
-//        mViewModel = null;
+        mViewModel = null;
     }
 }
