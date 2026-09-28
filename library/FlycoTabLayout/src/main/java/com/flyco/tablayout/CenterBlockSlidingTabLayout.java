@@ -23,7 +23,7 @@ import androidx.core.content.ContextCompat;
  *   <li>支持设置宽高（{@code stl_indicator_width} / {@code stl_indicator_height}）</li>
  *   <li>指示器与 item 文字中心对齐（在 Tab 内垂直、水平居中）</li>
  * </ul>
- * 其余行为与 API 同 {@link SlidingTabLayout}，不修改原类。
+ * 其余行为与 API 同 {@link SlidingTabLayout}：关联页面用 {@code setViewPager}，只展示标题用 {@code setTitles}。
  */
 public class CenterBlockSlidingTabLayout extends SlidingTabLayout {
 
@@ -311,6 +311,9 @@ public class CenterBlockSlidingTabLayout extends SlidingTabLayout {
     @Override
     public void notifyDataSetChanged() {
         super.notifyDataSetChanged();
+        if (getTabCount() > 0 && mSelectedTab >= getTabCount()) {
+            mSelectedTab = getTabCount() - 1;
+        }
         ensureTabsVerticalCenter();
     }
 }

@@ -157,6 +157,7 @@ public class SegmentTabLayout extends FrameLayout implements ValueAnimator.Anima
         ta.recycle();
     }
 
+    /** 不关联页面，只展示标题。选中变化通过 {@link OnTabSelectListener} 回调。 */
     public void setTabData(String[] titles) {
         if (titles == null || titles.length == 0) {
             throw new IllegalStateException("Titles can not be NULL or EMPTY !");
@@ -167,7 +168,7 @@ public class SegmentTabLayout extends FrameLayout implements ValueAnimator.Anima
         notifyDataSetChanged();
     }
 
-    /** 关联数据支持同时切换fragments */
+    /** 关联 Fragment 容器，点击时同时切换对应 Fragment。 */
     public void setTabData(String[] titles, FragmentActivity fa, int containerViewId, ArrayList<Fragment> fragments) {
         mFragmentChangeManager = new FragmentChangeManager(fa.getSupportFragmentManager(), containerViewId, fragments);
         setTabData(titles);

@@ -1,42 +1,27 @@
 package com.flyco.tablayoutsamples.ui;
 
-import android.content.Context;
-import android.content.Intent;
-import android.widget.AdapterView;
+import android.view.View;
 
-import com.flyco.tablayoutsamples.adapter.SimpleHomeAdapter;
 import com.lib.base.ui.activity.BaseActivity;
 import com.templete.project.databinding.ActivitySimpleHomeBinding;
 
 public class SimpleHomeActivity extends BaseActivity<ActivitySimpleHomeBinding> {
-    private final Context mContext = this;
-    private final String[] mItems = {"SlidingTabLayout", "CommonTabLayout", "SegmentTabLayout",
-            "GradientSlidingTabLayout", "DrawableIndicatorSlidingTabLayout",
-            "CenterBlockSlidingTabLayout", "DesignSlidingTabLayout"};
-    private final Class<?>[] mClasses = {SlidingTabActivity.class, CommonTabActivity.class,
-            SegmentTabActivity.class, GradientTabActivity.class, DrawableTabActivity.class,
-            CenterBlockTabActivity.class, DesignTabActivity.class};
 
     @Override
     public void inits() {
-        setTitleStr("FlycoTabLayout");
+        setTitleStr("标签");
     }
 
     @Override
     public void initView() {
-        mViewBinding.lv.setCacheColorHint(android.graphics.Color.TRANSPARENT);
-        mViewBinding.lv.setFadingEdgeLength(0);
-        mViewBinding.lv.setAdapter(new SimpleHomeAdapter(mContext, mItems));
     }
 
     @Override
     public void initEvent() {
-        mViewBinding.lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, android.view.View view, int position, long id) {
-                startActivity(new Intent(mContext, mClasses[position]));
-            }
-        });
+        setOnClickListener(this::openDemo,
+                mViewBinding.tvSliding, mViewBinding.tvCommon, mViewBinding.tvSegment,
+                mViewBinding.tvGradient, mViewBinding.tvDrawable, mViewBinding.tvCenter,
+                mViewBinding.tvDesign);
     }
 
     @Override
@@ -46,5 +31,25 @@ public class SimpleHomeActivity extends BaseActivity<ActivitySimpleHomeBinding> 
     @Override
     protected ActivitySimpleHomeBinding viewBinding() {
         return ActivitySimpleHomeBinding.inflate(getLayoutInflater());
+    }
+
+    private void openDemo(View view) {
+        Class<?> clazz;
+        if (view.equals(mViewBinding.tvSliding)) {
+            clazz = SlidingTabActivity.class;
+        } else if (view.equals(mViewBinding.tvCommon)) {
+            clazz = CommonTabActivity.class;
+        } else if (view.equals(mViewBinding.tvSegment)) {
+            clazz = SegmentTabActivity.class;
+        } else if (view.equals(mViewBinding.tvGradient)) {
+            clazz = GradientTabActivity.class;
+        } else if (view.equals(mViewBinding.tvDrawable)) {
+            clazz = DrawableTabActivity.class;
+        } else if (view.equals(mViewBinding.tvCenter)) {
+            clazz = CenterBlockTabActivity.class;
+        } else {
+            clazz = DesignTabActivity.class;
+        }
+        startAty(this, clazz);
     }
 }

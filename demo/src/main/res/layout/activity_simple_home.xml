@@ -1,5 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ListView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/lv"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" />
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/x60">
+
+        <com.hjq.shape.view.ShapeTextView
+            android:id="@+id/tv_sliding"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/x150"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="滑动"
+            android:textSize="@dimen/x45"
+            app:shape_radius="@dimen/x75"
+            app:shape_solidColor="@color/common_accent_color"
+            app:shape_textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <com.hjq.shape.view.ShapeTextView
+            android:id="@+id/tv_common"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/x150"
+            android:layout_marginTop="@dimen/x65"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="图标"
+            android:textSize="@dimen/x45"
+            app:shape_radius="@dimen/x75"
+            app:shape_solidColor="@color/common_accent_color"
+            app:shape_textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <com.hjq.shape.view.ShapeTextView
+            android:id="@+id/tv_segment"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/x150"
+            android:layout_marginTop="@dimen/x65"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="分段"
+            android:textSize="@dimen/x45"
+            app:shape_radius="@dimen/x75"
+            app:shape_solidColor="@color/common_accent_color"
+            app:shape_textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <com.hjq.shape.view.ShapeTextView
+            android:id="@+id/tv_gradient"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/x150"
+            android:layout_marginTop="@dimen/x65"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="渐变"
+            android:textSize="@dimen/x45"
+            app:shape_radius="@dimen/x75"
+            app:shape_solidColor="@color/common_accent_color"
+            app:shape_textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <com.hjq.shape.view.ShapeTextView
+            android:id="@+id/tv_drawable"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/x150"
+            android:layout_marginTop="@dimen/x65"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="图片"
+            android:textSize="@dimen/x45"
+            app:shape_radius="@dimen/x75"
+            app:shape_solidColor="@color/common_accent_color"
+            app:shape_textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <com.hjq.shape.view.ShapeTextView
+            android:id="@+id/tv_center"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/x150"
+            android:layout_marginTop="@dimen/x65"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="胶囊"
+            android:textSize="@dimen/x45"
+            app:shape_radius="@dimen/x75"
+            app:shape_solidColor="@color/common_accent_color"
+            app:shape_textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <com.hjq.shape.view.ShapeTextView
+            android:id="@+id/tv_design"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/x150"
+            android:layout_marginTop="@dimen/x65"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="角标"
+            android:textSize="@dimen/x45"
+            app:shape_radius="@dimen/x75"
+            app:shape_solidColor="@color/common_accent_color"
+            app:shape_textColor="@color/white"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+</ScrollView>

@@ -238,6 +238,7 @@ public class DrawableIndicatorSlidingTabLayout extends HorizontalScrollView impl
         dTa.recycle();
     }
 
+    /** 不关联 ViewPager，只展示标题。选中变化通过 {@link OnTabSelectListener} 回调。 */
     public void setTitles(String[] titles) {
         if (titles == null || titles.length == 0) {
             return;
@@ -265,9 +266,7 @@ public class DrawableIndicatorSlidingTabLayout extends HorizontalScrollView impl
         setViewPager(vp, dataList);
     }
 
-    /**
-     * 关联ViewPager
-     */
+    /** 关联 ViewPager，标题用传入数组，长度须与 adapter 页数一致。 */
     public void setViewPager(ViewPager vp, List<String> titles) {
         if (vp == null || vp.getAdapter() == null) {
             return;
