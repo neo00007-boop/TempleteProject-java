@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="MentionEditText">
+        <attr name="mentionTextColor" format="color"/>
+        <attr name="mentionMemberColor" format="color"/>
+        <attr name="mentionAvatarColor" format="color"/>
+    </declare-styleable>
+</resources>

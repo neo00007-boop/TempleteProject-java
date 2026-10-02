@@ -106,7 +106,8 @@ public class SuperSpanUtil {
 
     private static int indexOf(SpanData[] contents, SpanData content) {
         for (int i = 0; i < contents.length; i++) {
-            if (content.content.equals(contents[i].content)) {
+            // 按这一段本身找位置。两段文案相同（两次 @ 同一个人）时，按文字比会永远命中第一段。
+            if (contents[i] == content) {
                 return i;
             }
         }

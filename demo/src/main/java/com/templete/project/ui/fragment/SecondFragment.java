@@ -16,6 +16,7 @@ import com.lib.base.util.PermissionUtil;
 import com.templete.project.bean.JBean;
 import com.templete.project.databinding.SecondFragmentBinding;
 import com.templete.project.ui.activity.LoadingActivity;
+import com.templete.project.ui.activity.MentionEditActivity;
 import com.templete.project.ui.activity.ScrollActivity;
 import com.templete.project.ui.activity.TestMvvmActivity;
 import com.templete.project.ui.activity.TranslateActivity;
@@ -64,6 +65,8 @@ public class SecondFragment extends BaseFragment<SecondFragmentBinding> {
                         clazz = TranslateActivity.class;
                     } else if (v.equals(mViewBinding.tv7)) {
                         clazz = ScrollActivity.class;
+                    } else if (v.equals(mViewBinding.tv11)) {
+                        clazz = MentionEditActivity.class;
                     } /*else if (v.equals(mViewBinding.tv8)) {
                         clazz = FloatingActivity.class;
                     } else if (v.equals(mViewBinding.tv9)) {
@@ -83,7 +86,7 @@ public class SecondFragment extends BaseFragment<SecondFragmentBinding> {
                 mViewBinding.tv1, mViewBinding.tv2, mViewBinding.tv3,
                 mViewBinding.tv4, mViewBinding.tv5, mViewBinding.tv6,
                 mViewBinding.tv7, /*mViewBinding.tv8, mViewBinding.tv9,*/
-                mViewBinding.tv10);
+                mViewBinding.tv11, mViewBinding.tv10);
     }
 
     private void gson() {
