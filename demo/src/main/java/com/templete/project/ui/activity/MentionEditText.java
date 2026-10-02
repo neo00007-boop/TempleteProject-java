@@ -204,7 +204,7 @@ public class MentionEditText extends ShapeEditText {
         Editable text = getText();
         int cursor = getSelectionEnd();
         Token token = findToken(text, cursor);
-        if (token == null || isCommittedMention(text, token, cursor)) {
+        if (token == null) {
             memberList.setVisibility(View.GONE);
             return;
         }
@@ -227,17 +227,48 @@ public class MentionEditText extends ShapeEditText {
 
     private void fillShown(String query) {
         shown.clear();
-        String key = query.toLowerCase(Locale.ROOT);
         for (Member member : members) {
-            String name = member.name.toLowerCase(Locale.ROOT);
-            String username = member.username.toLowerCase(Locale.ROOT);
-            if (key.isEmpty()
-                    || name.startsWith(key)
-                    || username.startsWith(key)
-                    || member.name.contains(query)) {
+            if (matches(member, query)) {
                 shown.add(member);
             }
         }
+    }
+
+    private boolean matches(Member member, String query) {
+        String key = query.toLowerCase(Locale.ROOT);
+        String name = member.name.toLowerCase(Locale.ROOT);
+        String username = member.username.toLowerCase(Locale.ROOT);
+        return key.isEmpty()
+                || name.startsWith(key)
+                || username.startsWith(key)
+                || member.name.contains(query);
+    }
+
+    /** 从紧挨着的人员 @ 看到这次输入的结尾，这段还能配到人。 */
+    private boolean extendsMention(Editable text, int mentionEnd, int insertEnd) {
+        MentionSpan[] spans = text.getSpans(Math.max(0, mentionEnd - 1), mentionEnd, MentionSpan.class);
+        for (MentionSpan span : spans) {
+            int start = text.getSpanStart(span);
+            if (text.getSpanEnd(span) != mentionEnd || start < 0 || start >= insertEnd) {
+                continue;
+            }
+            if (text.charAt(start) != '@') {
+                continue;
+            }
+            if (hasMatch(text.subSequence(start + 1, insertEnd).toString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasMatch(String query) {
+        for (Member member : members) {
+            if (matches(member, query)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void insertMember(Member member) {
@@ -280,9 +311,12 @@ public class MentionEditText extends ShapeEditText {
         if (insertEnd <= editStart) {
             return;
         }
+        // 紧挨着已选人员往后续写：续上后还能配到人，就留给关联列表，不在字前面补空格。
+        // 配不到人，再把空格补在这个字前面。
         boolean lead = editStart > 0
                 && mentionEndsAt(text, editStart)
-                && !Character.isWhitespace(text.charAt(editStart));
+                && !Character.isWhitespace(text.charAt(editStart))
+                && !extendsMention(text, editStart, insertEnd);
         boolean trail = insertEnd < text.length()
                 && mentionStartsAt(text, insertEnd)
                 && !Character.isWhitespace(text.charAt(insertEnd - 1));
@@ -440,19 +474,6 @@ public class MentionEditText extends ShapeEditText {
         }
         boolean spaceBefore = at > 0 && !Character.isWhitespace(text.charAt(at - 1));
         return new Token(at, cursor, text.subSequence(at + 1, cursor).toString(), spaceBefore);
-    }
-
-    private boolean isCommittedMention(Editable text, Token token, int cursor) {
-        if (text == null || cursor != token.end) {
-            return false;
-        }
-        MentionSpan[] spans = text.getSpans(token.start, token.end, MentionSpan.class);
-        for (MentionSpan span : spans) {
-            if (text.getSpanStart(span) == token.start && text.getSpanEnd(span) == token.end) {
-                return token.end >= text.length() || Character.isWhitespace(text.charAt(token.end));
-            }
-        }
-        return false;
     }
 
     /**
