@@ -45,19 +45,19 @@ public class MentionEditActivity extends BaseActivity<ActivityMentionEditBinding
 
     private List<MentionEditText.Member> demoMembers() {
         List<MentionEditText.Member> members = new ArrayList<>();
-        members.add(new MentionEditText.Member("1000", "张@伟", "zhang@wei", null));
+        members.add(new MentionEditText.Member("1000", "张@伟", null, null));
         members.add(new MentionEditText.Member("1001", "张伟", "zhangwei", null));
-        members.add(new MentionEditText.Member("1002", "张张", "zhangzhang", null));
+        members.add(new MentionEditText.Member("1002", "张张", null, null));
         members.add(new MentionEditText.Member("1003", "伟伟", "weiwei", null));
-        members.add(new MentionEditText.Member("1004", "张伟伟", "zhangweiwei", null));
+        members.add(new MentionEditText.Member("1004", "张伟伟", null, null));
         members.add(new MentionEditText.Member("1005", "李娜", "lina", null));
-        members.add(new MentionEditText.Member("1006", "李李", "lili", null));
+        members.add(new MentionEditText.Member("1006", "李李", null, null));
         members.add(new MentionEditText.Member("1007", "娜娜", "nana", null));
-        members.add(new MentionEditText.Member("1008", "李娜娜", "linana", null));
+        members.add(new MentionEditText.Member("1008", "李娜娜", null, null));
         members.add(new MentionEditText.Member("1009", "王强", "wangqiang", null));
-        members.add(new MentionEditText.Member("1010", "王王", "wangwang", null));
+        members.add(new MentionEditText.Member("1010", "王王", null, null));
         members.add(new MentionEditText.Member("1011", "强强", "qiangqiang", null));
-        members.add(new MentionEditText.Member("1012", "王强强", "wangqiangqiang", null));
+        members.add(new MentionEditText.Member("1012", "王强强", null, null));
         return members;
     }
 

@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.text.Editable;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.CharacterStyle;
 import android.util.AttributeSet;
@@ -237,11 +238,11 @@ public class MentionEditText extends ShapeEditText {
     private boolean matches(Member member, String query) {
         String key = query.toLowerCase(Locale.ROOT);
         String name = member.name.toLowerCase(Locale.ROOT);
-        String username = member.username.toLowerCase(Locale.ROOT);
-        return key.isEmpty()
-                || name.startsWith(key)
-                || username.startsWith(key)
-                || member.name.contains(query);
+        if (key.isEmpty() || name.startsWith(key) || member.name.contains(query)) {
+            return true;
+        }
+        return !TextUtils.isEmpty(member.username)
+                && member.username.toLowerCase(Locale.ROOT).startsWith(key);
     }
 
     /** 从紧挨着的人员 @ 看到这次输入的结尾，这段还能配到人。 */
@@ -374,7 +375,7 @@ public class MentionEditText extends ShapeEditText {
             }
         }
         for (Member member : members) {
-            if (member.username.equalsIgnoreCase(query)) {
+            if (!TextUtils.isEmpty(member.username) && member.username.equalsIgnoreCase(query)) {
                 return member;
             }
         }
@@ -614,7 +615,8 @@ public class MentionEditText extends ShapeEditText {
     }
 
     /**
-     * 可选人员。id 是后台认的那一个，展示名和用户名可以重复，id 不能靠名字反查。
+     * 可选人员。id 是后台认的那一个，展示名可以重复，id 不能靠名字反查。
+     * username 可空；有则关联列表显示第二行并参与过滤，没有则只显示名字并垂直居中。
      * avatar 有图时显示圆形头像，没有图时用首字和 {@link MentionEditText#setAvatarColor(int)} 的底色。
      */
     public static final class Member {
@@ -623,10 +625,10 @@ public class MentionEditText extends ShapeEditText {
         public final String username;
         public final Drawable avatar;
 
-        public Member(String id, String name, String username, @Nullable Drawable avatar) {
+        public Member(String id, String name, @Nullable String username, @Nullable Drawable avatar) {
             this.id = id;
             this.name = name;
-            this.username = username;
+            this.username = username == null ? "" : username;
             this.avatar = avatar;
         }
     }
@@ -675,7 +677,12 @@ public class MentionEditText extends ShapeEditText {
             Member member = shown.get(position);
             holder.name.setText(member.name);
             holder.name.setTextColor(memberTextColor);
-            holder.username.setText("@" + member.username);
+            if (TextUtils.isEmpty(member.username)) {
+                holder.username.setVisibility(View.GONE);
+            } else {
+                holder.username.setVisibility(View.VISIBLE);
+                holder.username.setText("@" + member.username);
+            }
             if (member.avatar != null) {
                 holder.avatar.setVisibility(View.GONE);
                 holder.avatarImage.setVisibility(View.VISIBLE);
