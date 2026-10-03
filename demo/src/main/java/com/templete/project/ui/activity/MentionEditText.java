@@ -391,12 +391,12 @@ public class MentionEditText extends ShapeEditText {
         return null;
     }
 
-    /** 名字本身以 @ 开头时不再前缀一个 @，避免出现 @@客服。 */
+    /**
+     * 正文里的人员标签一律是「@ + 名字」。
+     * 名字本身是「@客服」「@客@服」时，结果就是「@@客服」「@@客@服」。
+     */
     private static String mentionBody(String name) {
-        if (TextUtils.isEmpty(name)) {
-            return "@";
-        }
-        return name.charAt(0) == '@' ? name : "@" + name;
+        return "@" + (name == null ? "" : name);
     }
 
     private void applyMention(Editable text, Token token, Member member, int replaceEnd) {

@@ -59,8 +59,11 @@ public class MentionEditActivity extends BaseActivity<ActivityMentionEditBinding
         members.add(new MentionEditText.Member("1011", "强强", "qiangqiang", null));
         members.add(new MentionEditText.Member("1012", "王强强", null, null));
         members.add(new MentionEditText.Member("1013", "张 伟", null, null));
-        members.add(new MentionEditText.Member("1014", "@客服", null, null));
-        members.add(new MentionEditText.Member("1015", "", null, null));
+        members.add(new MentionEditText.Member("1014", "客服", null, null));
+        members.add(new MentionEditText.Member("1015", "@客服", null, null));
+        members.add(new MentionEditText.Member("1016", "@客@服", null, null));
+        members.add(new MentionEditText.Member("1017", "@@客@服", null, null));
+        members.add(new MentionEditText.Member("1018", "", null, null));
         return members;
     }
 
