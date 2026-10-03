@@ -458,22 +458,44 @@ public class MentionEditText extends ShapeEditText {
         if (cursor > text.length()) {
             cursor = text.length();
         }
-        int at = -1;
+        // 光标前这一段连续非空白里可能有多个 @（名字里也带 @）。
+        // 优先用「查询还能配到人」且最长的那个，避免 @张@ 被拆成第二个 @。
+        // 都配不到时退回最靠近光标的 @，光秃秃的 @ 仍能拉起全部人员。
+        int runStart = cursor;
         for (int i = cursor - 1; i >= 0; i--) {
-            char c = text.charAt(i);
-            if (c == '@') {
-                at = i;
+            if (Character.isWhitespace(text.charAt(i))) {
                 break;
             }
-            if (Character.isWhitespace(c)) {
-                return null;
-            }
+            runStart = i;
         }
-        if (at < 0) {
+        if (runStart >= cursor) {
             return null;
         }
-        boolean spaceBefore = at > 0 && !Character.isWhitespace(text.charAt(at - 1));
-        return new Token(at, cursor, text.subSequence(at + 1, cursor).toString(), spaceBefore);
+        int bestAt = -1;
+        int bestLen = -1;
+        int lastAt = -1;
+        for (int i = runStart; i < cursor; i++) {
+            if (text.charAt(i) != '@') {
+                continue;
+            }
+            lastAt = i;
+            String query = text.subSequence(i + 1, cursor).toString();
+            if (!hasMatch(query)) {
+                continue;
+            }
+            if (query.length() > bestLen) {
+                bestLen = query.length();
+                bestAt = i;
+            }
+        }
+        if (bestAt < 0) {
+            bestAt = lastAt;
+        }
+        if (bestAt < 0) {
+            return null;
+        }
+        boolean spaceBefore = bestAt > 0 && !Character.isWhitespace(text.charAt(bestAt - 1));
+        return new Token(bestAt, cursor, text.subSequence(bestAt + 1, cursor).toString(), spaceBefore);
     }
 
     /**

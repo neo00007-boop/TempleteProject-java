@@ -45,6 +45,7 @@ public class MentionEditActivity extends BaseActivity<ActivityMentionEditBinding
 
     private List<MentionEditText.Member> demoMembers() {
         List<MentionEditText.Member> members = new ArrayList<>();
+        members.add(new MentionEditText.Member("1000", "张@伟", "zhang@wei", null));
         members.add(new MentionEditText.Member("1001", "张伟", "zhangwei", null));
         members.add(new MentionEditText.Member("1002", "张张", "zhangzhang", null));
         members.add(new MentionEditText.Member("1003", "伟伟", "weiwei", null));
