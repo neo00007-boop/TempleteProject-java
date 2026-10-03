@@ -136,11 +136,15 @@ public class MentionEditText extends ShapeEditText {
         }
     }
 
-    /** 传入可选人员，之后输入 @ 会按这份数据过滤。 */
+    /** 传入可选人员，之后输入 @ 会按这份数据过滤。名字为空的条目会丢掉。 */
     public void setMembers(List<Member> data) {
         members.clear();
         if (data != null) {
-            members.addAll(data);
+            for (Member member : data) {
+                if (member != null && !TextUtils.isEmpty(member.name)) {
+                    members.add(member);
+                }
+            }
         }
         syncMemberList();
     }
@@ -278,7 +282,8 @@ public class MentionEditText extends ShapeEditText {
             return;
         }
         int cursor = getSelectionEnd();
-        Token token = findToken(text, cursor);
+        // 以点中的人为准反推替换区间，避免多 @ 时再猜一次猜偏。
+        Token token = findTokenForMember(text, cursor, member);
         if (token == null) {
             return;
         }
@@ -373,6 +378,10 @@ public class MentionEditText extends ShapeEditText {
             if (member.name.equals(query)) {
                 return member;
             }
+            // 名字本身带开头 @ 时，输入框里只打了一个 @，query 是「客服」也能对上「@客服」
+            if (member.name.charAt(0) == '@' && member.name.equals("@" + query)) {
+                return member;
+            }
         }
         for (Member member : members) {
             if (!TextUtils.isEmpty(member.username) && member.username.equalsIgnoreCase(query)) {
@@ -382,8 +391,16 @@ public class MentionEditText extends ShapeEditText {
         return null;
     }
 
+    /** 名字本身以 @ 开头时不再前缀一个 @，避免出现 @@客服。 */
+    private static String mentionBody(String name) {
+        if (TextUtils.isEmpty(name)) {
+            return "@";
+        }
+        return name.charAt(0) == '@' ? name : "@" + name;
+    }
+
     private void applyMention(Editable text, Token token, Member member, int replaceEnd) {
-        String body = "@" + member.name;
+        String body = mentionBody(member.name);
         boolean consumedSpace = replaceEnd > token.end;
         boolean needSpace = !consumedSpace
                 && (token.end >= text.length() || !Character.isWhitespace(text.charAt(token.end)));
@@ -446,7 +463,7 @@ public class MentionEditText extends ShapeEditText {
         for (MentionSpan span : spans) {
             int start = text.getSpanStart(span);
             int end = text.getSpanEnd(span);
-            if (start < 0 || end < start || !("@" + span.name).contentEquals(text.subSequence(start, end))) {
+            if (start < 0 || end < start || !mentionBody(span.name).contentEquals(text.subSequence(start, end))) {
                 text.removeSpan(span);
             }
         }
@@ -459,23 +476,16 @@ public class MentionEditText extends ShapeEditText {
         if (cursor > text.length()) {
             cursor = text.length();
         }
-        // 光标前这一段连续非空白里可能有多个 @（名字里也带 @）。
-        // 优先用「查询还能配到人」且最长的那个，避免 @张@ 被拆成第二个 @。
-        // 都配不到时退回最靠近光标的 @，光秃秃的 @ 仍能拉起全部人员。
-        int runStart = cursor;
-        for (int i = cursor - 1; i >= 0; i--) {
-            if (Character.isWhitespace(text.charAt(i))) {
-                break;
-            }
-            runStart = i;
-        }
-        if (runStart >= cursor) {
+        // 默认仍按非空白截断。名字带空格时，只有「@ 到光标」仍是某个人名/用户名前缀，才跨过空白。
+        // 一段里多个 @（名字里也带 @）时，优先用还能配到人且最长的那个；都配不到就退回最近的 @。
+        int leftBound = tokenLeftBound(text, cursor);
+        if (leftBound >= cursor) {
             return null;
         }
         int bestAt = -1;
         int bestLen = -1;
         int lastAt = -1;
-        for (int i = runStart; i < cursor; i++) {
+        for (int i = leftBound; i < cursor; i++) {
             if (text.charAt(i) != '@') {
                 continue;
             }
@@ -492,11 +502,116 @@ public class MentionEditText extends ShapeEditText {
         if (bestAt < 0) {
             bestAt = lastAt;
         }
-        if (bestAt < 0) {
+        return tokenAt(text, bestAt, cursor);
+    }
+
+    /**
+     * 按点中的成员反推 @ 起点。
+     * 光标前到某个 @ 的整段必须是这个人正文的前缀，或 query 是其名字/用户名前缀；取最长的那段。
+     * 对不上时退回 {@link #findToken}，不改变原有兜底。
+     */
+    private Token findTokenForMember(Editable text, int cursor, Member member) {
+        if (text == null || member == null || cursor < 0) {
             return null;
         }
-        boolean spaceBefore = bestAt > 0 && !Character.isWhitespace(text.charAt(bestAt - 1));
-        return new Token(bestAt, cursor, text.subSequence(bestAt + 1, cursor).toString(), spaceBefore);
+        if (cursor > text.length()) {
+            cursor = text.length();
+        }
+        int leftBound = tokenLeftBound(text, cursor);
+        if (leftBound >= cursor) {
+            return findToken(text, cursor);
+        }
+        int bestAt = -1;
+        int bestLen = -1;
+        for (int i = leftBound; i < cursor; i++) {
+            if (text.charAt(i) != '@') {
+                continue;
+            }
+            String fromAt = text.subSequence(i, cursor).toString();
+            if (!isTypedPrefixOfMember(fromAt, member)) {
+                continue;
+            }
+            if (fromAt.length() > bestLen) {
+                bestLen = fromAt.length();
+                bestAt = i;
+            }
+        }
+        if (bestAt < 0) {
+            return findToken(text, cursor);
+        }
+        return tokenAt(text, bestAt, cursor);
+    }
+
+    private int tokenLeftBound(Editable text, int cursor) {
+        int leftBound = 0;
+        for (int j = cursor - 1; j >= 0; j--) {
+            if (!Character.isWhitespace(text.charAt(j))) {
+                continue;
+            }
+            boolean cross = false;
+            for (int k = j - 1; k >= 0; k--) {
+                char ck = text.charAt(k);
+                if (Character.isWhitespace(ck)) {
+                    break;
+                }
+                if (ck == '@') {
+                    cross = isMemberPrefix(text.subSequence(k + 1, cursor).toString());
+                    break;
+                }
+            }
+            if (!cross) {
+                leftBound = j + 1;
+                break;
+            }
+        }
+        return leftBound;
+    }
+
+    @Nullable
+    private Token tokenAt(Editable text, int at, int cursor) {
+        if (at < 0 || at >= cursor) {
+            return null;
+        }
+        boolean spaceBefore = at > 0 && !Character.isWhitespace(text.charAt(at - 1));
+        return new Token(at, cursor, text.subSequence(at + 1, cursor).toString(), spaceBefore);
+    }
+
+    /** 光标前从某个 @ 起的原文，是否可作为此人 mention 的未完成输入。 */
+    private boolean isTypedPrefixOfMember(String fromAt, Member member) {
+        if (TextUtils.isEmpty(fromAt) || fromAt.charAt(0) != '@') {
+            return false;
+        }
+        String body = mentionBody(member.name);
+        if (body.startsWith(fromAt)) {
+            return true;
+        }
+        String query = fromAt.substring(1);
+        if (member.name.startsWith(query)) {
+            return true;
+        }
+        if (member.name.charAt(0) == '@' && member.name.substring(1).startsWith(query)) {
+            return true;
+        }
+        return !TextUtils.isEmpty(member.username)
+                && member.username.toLowerCase(Locale.ROOT).startsWith(query.toLowerCase(Locale.ROOT));
+    }
+
+    /** 仅前缀匹配，供跨空格时使用；不用 contains，避免误把普通空格吃进 token。 */
+    private boolean isMemberPrefix(String query) {
+        if (TextUtils.isEmpty(query)) {
+            return false;
+        }
+        String key = query.toLowerCase(Locale.ROOT);
+        for (Member member : members) {
+            if (member.name.toLowerCase(Locale.ROOT).startsWith(key)) {
+                return true;
+            }
+            if (!TextUtils.isEmpty(member.username)
+                    && member.username.toLowerCase(Locale.ROOT).startsWith(key)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -523,7 +638,7 @@ public class MentionEditText extends ShapeEditText {
                 if (start < 0 || end <= start || end > plain.length()) {
                     continue;
                 }
-                if (!("@" + span.name).contentEquals(text.subSequence(start, end))) {
+                if (!mentionBody(span.name).contentEquals(text.subSequence(start, end))) {
                     continue;
                 }
                 mentions.add(new Mention(span.id, start, end - start));
@@ -557,10 +672,15 @@ public class MentionEditText extends ShapeEditText {
             if (mention.length <= 0 || start < cursor || end > text.length()) {
                 continue;
             }
+            // 脏数据只当普通字：必须以 @ 开头，且 @ 后面至少还有一个字。
+            String piece = text.substring(start, end);
+            if (piece.length() < 2 || piece.charAt(0) != '@') {
+                continue;
+            }
             if (start > cursor) {
                 parts.add(SpanData.build(text.substring(cursor, start), false));
             }
-            parts.add(SpanData.build(text.substring(start, end), true));
+            parts.add(SpanData.build(piece, true));
             ids.add(mention.id);
             cursor = end;
         }
@@ -627,7 +747,7 @@ public class MentionEditText extends ShapeEditText {
 
         public Member(String id, String name, @Nullable String username, @Nullable Drawable avatar) {
             this.id = id;
-            this.name = name;
+            this.name = name == null ? "" : name;
             this.username = username == null ? "" : username;
             this.avatar = avatar;
         }
