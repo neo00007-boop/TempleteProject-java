@@ -2,11 +2,11 @@ package com.templete.project.mvvm;
 
 import android.app.Application;
 
-import com.lib.base.mvvm.BaseViewModel;
-import com.lib.base.mvvm.CusLiveData;
-import com.templete.project.bean.Demo;
-
 import androidx.annotation.NonNull;
+
+import com.kunminx.architecture.domain.message.MutableResult;
+import com.lib.base.mvvm.BaseViewModel;
+import com.templete.project.bean.Demo;
 
 /**
  * ProjectName  TempleteProject-java
@@ -17,9 +17,9 @@ import androidx.annotation.NonNull;
  */
 
 public class DemoViewModel extends BaseViewModel {
-    public CusLiveData<Demo> darks = new CusLiveData<>();
+    public MutableResult<Demo> darks = new MutableResult<>();
 
-    public CusLiveData<Demo> getDarks() {
+    public MutableResult<Demo> getDarks() {
         if (darks.getValue() == null) {
             Demo demo = new Demo(0);
             darks.setValue(demo);

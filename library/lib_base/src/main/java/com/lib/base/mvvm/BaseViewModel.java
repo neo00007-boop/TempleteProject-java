@@ -2,11 +2,13 @@ package com.lib.base.mvvm;
 
 import android.app.Application;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
+
+import com.kunminx.architecture.domain.message.MutableResult;
 import com.lib.base.bean.BaseData;
 import com.lib.base.config.App;
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 
@@ -29,11 +31,11 @@ public class BaseViewModel extends AndroidViewModel {
     }
 
     /***********************BaseViewModelState操作******************************/
-    private CusLiveData<BaseData> baseData;
+    private MutableResult<BaseData> baseData;
 
-    public CusLiveData<BaseData> getBaseData() {
+    public MutableResult<BaseData> getBaseData() {
         if (baseData == null) {
-            baseData = new CusLiveData<>();
+            baseData = new MutableResult<>();
         }
         return baseData;
     }
@@ -56,7 +58,7 @@ public class BaseViewModel extends AndroidViewModel {
      * @param obj
      */
     public void setBaseData(int type, String message, Object obj) {
-        CusLiveData<BaseData> liveData = getBaseData();
+        MutableResult<BaseData> liveData = getBaseData();
         BaseData state = liveData.getValue();
         if (state == null) {
             state = new BaseData(type, message, obj);
