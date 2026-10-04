@@ -242,11 +242,14 @@ public class MentionEditText extends ShapeEditText {
     private boolean matches(Member member, String query) {
         String key = query.toLowerCase(Locale.ROOT);
         String name = member.name.toLowerCase(Locale.ROOT);
-        if (key.isEmpty() || name.startsWith(key) || member.name.contains(query)) {
+        if (key.isEmpty() || name.startsWith(key) || name.contains(key)) {
             return true;
         }
-        return !TextUtils.isEmpty(member.username)
-                && member.username.toLowerCase(Locale.ROOT).startsWith(key);
+        if (TextUtils.isEmpty(member.username)) {
+            return false;
+        }
+        String username = member.username.toLowerCase(Locale.ROOT);
+        return username.startsWith(key) || username.contains(key);
     }
 
     /** 从紧挨着的人员 @ 看到这次输入的结尾，这段还能配到人。 */
@@ -375,11 +378,11 @@ public class MentionEditText extends ShapeEditText {
 
     private Member findExact(String query) {
         for (Member member : members) {
-            if (member.name.equals(query)) {
+            if (member.name.equalsIgnoreCase(query)) {
                 return member;
             }
             // 名字本身带开头 @ 时，输入框里只打了一个 @，query 是「客服」也能对上「@客服」
-            if (member.name.charAt(0) == '@' && member.name.equals("@" + query)) {
+            if (member.name.charAt(0) == '@' && member.name.equalsIgnoreCase("@" + query)) {
                 return member;
             }
         }
@@ -576,24 +579,32 @@ public class MentionEditText extends ShapeEditText {
         return new Token(at, cursor, text.subSequence(at + 1, cursor).toString(), spaceBefore);
     }
 
-    /** 光标前从某个 @ 起的原文，是否可作为此人 mention 的未完成输入。 */
+    /** 光标前从某个 @ 起的原文，是否可作为此人 mention 的未完成输入；规则与 {@link #matches} 对齐。 */
     private boolean isTypedPrefixOfMember(String fromAt, Member member) {
         if (TextUtils.isEmpty(fromAt) || fromAt.charAt(0) != '@') {
             return false;
         }
         String body = mentionBody(member.name);
-        if (body.startsWith(fromAt)) {
+        String fromKey = fromAt.toLowerCase(Locale.ROOT);
+        if (body.toLowerCase(Locale.ROOT).startsWith(fromKey)) {
             return true;
         }
-        String query = fromAt.substring(1);
-        if (member.name.startsWith(query)) {
+        String key = fromAt.substring(1).toLowerCase(Locale.ROOT);
+        String name = member.name.toLowerCase(Locale.ROOT);
+        if (name.startsWith(key) || name.contains(key)) {
             return true;
         }
-        if (member.name.charAt(0) == '@' && member.name.substring(1).startsWith(query)) {
-            return true;
+        if (member.name.charAt(0) == '@') {
+            String bare = name.substring(1);
+            if (bare.startsWith(key) || bare.contains(key)) {
+                return true;
+            }
         }
-        return !TextUtils.isEmpty(member.username)
-                && member.username.toLowerCase(Locale.ROOT).startsWith(query.toLowerCase(Locale.ROOT));
+        if (TextUtils.isEmpty(member.username)) {
+            return false;
+        }
+        String username = member.username.toLowerCase(Locale.ROOT);
+        return username.startsWith(key) || username.contains(key);
     }
 
     /** 仅前缀匹配，供跨空格时使用；不用 contains，避免误把普通空格吃进 token。 */
