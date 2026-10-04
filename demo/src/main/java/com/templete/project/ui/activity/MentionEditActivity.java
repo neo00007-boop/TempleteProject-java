@@ -22,7 +22,7 @@ public class MentionEditActivity extends BaseActivity<ActivityMentionEditBinding
 
     @Override
     public void inits() {
-        setTitleStr("TG @群员");
+        setTitleStr("聊天群@群员");
     }
 
     @Override

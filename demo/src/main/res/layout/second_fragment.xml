@@ -183,7 +183,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="TG群@群员"
+                android:text="聊天群@群员"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
