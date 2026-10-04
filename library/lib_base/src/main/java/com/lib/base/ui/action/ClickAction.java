@@ -74,7 +74,7 @@ public interface ClickAction extends ContextAction {
      * @return
      */
     default View getViewById(int layoutId) {
-        return LayoutInflater.from(getCurCtx()).inflate(layoutId, null);
+        return LayoutInflater.from(getCurrentContext()).inflate(layoutId, null);
     }
 
 }

@@ -21,7 +21,7 @@ public interface ContextAction extends View.OnClickListener {
      * @return
      */
     @NonNull
-    Context getCurCtx();
+    Context getCurrentContext();
 
     /**
      * 获取当前Activity
@@ -29,7 +29,7 @@ public interface ContextAction extends View.OnClickListener {
      * @return
      */
     @NonNull
-    Activity getCurAty();
+    Activity getCurrentActivity();
 
     /**
      * 点击事件

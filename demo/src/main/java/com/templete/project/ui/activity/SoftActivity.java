@@ -15,7 +15,7 @@ import com.templete.project.databinding.SoftActivityBinding;
 public class SoftActivity extends BaseActivity<SoftActivityBinding> {
 
     @Override
-    public int getActivityTheme() {
+    public int getTitleTheme() {
         return TitleBarTheme.THEME_BLUE;
     }
 

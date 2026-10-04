@@ -55,7 +55,7 @@ public interface OverridePendingTransitionAction extends ContextAction {
      * 常规跳转activity转场动画
      */
     default void overridePendingTransitionStartNormal() {
-        Activity activity = getCurAty();
+        Activity activity = getCurrentActivity();
         activity.overridePendingTransition(R.anim.trans_pre_in, R.anim.trans_pre_out);
     }
 
@@ -63,7 +63,7 @@ public interface OverridePendingTransitionAction extends ContextAction {
      * 无跳转activity转场动画
      */
     default void overridePendingTransitionStartNone() {
-        Activity activity = getCurAty();
+        Activity activity = getCurrentActivity();
         activity.overridePendingTransition(0, 0);
     }
 
@@ -71,7 +71,7 @@ public interface OverridePendingTransitionAction extends ContextAction {
      * 常规finish activity转场动画
      */
     default void overridePendingTransitionFinishNormal() {
-        Activity activity = getCurAty();
+        Activity activity = getCurrentActivity();
         activity.overridePendingTransition(R.anim.trans_pre_in_back, R.anim.trans_pre_out_back);
     }
 
@@ -79,7 +79,7 @@ public interface OverridePendingTransitionAction extends ContextAction {
      * 无转场动画
      */
     default void overridePendingTransitionFinishNone() {
-        Activity activity = getCurAty();
+        Activity activity = getCurrentActivity();
         activity.overridePendingTransition(0, 0);
     }
 
@@ -87,7 +87,7 @@ public interface OverridePendingTransitionAction extends ContextAction {
      * 登录跳转activity转场动画
      */
     default void overridePendingTransitionStartLogin() {
-        Activity activity = getCurAty();
+        Activity activity = getCurrentActivity();
         activity.overridePendingTransition(R.anim.bottom_in_anim, R.anim.no_anim);
     }
 
@@ -95,7 +95,7 @@ public interface OverridePendingTransitionAction extends ContextAction {
      * 登录finish activity转场动画
      */
     default void overridePendingTransitionFinishLogin() {
-        Activity activity = getCurAty();
+        Activity activity = getCurrentActivity();
         activity.overridePendingTransition(R.anim.no_anim, R.anim.bottom_out_anim);
     }
 }

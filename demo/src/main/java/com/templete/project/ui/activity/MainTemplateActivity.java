@@ -29,7 +29,7 @@ public class MainTemplateActivity extends BaseMvvmActivity<MainTempleteActivityB
     }
 
     @Override
-    public int getActivityTheme() {
+    public int getTitleTheme() {
         return TitleBarTheme.THEME_NONE;
     }
 

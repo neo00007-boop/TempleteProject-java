@@ -45,7 +45,7 @@ public interface ImmersionAvtion extends ContextAction {
      */
     default void setImmersionBar(int statusBarColor, boolean fitsSystemWindows) {
         ImmersionBar
-                .with(getCurAty())
+                .with(getCurrentActivity())
                 .statusBarColor(statusBarColor)
                 .fitsSystemWindows(fitsSystemWindows)
                 .statusBarDarkFont(darkStatusBarFont())
@@ -75,7 +75,7 @@ public interface ImmersionAvtion extends ContextAction {
      */
     default void setStatueBarTextColorDark(boolean dark) {
         ImmersionBar
-                .with(getCurAty())
+                .with(getCurrentActivity())
                 .statusBarDarkFont(dark)
                 //软键盘监听回调，keyboardEnable为true才会回调此方法
                 //open为true，软键盘弹出，为false，软键盘关闭
@@ -89,7 +89,7 @@ public interface ImmersionAvtion extends ContextAction {
      */
     default void specialImmersion() {
         ImmersionBar
-                .with(getCurAty())
+                .with(getCurrentActivity())
                 .statusBarColor(R.color.cl_no_color)
                 .fitsSystemWindows(false)
                 .statusBarDarkFont(false)

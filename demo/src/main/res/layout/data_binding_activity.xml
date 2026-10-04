@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
 
@@ -22,6 +23,16 @@
         android:orientation="vertical">
         <!--        android:background="@{vm.dark?@color/app_color_white:@color/app_color_red}"-->
         <!--        android:background="@{ints == 1?@color/app_color_white:@color/app_color_red}"-->
+
+        <com.lib.base.ui.widget.TitleBar
+            android:id="@+id/title_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:barBackVisible="true"
+            app:barInitModel="initBlueTheme"
+            app:barStatuesVisible="true"
+            app:barTitleStr="DataBinding" />
+            <!--app:barRightIconResource="@drawable/ic_more_do"-->
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view"

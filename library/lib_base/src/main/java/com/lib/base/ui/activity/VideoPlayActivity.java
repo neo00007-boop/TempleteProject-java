@@ -27,7 +27,7 @@ public class VideoPlayActivity extends BaseActivity<VideoPlayActivityBinding> im
     }
 
     @Override
-    public int getActivityTheme() {
+    public int getTitleTheme() {
         return TitleBarTheme.THEME_NONE;
     }
 

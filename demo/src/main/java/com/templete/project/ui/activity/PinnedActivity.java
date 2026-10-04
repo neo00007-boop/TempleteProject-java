@@ -23,7 +23,7 @@ public class PinnedActivity extends BaseActivity<PinnedActivityBinding> {
     }
 
     @Override
-    public int getActivityTheme() {
+    public int getTitleTheme() {
         return TitleBarTheme.THEME_BLUE;
     }
 

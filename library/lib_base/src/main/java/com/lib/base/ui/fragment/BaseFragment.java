@@ -91,13 +91,13 @@ public abstract class BaseFragment<T extends ViewBinding> extends ViewBindingFra
 
     @NonNull
     @Override
-    public Context getCurCtx() {
+    public Context getCurrentContext() {
         return requireContext();
     }
 
     @NonNull
     @Override
-    public Activity getCurAty() {
+    public Activity getCurrentActivity() {
         return requireActivity();
     }
 

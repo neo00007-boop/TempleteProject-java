@@ -66,7 +66,7 @@ public abstract class BaseActivity<T extends ViewBinding> extends ViewBindingAct
         if (mViewBinding == null) {
             throw new RuntimeException("viewBinding() must not return null!");
         }
-        int activityTheme = getActivityTheme();
+        int activityTheme = getTitleTheme();
         View innerView = mViewBinding.getRoot();
         if (TitleBarTheme.THEME_NONE != activityTheme) {
             //setContentView
@@ -142,13 +142,13 @@ public abstract class BaseActivity<T extends ViewBinding> extends ViewBindingAct
 
     @NonNull
     @Override
-    public Context getCurCtx() {
+    public Context getCurrentContext() {
         return this;
     }
 
     @NonNull
     @Override
-    public Activity getCurAty() {
+    public Activity getCurrentActivity() {
         return this;
     }
 

@@ -29,7 +29,7 @@ public interface TitleBarAction extends ImmersionAvtion {
      *
      * @return
      */
-    default int getActivityTheme() {
+    default int getTitleTheme() {
         return TitleBarTheme.THEME_BLUE;
     }
 

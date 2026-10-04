@@ -55,7 +55,7 @@ public class LoginActivity extends BaseMvvmActivity<MlLoginActivityBinding, Logi
     }
 
     @Override
-    public int getActivityTheme() {
+    public int getTitleTheme() {
         return TitleBarTheme.THEME_WHITE;
     }
 

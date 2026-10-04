@@ -27,7 +27,7 @@ public interface BaseAction extends ContextAction {
      * @return
      */
     default LayoutInflater getLayoutInflater() {
-        return LayoutInflater.from(getCurCtx());
+        return LayoutInflater.from(getCurrentContext());
     }
 
     /**
@@ -36,7 +36,7 @@ public interface BaseAction extends ContextAction {
      * @return
      */
     default Resources getResourcess() {
-        return getCurCtx().getResources();
+        return getCurrentContext().getResources();
     }
 
     /**
@@ -56,7 +56,7 @@ public interface BaseAction extends ContextAction {
      * @return
      */
     default String getString(@StringRes int id) {
-        return getCurCtx().getString(id);
+        return getCurrentContext().getString(id);
     }
 
     /**
@@ -77,7 +77,7 @@ public interface BaseAction extends ContextAction {
      * @return
      */
     default Drawable getDrawable(@DrawableRes int id) {
-        return ContextCompat.getDrawable(getCurCtx(), id);
+        return ContextCompat.getDrawable(getCurrentContext(), id);
     }
 
     /**
@@ -88,7 +88,7 @@ public interface BaseAction extends ContextAction {
      */
     @ColorInt
     default int getColor(@ColorRes int id) {
-        return ContextCompat.getColor(getCurCtx(), id);
+        return ContextCompat.getColor(getCurrentContext(), id);
     }
 
     /**
@@ -99,7 +99,7 @@ public interface BaseAction extends ContextAction {
      * @return
      */
     default <S> S getSystemService(@NonNull Class<S> serviceClass) {
-        return ContextCompat.getSystemService(getCurCtx(), serviceClass);
+        return ContextCompat.getSystemService(getCurrentContext(), serviceClass);
     }
 
 }

@@ -1,12 +1,9 @@
 package com.templete.project.ui.activity;
 
-import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -15,6 +12,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.greendao.db.bean.DemoBean;
 import com.lib.base.mvvm.BaseViewModel;
+import com.lib.base.ui.activity.BaseActivity;
+import com.lib.base.ui.activity.TitleBarTheme;
 import com.templete.project.R;
 import com.templete.project.databinding.DataBindingActivityBinding;
 import com.templete.project.databinding.DynamicItem1Binding;
@@ -31,7 +30,7 @@ import java.util.List;
  * @author xwchen
  */
 
-public class DatabindingActivity extends AppCompatActivity {
+public class DatabindingActivity extends BaseActivity<DataBindingActivityBinding> {
 
     private DemoViewModel demoViewModel;
 
@@ -44,14 +43,25 @@ public class DatabindingActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public int getTitleTheme() {
+        return TitleBarTheme.THEME_NONE;
+    }
+
+    @Override
+    protected DataBindingActivityBinding viewBinding() {
         DataBindingActivityBinding viewDataBinding = DataBindingUtil.setContentView(this, R.layout.data_binding_activity);
         viewDataBinding.setLifecycleOwner(this);
+        return viewDataBinding;
+    }
 
+    @Override
+    public void inits() {
         demoViewModel = createViewModel(DemoViewModel.class);
+    }
 
-        RecyclerView recyclerView = viewDataBinding.recyclerView;
+    @Override
+    public void initView() {
+        RecyclerView recyclerView = mViewBinding.recyclerView;
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         MyAdapter myAdapter = new MyAdapter();
         recyclerView.setAdapter(myAdapter);
@@ -61,9 +71,19 @@ public class DatabindingActivity extends AppCompatActivity {
         }
         myAdapter.setList(list);
 
-        viewDataBinding.getRoot().postDelayed(() -> {
+        mViewBinding.getRoot().postDelayed(() -> {
             demoViewModel.setDarks(1);
         }, 1000);
+    }
+
+    @Override
+    public void initEvent() {
+
+    }
+
+    @Override
+    public void initData() {
+
     }
 
     class MyAdapter extends BaseQuickAdapter<DemoBean, MyAdapter.ViewHolder> {

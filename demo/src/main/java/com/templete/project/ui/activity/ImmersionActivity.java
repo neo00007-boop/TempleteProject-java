@@ -28,7 +28,7 @@ public class ImmersionActivity extends BaseActivity<ImmersionActivityBinding> {
     }
 
     @Override
-    public int getActivityTheme() {
+    public int getTitleTheme() {
         return TitleBarTheme.THEME_BLUE;
     }
 
