@@ -93,7 +93,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="超级Intent+NavigationBar"
+                android:text="超级Intent"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"

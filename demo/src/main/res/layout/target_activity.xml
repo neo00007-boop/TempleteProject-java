@@ -5,8 +5,4 @@
     android:background="@color/cl_f0f0f0"
     android:orientation="vertical">
 
-    <com.hjq.shape.view.NavigationBar
-        android:id="@+id/bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
 </LinearLayout>

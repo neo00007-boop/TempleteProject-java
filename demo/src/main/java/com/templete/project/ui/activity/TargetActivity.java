@@ -1,13 +1,11 @@
 package com.templete.project.ui.activity;
 
-import com.hjq.shape.view.NavigationBar;
 import com.lib.base.ui.activity.BaseActivity;
 import com.templete.project.bean.PBean;
 import com.templete.project.databinding.TargetActivityBinding;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * PackageName  com.templete.project.ui
@@ -43,20 +41,7 @@ public class TargetActivity extends BaseActivity<TargetActivityBinding> {
 
     @Override
     public void initView() {
-        List<NavigationBar.Data> list = Arrays.asList(
-                new NavigationBar.Data("导航按钮1"), new NavigationBar.Data("导航按钮2"),
-                new NavigationBar.Data("导航按钮3"), new NavigationBar.Data("导航按钮4"),
-                new NavigationBar.Data("导航按钮5"), new NavigationBar.Data("导航按钮6"),
-                new NavigationBar.Data("导航按钮7"), new NavigationBar.Data("导航按钮8"),
-                new NavigationBar.Data("导航按钮2"), new NavigationBar.Data("导航按钮3"),
-                new NavigationBar.Data("导航按钮4"), new NavigationBar.Data("导航按钮5"),
-                new NavigationBar.Data("导航按钮6"), new NavigationBar.Data("导航按钮7"),
-                new NavigationBar.Data("导航按钮8"));
-        mViewBinding.bar.setData(list, 2, null);
-//        mViewBinding.bar.scrollBys(147);
-        mViewBinding.bar.scrollTos(147, 2);
-//        mViewBinding.bar.smoothScrollBys(147);
-//        mViewBinding.bar.smoothScrollTos(147);
+
     }
 
     @Override
