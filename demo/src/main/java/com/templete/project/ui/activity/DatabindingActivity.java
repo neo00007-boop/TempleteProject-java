@@ -61,6 +61,8 @@ public class DatabindingActivity extends BaseActivity<DataBindingActivityBinding
 
     @Override
     public void initView() {
+        mViewBinding.titleBar.setBackClickListener(view -> onBackPressed());
+
         RecyclerView recyclerView = mViewBinding.recyclerView;
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         MyAdapter myAdapter = new MyAdapter();
