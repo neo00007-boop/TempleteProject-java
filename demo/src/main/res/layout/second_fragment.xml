@@ -131,36 +131,6 @@
                 app:shape_textColor="@color/white"
                 tools:ignore="HardcodedText" />
 
-            <!--<com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv8"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="悬浮刷新同步两个tablayout(最不推荐)"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />
-
-            <com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv9"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="悬浮刷新使用同一个tablayout"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />-->
-
             <com.hjq.shape.view.ShapeTextView
                 android:id="@+id/tv10"
                 android:layout_width="match_parent"

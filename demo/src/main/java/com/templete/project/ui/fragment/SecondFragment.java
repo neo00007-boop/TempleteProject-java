@@ -67,11 +67,7 @@ public class SecondFragment extends BaseFragment<SecondFragmentBinding> {
                         clazz = ScrollActivity.class;
                     } else if (v.equals(mViewBinding.tv11)) {
                         clazz = MentionEditActivity.class;
-                    } /*else if (v.equals(mViewBinding.tv8)) {
-                        clazz = FloatingActivity.class;
-                    } else if (v.equals(mViewBinding.tv9)) {
-                        clazz = FloatingNewActivity.class;
-                    } */ else if (v.equals(mViewBinding.tv10)) {
+                    } else if (v.equals(mViewBinding.tv10)) {
                         VideoBuilder.newBuilder()
                                 .setVideoTitle("速度与激情特别行动")
                                 .setVideoSource("https://media.w3.org/2010/05/sintel/trailer.mp4")
@@ -85,8 +81,7 @@ public class SecondFragment extends BaseFragment<SecondFragmentBinding> {
                 },
                 mViewBinding.tv1, mViewBinding.tv2, mViewBinding.tv3,
                 mViewBinding.tv4, mViewBinding.tv5, mViewBinding.tv6,
-                mViewBinding.tv7, /*mViewBinding.tv8, mViewBinding.tv9,*/
-                mViewBinding.tv11, mViewBinding.tv10);
+                mViewBinding.tv7, mViewBinding.tv11, mViewBinding.tv10);
     }
 
     private void gson() {
