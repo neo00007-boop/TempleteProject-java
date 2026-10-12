@@ -55,15 +55,15 @@ dependencies {
     //lib_view 已 api 依赖 lib_res，公共资源随它带出
     api project(':library:lib_view')
     api 'com.github.getActivity:XXPermissions:13.5'
-    implementation "com.github.getActivity:ToastUtils:${config.dependencies.toastutils_version}"
-    implementation "com.jakewharton.rxbinding4:rxbinding:${config.dependencies.rxbinding_version}"
+    api "com.github.getActivity:ToastUtils:${config.dependencies.toastutils_version}"
+    api "com.jakewharton.rxbinding4:rxbinding:${config.dependencies.rxbinding_version}"
 
     api 'com.trello.rxlifecycle4:rxlifecycle:4.0.2'
     api 'com.trello.rxlifecycle4:rxlifecycle-android:4.0.2'
     api 'com.trello.rxlifecycle4:rxlifecycle-components:4.0.2'
 
     //title bar
-    implementation "com.geyifeng.immersionbar:immersionbar:${config.dependencies.immersionbar_version}"
+    api "com.geyifeng.immersionbar:immersionbar:${config.dependencies.immersionbar_version}"
     //leakcanary
     //noinspection GradleDependency
     debugApi "com.squareup.leakcanary:leakcanary-android:${config.dependencies.leakcanary_version}"
@@ -85,9 +85,9 @@ dependencies {
 
     //********************************************以下是view依赖**************************************************
     // 动画解析库：https://github.com/airbnb/lottie-android
-    implementation 'com.airbnb.android:lottie:4.1.0'
+    api 'com.airbnb.android:lottie:4.1.0'
     //banner
-    implementation 'io.github.youth5201314:banner:2.2.2'
+    api 'io.github.youth5201314:banner:2.2.2'
     //AndRatingBar
     api 'com.github.wdsqjq:AndRatingBar:1.0.6'
     api "jp.co.cyberagent.android:gpuimage:2.1.0"
