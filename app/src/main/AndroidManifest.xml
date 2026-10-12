@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.example.app">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -42,12 +41,23 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true"
         tools:replace="android:label">
         <!--        android:theme="@style/Theme.TempleteProjectjava"-->
         <!--            android:name=".VoteListActivity"-->
-        <activity
+        <!--<activity
             android:name=".VotePKActivity"
             android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>-->
+        <activity
+            android:name=".sample.ModuleSampleActivity"
+            android:exported="true"
+            android:label="业务模块示例">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

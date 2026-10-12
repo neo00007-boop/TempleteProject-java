@@ -12,12 +12,9 @@ import androidx.annotation.NonNull;
  * Date         2019-11-27.
  */
 public interface AppConfig {
-    //host ip
+    //host ip，多域名切换见 com.lib.network.Hosts
     String COOKIE_URL_PATH = "";//cookie 指定path
-    String HOST = "host";
-    String HOST1 = "host:host1";
     String API_BASE_URL_FINAL1 = "http://192.168.3.6:8888";
-    String HOST2 = "host:host2";
     String API_BASE_URL_FINAL2 = "http://app.jnprsc.com";//url2前缀
 
     /**

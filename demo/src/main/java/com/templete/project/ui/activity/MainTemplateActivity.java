@@ -3,9 +3,9 @@ package com.templete.project.ui.activity;
 import com.alibaba.android.arouter.facade.annotation.Route;
 import com.greendao.db.helper.CityBeanDao;
 import com.greendao.db.util.LocalRepository;
-import com.lib.base.aroute.ArouteConfig;
 import com.lib.base.ui.activity.BaseMvvmActivity;
 import com.lib.base.ui.activity.TitleBarTheme;
+import com.lib.router.RoutePath;
 import com.lib.base.util.LoginUtil;
 import com.templete.project.R;
 import com.templete.project.databinding.MainTempleteActivityBinding;
@@ -19,7 +19,7 @@ import com.templete.project.ui.widget.TabHost;
 /**
  * @author xwchen
  */
-@Route(path = ArouteConfig.ACTIVITY_MAIN)
+@Route(path = RoutePath.DEMO_MAIN)
 public class MainTemplateActivity extends BaseMvvmActivity<MainTempleteActivityBinding, MainViewModel> {
     public static final String TAG = "MainActivity";
 

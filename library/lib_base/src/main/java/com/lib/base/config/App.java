@@ -3,19 +3,13 @@ package com.lib.base.config;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
-import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.view.Gravity;
 
-import com.alibaba.android.arouter.launcher.ARouter;
-import com.google.common.reflect.TypeToken;
-import com.greendao.db.bean.CityBean;
-import com.greendao.db.helper.CityBeanDao;
 import com.greendao.db.util.GsonUtil;
-import com.greendao.db.util.LocalRepository;
 import com.hjq.gson.factory.GsonFactory;
 import com.hjq.shape.view.horizontal.SmartRefreshHorizontal;
 import com.hjq.toast.CustomToast;
@@ -26,13 +20,18 @@ import com.lib.base.BuildConfig;
 import com.lib.base.R;
 import com.lib.base.glide.GlideApp;
 import com.lib.base.mvvm.GlobalViewModel;
-import com.lib.base.rxjava.RxUtils;
 import com.lib.base.ui.OverlayTextDrawableUtil;
 import com.lib.base.ui.action.LogAction;
 import com.lib.base.ui.widget.BlackToastStyle;
+import com.lib.base.util.AppUtil;
 import com.lib.base.util.ContextUtil;
 import com.lib.base.util.DebugUtil;
-import com.lib.base.util.OUtil;
+import com.lib.base.util.LoginUtil;
+import com.lib.base.util.SPUtil;
+import com.lib.common.init.ModuleInitializers;
+import com.lib.network.HttpConfig;
+import com.lib.network.Hosts;
+import com.lib.network.RetrofitHelper;
 import com.scwang.smart.refresh.footer.ClassicsFooter;
 import com.scwang.smart.refresh.header.ClassicsHeader;
 import com.scwang.smart.refresh.header.MaterialHeader;
@@ -41,10 +40,7 @@ import com.scwang.smart.refresh.layout.wrapper.RefreshFooterWrapper;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.lang.ref.SoftReference;
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.camera.camera2.Camera2Config;
@@ -53,8 +49,6 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelStore;
 import androidx.lifecycle.ViewModelStoreOwner;
-import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.core.SingleEmitter;
 import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 
 /**
@@ -86,34 +80,15 @@ public abstract class App extends Application implements ViewModelStoreOwner, Lo
         logD("startTime", "startTime1=" + System.currentTimeMillis());
     }
 
-    /**
-     * 初始化模块的Application
-     *
-     * @param context
-     */
-    public abstract void initApplication(Context context);
-
-    /**
-     * 初始化module
-     *
-     * @param context
-     */
-    public abstract void initModule(Context context);
-
     private void init() {
         //处理RxJava中未处理异常
         setRxJavaErrorHandler();
         // 初始化 Toast 框架
         initToast();
-        //初始化module application
-        if (BuildConfig.MOULDE_TO_APPLICATION) {
-            initApplication(this);
-        } else {
-            initModule(this);
-        }
-        //db
-        LocalRepository.getInstance().init(this);
-        saveCity();
+        //网络，模块初始化里可能发请求，要放在前面
+        initNetwork();
+        //各模块初始化：数据库、路由、业务模块，按优先级执行
+        ModuleInitializers.init(this);
         //json解析异常回调
         setGsonErrorHandler();
         //life
@@ -122,8 +97,6 @@ public abstract class App extends Application implements ViewModelStoreOwner, Lo
         setFreshHeaderOrFooter();
         //viewModel
         setViewModel();
-        //路由
-        setRoute();
         //注册网络状态变化监听
         setNetWorkListener();
         //debug
@@ -133,44 +106,19 @@ public abstract class App extends Application implements ViewModelStoreOwner, Lo
         }
     }
 
-    private void saveCity() {
-        Single
-                .create(this::saveCityData)
-                .compose(RxUtils::toSimpleSingleIo)
-                .subscribe(integer -> logD("city_", "city num is " + integer), throwable -> logE("city_", throwable != null ? throwable.getMessage() + "" : "city data error"));
-    }
-
-    private void saveCityData(SingleEmitter<Integer> emitter) {
-        try {
-            CityBeanDao cityBeanDao = LocalRepository.getInstance().getCityBeanDao();
-            if (cityBeanDao.count() > 0) {
-                emitter.onSuccess((int) cityBeanDao.count());
-                return;
-            }
-
-            InputStream inputStream = getResources().openRawResource(R.raw.province);
-            ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-            byte[] buffer = new byte[512];
-            int length;
-            while ((length = inputStream.read(buffer)) != -1) {
-                outStream.write(buffer, 0, length);
-            }
-            outStream.close();
-            inputStream.close();
-
-            String data = outStream.toString();
-            if (OUtil.isNotNull(data)) {
-                List<CityBean> list = GsonUtil.getInstance().fromJson(data, new TypeToken<List<CityBean>>() {
-                }.getType());
-                cityBeanDao.insertInTx(list);
-                emitter.onSuccess(list.size());
-            } else {
-                emitter.onError(new RuntimeException("city data error"));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            emitter.onError(new RuntimeException("city data error"));
-        }
+    private void initNetwork() {
+        RetrofitHelper.init(new HttpConfig.Builder(AppConfig.getUrl())
+                .host(Hosts.KEY1, AppConfig.API_BASE_URL_FINAL1)
+                .host(Hosts.KEY2, AppConfig.API_BASE_URL_FINAL2)
+                .header("client_type", "android")
+                .header("version_code", String.valueOf(AppUtil.getVersionCode(this)))
+                .header("version_name", String.valueOf(AppUtil.getVersionName(this)))
+                .tokenProvider(() -> SPUtil.getString(AppConfig.USER_TOKEN))
+                .onTokenExpired(LoginUtil::toLogin)
+                .gson(GsonUtil.getInstance())
+                .cookiePath(AppConfig.COOKIE_URL_PATH)
+                .debug(DebugUtil.isDebug)
+                .build());
     }
 
     /**
@@ -258,14 +206,6 @@ public abstract class App extends Application implements ViewModelStoreOwner, Lo
         });
     }
 
-    private void setRoute() {
-        if (DebugUtil.isDebug) {
-            ARouter.openLog(); //打印日志
-            ARouter.openDebug();//开启调试模式
-        }
-        ARouter.init(this);
-    }
-
     private void setViewModel() {
         globalViewModelStore = new ViewModelStore();
         globalViewModel = new ViewModelProvider(this,
@@ -347,7 +287,6 @@ public abstract class App extends Application implements ViewModelStoreOwner, Lo
     @Override
     public void onTerminate() {
         super.onTerminate();
-        ARouter.getInstance().destroy();
     }
 
 

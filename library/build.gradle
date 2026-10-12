@@ -1,0 +1,4 @@
+// 只是基础库的目录，没有代码；加 base 插件是为了让 IDE 的 Clean Project（会执行 :library:clean）能找到 clean 任务
+plugins {
+    id 'base'
+}

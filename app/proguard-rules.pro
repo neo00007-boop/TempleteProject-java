@@ -79,8 +79,7 @@
 -keep class com.templete.project.** {*;}
 -keep class com.lib.base.** {*;}
 -keep class com.greendao.db.** {*;}
--keep class com.module.a.** {*;}
--keep class com.module.a.** {*;}
+-keep class com.module.square.** {*;}
 -keepclassmembers class * {
     native <methods>;
 }

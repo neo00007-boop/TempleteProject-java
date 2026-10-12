@@ -1,8 +1,6 @@
 package com.module.login.ui;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Intent;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextPaint;
@@ -16,15 +14,17 @@ import androidx.annotation.NonNull;
 
 import com.alibaba.android.arouter.facade.annotation.Autowired;
 import com.alibaba.android.arouter.facade.annotation.Route;
-import com.alibaba.android.arouter.launcher.ARouter;
-import com.lib.base.aroute.ArouteConfig;
+import com.greendao.db.util.GsonUtil;
+import com.lib.base.rxjava.RxUtils;
+import com.lib.router.Router;
 import com.lib.base.ui.activity.BaseMvvmActivity;
 import com.lib.base.ui.activity.TitleBarTheme;
 import com.lib.base.util.LoginUtil;
 import com.module.login.R;
-import com.module.login.databinding.MlLoginActivityBinding;
+import com.lib.router.RoutePath;
+import com.module.login.databinding.LoginActivityBinding;
+import com.module.login.http.LoginHttp;
 import com.module.login.mvvm.LoginViewModel;
-
 /**
  * PackageName  com.bigheadhorse.xscat.view.activity
  * ProjectName  XSCat
@@ -32,17 +32,11 @@ import com.module.login.mvvm.LoginViewModel;
  * Date         2019-12-02.
  */
 
-@Route(path = ArouteConfig.ACTIVITY_LOGIN)
-public class LoginActivity extends BaseMvvmActivity<MlLoginActivityBinding, LoginViewModel> implements View.OnClickListener {
+@Route(path = RoutePath.LOGIN_ACTIVITY)
+public class LoginActivity extends BaseMvvmActivity<LoginActivityBinding, LoginViewModel> implements View.OnClickListener {
     public static final String TAG = "LoginActivity_LOG";
     @Autowired
     public String data;
-
-    public static void toLogin(Activity activity) {
-        Intent intent = new Intent(activity, LoginActivity.class);
-        activity.startActivity(intent);
-        activity.overridePendingTransition(R.anim.ml_bottom_in_anim, R.anim.ml_no_anim);
-    }
 
     @Override
     protected Class<LoginViewModel> getViewModelClass() {
@@ -50,8 +44,8 @@ public class LoginActivity extends BaseMvvmActivity<MlLoginActivityBinding, Logi
     }
 
     @Override
-    public MlLoginActivityBinding viewBinding() {
-        return MlLoginActivityBinding.inflate(getLayoutInflater());
+    public LoginActivityBinding viewBinding() {
+        return LoginActivityBinding.inflate(getLayoutInflater());
     }
 
     @Override
@@ -68,7 +62,8 @@ public class LoginActivity extends BaseMvvmActivity<MlLoginActivityBinding, Logi
     @Override
     public void inits() {
         setTitleStr("登录");
-        ARouter.getInstance().inject(this);
+        Router.inject(this);
+        LoginUtil.onLoginShown();
         /*setRightClickViews((position, view) -> {
             // todo
         }, getViewById(R.layout.kefu_layout));*/
@@ -183,7 +178,29 @@ public class LoginActivity extends BaseMvvmActivity<MlLoginActivityBinding, Logi
 
     @Override
     public void onClick(View v) {
+        if (v.getId() == R.id.tv_one_click_login) {
+            login();
+        }
+    }
 
+    @SuppressLint("CheckResult")
+    private void login() {
+        LoginHttp
+                .getInstance()
+                .login("18557532484", "000000")
+                /*********************************** 以下写法任选其一，不要叠加 ***********************************/
+                //.compose(RxUtils::toSimpleSingle)
+                //.compose(RxUtils.toSimpleSingle())//这两个一样
+                //.doOnSubscribe(this::addDisposable) //自动处理生命周期方式,以下两种是框架处理方式
+                //.compose(bindUntilEvent(ActivityEvent.DESTROY))// 框架自动处理生命周期方式一
+                //.compose(RxUtils.bindUntilEvent(this))// 对上面封装
+                //.compose(RxUtils.bindUntilEvent(this, ActivityEvent.DESTROY))// 对上面封装
+                //.compose(bindToLifecycle())// 框架自动处理生命周期方式二,注意此种方式绑定的生命周期是onResume()/onPause()
+                //.compose(RxUtils.bindToLifecycle(this))// 对上面封装
+                //.compose(RxUtils.withDialogSingle(this, null, false))
+                /******************************************************************************************/
+                .compose(RxUtils.toSimpleSingle(this, null, false))//包含上面所有,包括线程调度,绑定生命周期,显示loading
+                .subscribe(loginBean -> logD(TAG, "data message=" + GsonUtil.toJson(loginBean)), throwable -> logD(TAG, "data message=" + throwable));
     }
 
     @Override

@@ -4,6 +4,7 @@ plugins {
 }
 def config = rootProject.ext
 android {
+    namespace 'com.greendao.db'
     compileSdkVersion config.android.compileSdkVersion
 //    buildToolsVersion config.android.buildToolsVersion
 
@@ -45,6 +46,8 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:${config.dependencies.ext_junit_version}"
     androidTestImplementation "androidx.test.espresso:espresso-core:${config.dependencies.espresso_core_version}"
 
+    //ModuleInitializer
+    api project(':library:lib_common')
     //db
     api "org.greenrobot:greendao:${config.dependencies.greendao_version}"
     implementation "org.greenrobot:greendao-generator:${config.dependencies.greendao_version}"

@@ -3,17 +3,12 @@ apply plugin: 'kotlin-android'
 def config = rootProject.ext
 dependencies {
     implementation project(path: ':library:lib_base')
-    implementation project(path: ':library:FlycoTabLayout')
     annotationProcessor "com.alibaba:arouter-compiler:${config.dependencies.route_version}"
     implementation "androidx.multidex:multidex:${config.dependencies.multidex_version}"
     //oaid
     implementation(name: 'oaid_sdk_1.0.25', ext: 'aar')
-    //业务模块
-    if (!mouldeToApplication.toBoolean()) {
-        implementation project(path: ':module_a')
-        implementation project(path: ':module_b')
-        implementation project(path: ':module_login')
-    }
+    //只放基础库示例，业务模块示例在 app 的 ModuleSampleActivity；登录页只在运行时提供给登录拦截示例
+    runtimeOnly project(path: ':module_login')
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     //test
     testImplementation "junit:junit:${config.dependencies.junit_version}"
@@ -64,7 +59,6 @@ android {
 //            zipAlignEnabled true
 //            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField("Boolean", "MOULDE_TO_APPLICATION", "${mouldeToApplication}")
 //            resValue("string", "ia_mnumstring", "demo")//xml使用方式@string/app_key
 //            resValue("dimen", "ia_mpx", "4px")
 //            resValue("integer", "ia_mnum", "4")
@@ -74,7 +68,6 @@ android {
             zipAlignEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField("Boolean", "MOULDE_TO_APPLICATION", "${mouldeToApplication}")
 //            signingConfig signingConfigs.release
 //            resValue("integer", "iamnum", "4")
 //            resValue("dimen", "iampx", "4px")

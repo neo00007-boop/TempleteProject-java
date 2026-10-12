@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 def config = rootProject.ext
 android {
+    namespace 'com.hjq.shape'
     compileSdkVersion config.android.compileSdkVersion
 //    buildToolsVersion config.android.buildToolsVersion
 
@@ -32,6 +33,8 @@ android {
 }*/
 //常用view控件汇总
 dependencies {
+    //颜色、x/y 适配尺寸在 lib_res
+    api project(':library:lib_res')
     //androidx support
     //noinspection GradleDependency
     api "com.google.android.material:material:${config.dependencies.material_version}"
@@ -41,6 +44,8 @@ dependencies {
     //noinspection GradleDependency
     api "androidx.constraintlayout:constraintlayout:${config.dependencies.constraintlayout_version}"
     api "androidx.viewpager2:viewpager2:${config.dependencies.viewpager2_version}"
+    //Tab 控件（com.flyco.tablayout，源自 FlycoTabLayout）用
+    api "androidx.viewpager:viewpager:1.0.0"
     //api "com.nex3z:flow-layout:${config.dependencies.flow_layout_version}"
     //垂直刷新
     api "io.github.scwang90:refresh-layout-kernel:${config.dependencies.smart_refresh_version}"      //核心必须依赖

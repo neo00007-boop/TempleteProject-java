@@ -1,13 +1,18 @@
 rootProject.name = "TempleteProject-java"
-//业务模块
+//壳工程
 include ':app'
 include ':demo'
-include ':module_a'
-include ':module_b'
+//业务模块：xxx 是实现，xxx_api 放对外服务接口（没有服务接口的模块不建 api）；路由路径统一在 lib_router 的 RoutePath
+include ':module_square_api'
+include ':module_square'
+include ':module_player'
 include ':module_login'
-//功能基础组件
+//基础组件，自下而上：common → network/router/res/db/view → base
 include ':library'
+include ':library:lib_common'
+include ':library:lib_router'
+include ':library:lib_network'
+include ':library:lib_res'
 include ':library:lib_base'
 include ':library:lib_db'
 include ':library:lib_view'
-include ':library:FlycoTabLayout'

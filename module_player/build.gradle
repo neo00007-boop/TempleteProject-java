@@ -1,0 +1,51 @@
+plugins {
+    id 'com.android.library'
+}
+def config = rootProject.ext
+// 播放业务实现，固定为 library。其它模块不能依赖这里，跳转用 RoutePath 里的路由
+android {
+    namespace 'com.module.player'
+    compileSdkVersion config.android.compileSdkVersion
+    //资源名必须以 player_ 开头，防止和其它模块同名被覆盖。只做检查，不会自动改名
+    resourcePrefix 'py_'
+
+    defaultConfig {
+        minSdkVersion config.android.minSdkVersion
+        targetSdkVersion config.android.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        //本模块自带的混淆规则，app 打包混淆时自动带上
+        consumerProguardFiles "consumer-rules.pro"
+        //ARouter 按模块名生成路由表，模块名必须全工程唯一
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [AROUTER_MODULE_NAME: project.getName()]
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    buildFeatures {
+        viewBinding true
+        dataBinding true
+    }
+}
+
+dependencies {
+    //基础库：BaseActivity、LoginUtil、Router、网络请求等
+    implementation project(':library:lib_base')
+    //处理 @Route、@Autowired 注解，生成路由表和参数注入
+    annotationProcessor "com.alibaba:arouter-compiler:${config.dependencies.route_version}"
+
+    testImplementation "junit:junit:${config.dependencies.junit_version}"
+    androidTestImplementation "androidx.test.ext:junit:${config.dependencies.ext_junit_version}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${config.dependencies.espresso_core_version}"
+}

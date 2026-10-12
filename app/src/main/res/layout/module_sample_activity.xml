@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingHorizontal="@dimen/x30"
+    android:paddingVertical="@dimen/x30">
+
+    <Button
+        android:id="@+id/btn_square"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="打开广场（广场页里可跳播放）" />
+
+    <Button
+        android:id="@+id/btn_player"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x20"
+        android:text="打开播放" />
+
+    <Button
+        android:id="@+id/btn_player_with_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x20"
+        android:text="打开播放（带视频 id）" />
+
+    <Button
+        android:id="@+id/btn_login"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x20"
+        android:text="打开登录（点一键登录发登录请求）" />
+
+    <Button
+        android:id="@+id/btn_square_service"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x20"
+        android:text="调用广场服务" />
+</LinearLayout>

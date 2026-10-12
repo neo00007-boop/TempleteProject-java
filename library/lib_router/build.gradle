@@ -1,0 +1,37 @@
+plugins {
+    id 'com.android.library'
+}
+def config = rootProject.ext
+// 路由层：ARouter 只在这里声明依赖，路由路径统一在 RoutePath，服务接口在各模块 xxx_api
+android {
+    namespace 'com.lib.router'
+    compileSdkVersion config.android.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion config.android.minSdkVersion
+        targetSdkVersion config.android.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        //本库自带的混淆规则，app 打包混淆时自动带上
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    api project(':library:lib_common')
+    api "com.alibaba:arouter-api:${config.dependencies.route_version}"
+
+    testImplementation "junit:junit:${config.dependencies.junit_version}"
+    androidTestImplementation "androidx.test.ext:junit:${config.dependencies.ext_junit_version}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${config.dependencies.espresso_core_version}"
+}

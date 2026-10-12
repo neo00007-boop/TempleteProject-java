@@ -8,9 +8,9 @@ import com.lib.base.config.App;
 import androidx.multidex.MultiDex;
 
 /**
- * ProjectName  TempleteProject
- * PackageName  com.module.a
- * @author      xwchen
+ * 壳工程 Application。各模块的初始化由 {@link com.lib.common.init.ModuleInitializer} 自动收集，这里不用逐个登记。
+ *
+ * @author xwchen
  * Date         2021/10/11.
  */
 public class MainApp extends App {
@@ -19,30 +19,9 @@ public class MainApp extends App {
     private static MainApp mainApp;
 
     @Override
-    public void initApplication(Context context) {
-        init(context, true);
-    }
-
-
-    @Override
-    public void initModule(Context context) {
-        init(context, false);
-    }
-
-    private void init(Context context, boolean isApp) {
-        try {
-            mainApp = this;
-            for (Class name : AppConfig.APP_ARR) {
-                Object o = name.newInstance();
-                if (isApp) {
-                    ((App) o).initApplication(context);
-                } else {
-                    ((App) o).initModule(context);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void onCreate() {
+        mainApp = this;
+        super.onCreate();
     }
 
     @Override

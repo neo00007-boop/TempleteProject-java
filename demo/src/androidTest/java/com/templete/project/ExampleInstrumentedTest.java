@@ -7,11 +7,9 @@ import com.google.gson.JsonSyntaxException;
 import com.greendao.db.util.GsonUtil;
 import com.lib.base.bean.BtnBean;
 import com.lib.base.config.App;
-import com.lib.base.rxjava.RxUtils;
 import com.lib.base.util.DebugUtil;
 import com.lib.base.util.JsonDataUtil;
 import com.lib.base.util.txt.label.TxtUtil;
-import com.module.a.http.HttpUtil;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,15 +36,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         assertEquals("com.templete.project", appContext.getPackageName());
-    }
-
-    @Test
-    public void http() {
-        HttpUtil
-                .getInstance()
-                .login("18557532484", "000000")
-                .compose(RxUtils.toSimpleSingle())
-                .subscribe(loginBean -> DebugUtil.logD(TAG, "data message=" + GsonUtil.getNoCrashInstance().toJson(loginBean)), throwable -> DebugUtil.logD(TAG, "data message=" + throwable));
     }
 
     @Test

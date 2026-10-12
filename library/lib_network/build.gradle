@@ -1,0 +1,43 @@
+plugins {
+    id 'com.android.library'
+}
+def config = rootProject.ext
+// 网络层：只管请求本身。域名、token、登录失效处理都由上层通过 HttpConfig 注入，不依赖业务和 UI
+android {
+    namespace 'com.lib.network'
+    compileSdkVersion config.android.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion config.android.minSdkVersion
+        targetSdkVersion config.android.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        //本库自带的混淆规则，app 打包混淆时自动带上
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    api "com.squareup.retrofit2:retrofit:${config.dependencies.retrofit_version}"
+    api "com.squareup.retrofit2:adapter-rxjava3:${config.dependencies.retrofit_version}"
+    api "com.squareup.retrofit2:converter-gson:${config.dependencies.retrofit_version}"
+    api "com.squareup.okhttp3:okhttp:${config.dependencies.okhttp_version}"
+    implementation "com.squareup.okhttp3:logging-interceptor:${config.dependencies.okhttp_version}"
+    //noinspection GradleDependency
+    implementation "com.squareup.okio:okio:${config.dependencies.okio_version}"
+    implementation "androidx.annotation:annotation:1.2.0"
+
+    testImplementation "junit:junit:${config.dependencies.junit_version}"
+    androidTestImplementation "androidx.test.ext:junit:${config.dependencies.ext_junit_version}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${config.dependencies.espresso_core_version}"
+}

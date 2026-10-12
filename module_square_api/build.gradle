@@ -1,0 +1,35 @@
+plugins {
+    id 'com.android.library'
+}
+def config = rootProject.ext
+// module_square 的对外接口：只放服务接口、对外实体，不放实现和资源。其它模块只能依赖这里，不能依赖 module_square
+android {
+    namespace 'com.module.square.api'
+    compileSdkVersion config.android.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion config.android.minSdkVersion
+        targetSdkVersion config.android.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    //服务接口要继承 ARouter 的 IProvider；只依赖路由层，保持接口模块轻量
+    api project(':library:lib_router')
+
+    testImplementation "junit:junit:${config.dependencies.junit_version}"
+    androidTestImplementation "androidx.test.ext:junit:${config.dependencies.ext_junit_version}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${config.dependencies.espresso_core_version}"
+}

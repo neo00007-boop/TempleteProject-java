@@ -1,0 +1,32 @@
+plugins {
+    id 'com.android.library'
+}
+def config = rootProject.ext
+// 公共资源：颜色、x/y 屏幕适配尺寸、通用字符串、转场动画、通用图标。不放代码，所有界面模块都依赖它
+android {
+    namespace 'com.lib.res'
+    compileSdkVersion config.android.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion config.android.minSdkVersion
+        targetSdkVersion config.android.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    testImplementation "junit:junit:${config.dependencies.junit_version}"
+    androidTestImplementation "androidx.test.ext:junit:${config.dependencies.ext_junit_version}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${config.dependencies.espresso_core_version}"
+}

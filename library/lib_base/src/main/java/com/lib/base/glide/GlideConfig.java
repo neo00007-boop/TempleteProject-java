@@ -14,7 +14,7 @@ import com.bumptech.glide.load.model.GlideUrl;
 import com.bumptech.glide.module.AppGlideModule;
 import com.bumptech.glide.request.RequestOptions;
 import com.lib.base.R;
-import com.lib.base.http.RetrofitHelper;
+import com.lib.network.RetrofitHelper;
 
 import java.io.File;
 import java.io.InputStream;

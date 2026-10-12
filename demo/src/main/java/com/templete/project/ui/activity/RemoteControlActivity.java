@@ -5,8 +5,6 @@ import android.annotation.SuppressLint;
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.greendao.db.helper.CityBeanDao;
 import com.greendao.db.util.LocalRepository;
-import com.lib.base.aroute.ArouteConfig;
-import com.lib.base.aroute.ModuleAService;
 import com.lib.base.rxjava.RxUtils;
 import com.lib.base.ui.activity.BaseActivity;
 import com.templete.project.databinding.RemoteControlActivityBinding;
@@ -74,8 +72,6 @@ public class RemoteControlActivity extends BaseActivity<RemoteControlActivityBin
                 .compose(RxUtils::toSimpleSingleIo)
                 .doOnSubscribe(this::addDisposable) //自动处理生命周期方式,以下两种是框架处理方式
                 .subscribe(o -> logD("cityBeanDao", "cityBeanDao3=success"), throwable -> logD("cityBeanDao", "cityBeanDao4=error"));
-        ModuleAService moduleAService = (ModuleAService) ARouter.getInstance().build(ArouteConfig.MODULE_SERVICE_A).navigation();
-        moduleAService.getA(a -> logD("moduleAService", "moduleAService=" + a));
     }
 
     @Override
