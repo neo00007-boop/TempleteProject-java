@@ -10,7 +10,7 @@
 二.子依赖库(lib_base 用 api 依赖,业务模块只依赖 lib_base 即可全部使用,详见 docs/ARCHITECTURE.md)
 1.lib_router:ARouter 封装,全局路由表 RoutePath;
 2.lib_network:Retrofit+Okhttp,域名、token、登录失效由上层通过 HttpConfig 注入;
-3.lib_db:greendao数据库,含 GsonFactory json容错解析(解析数据时不会crash,同时会打印解析报错字段和后台返回值类型);
+3.lib_greendao:greendao数据库,含 GsonFactory json容错解析(解析数据时不会crash,同时会打印解析报错字段和后台返回值类型);
 4.lib_view:强大的shape框架(不用再写任何xml shape文件,0学习成本)+Tab控件;
 5.lib_res:公共颜色、屏幕适配尺寸、文字、动画、图片(由 lib_view 带出);
 6.lib_common:最底层,模块初始化接口 ModuleInitializer;

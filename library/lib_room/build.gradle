@@ -1,0 +1,53 @@
+plugins {
+    id 'com.android.library'
+}
+def config = rootProject.ext
+// Room 数据库：表结构、Dao、版本迁移。和 lib_greendao（GreenDao）并列，新功能建议用 Room
+android {
+    namespace 'com.lib.room'
+    compileSdkVersion config.android.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion config.android.minSdkVersion
+        targetSdkVersion config.android.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        //本库自带的混淆规则，app 打包混淆时自动带上
+        consumerProguardFiles "consumer-rules.pro"
+        //每个数据库版本的表结构导出到 schemas/，要提交到 git，迁移测试靠它还原旧版本的库
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
+    }
+
+    sourceSets {
+        //迁移测试从 assets 读取导出的表结构
+        androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    api "androidx.room:room-runtime:${config.dependencies.room_version}"
+    //处理 @Entity、@Dao、@Database 注解，生成 Dao 实现和建表语句
+    annotationProcessor "androidx.room:room-compiler:${config.dependencies.room_version}"
+    //Dao 查询返回 LiveData，数据变化时界面自动刷新
+    api "androidx.lifecycle:lifecycle-livedata:${config.dependencies.androidx_lifecycle_version}"
+
+    testImplementation "junit:junit:${config.dependencies.junit_version}"
+    androidTestImplementation "androidx.test.ext:junit:${config.dependencies.ext_junit_version}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${config.dependencies.espresso_core_version}"
+    //迁移测试：按导出的表结构建旧版本库，跑迁移后校验表结构
+    androidTestImplementation "androidx.room:room-testing:${config.dependencies.room_version}"
+}

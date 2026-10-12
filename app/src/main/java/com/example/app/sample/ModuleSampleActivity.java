@@ -1,5 +1,7 @@
 package com.example.app.sample;
 
+import android.content.Intent;
+
 import com.example.app.databinding.ModuleSampleActivityBinding;
 import com.lib.base.ui.activity.BaseActivity;
 import com.lib.base.util.LoginUtil;
@@ -8,7 +10,7 @@ import com.lib.router.RoutePath;
 import com.module.square.api.SquareService;
 
 /**
- * 业务模块用法示例：路由跳转、带参跳转、跨模块服务。demo 只放基础库示例，不依赖业务模块。
+ * 业务模块用法示例：路由跳转、带参跳转、跨模块服务，以及 Room 数据库示例入口。demo 只放基础库示例，不依赖业务模块。
  */
 public class ModuleSampleActivity extends BaseActivity<ModuleSampleActivityBinding> {
     public static final String TAG = "ModuleSampleActivity";
@@ -37,6 +39,7 @@ public class ModuleSampleActivity extends BaseActivity<ModuleSampleActivityBindi
                 .navigation(this));
         mViewBinding.btnLogin.setOnClickListener(v -> LoginUtil.toLogin());
         mViewBinding.btnSquareService.setOnClickListener(v -> callSquareService());
+        mViewBinding.btnRoom.setOnClickListener(v -> startActivity(new Intent(this, RoomSampleActivity.class)));
     }
 
     @Override

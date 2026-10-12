@@ -23,7 +23,8 @@ TempleteProject
     ├── lib_common/              最底层：模块初始化接口
     ├── lib_router/              路由封装（ARouter）、全局路由表 RoutePath
     ├── lib_network/             网络（Retrofit / OkHttp）
-    ├── lib_db/                  数据库（GreenDao）
+    ├── lib_greendao/            数据库（GreenDao）
+    ├── lib_room/                数据库（Room），含版本迁移和表结构导出
     ├── lib_res/                 公共资源
     ├── lib_view/                通用控件，含 Tab 控件（源自 FlycoTabLayout）
     └── lib_base/                UI 基础：Base 类、工具、App
@@ -42,7 +43,7 @@ TempleteProject
               ▼
 基础 UI     lib_base
               ▼
-基础能力    lib_router    lib_network    lib_db    lib_view
+基础能力    lib_router    lib_network    lib_greendao    lib_room    lib_view
               ▼
 最底层      lib_common    lib_res
 ```
@@ -57,11 +58,11 @@ TempleteProject
 | `module_player` | `lib_base` |
 | `module_login` | `lib_base` |
 | `module_square_api` | `lib_router` |
-| `lib_base` | `lib_router`、`lib_network`、`lib_db`、`lib_view` |
+| `lib_base` | `lib_router`、`lib_network`、`lib_greendao`、`lib_room`、`lib_view` |
 | `lib_router` | `lib_common` |
-| `lib_db` | `lib_common` |
+| `lib_greendao` | `lib_common` |
 | `lib_view` | `lib_res` |
-| `lib_network`、`lib_common`、`lib_res` | 无 |
+| `lib_network`、`lib_room`、`lib_common`、`lib_res` | 无 |
 
 业务接口层是可选的：只有要给别的模块提供能力的业务模块才建 `_api`，目前只有广场有，所以播放和登录直接依赖 `lib_base`。
 
@@ -87,11 +88,11 @@ TempleteProject
 | module_player | `implementation` lib_base | lib_base 及其带出的全部基础库 |
 | module_login | `implementation` lib_base | lib_base 及其带出的全部基础库 |
 | module_square_api | `api` lib_router | lib_router、lib_common |
-| lib_base | `api` lib_router、lib_network、lib_db、lib_view | lib_router、lib_common、lib_network、lib_db、lib_view、lib_res |
+| lib_base | `api` lib_router、lib_network、lib_greendao、lib_room、lib_view | lib_router、lib_common、lib_network、lib_greendao、lib_room、lib_view、lib_res |
 | lib_view | `api` lib_res | lib_res |
-| lib_db | `api` lib_common | lib_common |
+| lib_greendao | `api` lib_common | lib_common |
 | lib_router | `api` lib_common | lib_common |
-| lib_network、lib_res、lib_common | 无 | 无（只依赖第三方库） |
+| lib_network、lib_room、lib_res、lib_common | 无 | 无（只依赖第三方库） |
 
 ### 4.2 展开后的完整依赖树
 
@@ -103,8 +104,9 @@ module_login
     ├── lib_router                ← lib_base 手写 api
     │   └── lib_common            ← lib_router 手写 api
     ├── lib_network               ← lib_base 手写 api
-    ├── lib_db                    ← lib_base 手写 api
+    ├── lib_greendao              ← lib_base 手写 api
     │   └── lib_common
+    ├── lib_room                  ← lib_base 手写 api
     └── lib_view                  ← lib_base 手写 api
         └── lib_res               ← lib_view 手写 api
 ```
@@ -221,8 +223,13 @@ lib_router       Router（build / open / service / inject）
                  RouterInitializer
 lib_network      HttpConfig（Builder 注入 host、header、token、登录失效回调）
                  Hosts、RetrofitHelper、各 Interceptor、OkCookieJar
-lib_db           GreenDao 实体与 Dao、LocalRepository
+lib_greendao     GreenDao 实体与 Dao、LocalRepository
                  DbInitializer（建库、导入城市数据）
+lib_room         AppDatabase（全局唯一的库，VERSION 为当前版本）
+                 entity/Note、dao/NoteDao（示例表，增删改查 + LiveData 查询）
+                 migration/Migrations（版本迁移，改表结构的步骤写在类注释里）
+                 repository/NoteRepository（写操作切子线程，结果回调主线程）
+                 schemas/（每个版本的表结构 json，要提交），androidTest/MigrationTest
 lib_res          colors、dimens（dp_/sp_）、strings、anim、公共图片
 lib_view         通用控件（包名 com.hjq.shape）
                  Tab 控件（包名保留 com.flyco.tablayout，属性在 tablayout_attrs.xml）

@@ -39,4 +39,11 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/x20"
         android:text="调用广场服务" />
+
+    <Button
+        android:id="@+id/btn_room"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x20"
+        android:text="Room 数据库示例（增删改查、版本迁移）" />
 </LinearLayout>

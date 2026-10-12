@@ -50,7 +50,8 @@ dependencies {
     api project(':library:lib_router')
     //网络层，带出 retrofit、okhttp、rxjava3
     api project(':library:lib_network')
-    api project(':library:lib_db')
+    api project(':library:lib_greendao')
+    api project(':library:lib_room')
     //lib_view 已 api 依赖 lib_res，公共资源随它带出
     api project(':library:lib_view')
     api 'com.github.getActivity:XXPermissions:13.5'

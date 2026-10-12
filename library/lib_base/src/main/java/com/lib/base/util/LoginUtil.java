@@ -43,7 +43,10 @@ public class LoginUtil {
         sMain.post(LoginUtil::openLogin);
     }
 
-    /** 登录页 onCreate 调用，挡住登录页打开期间的重复跳转 */
+    /**
+     * 登录页 onCreate 调用。登录页不一定经过 toLogin 打开（进程被回收后系统重建、直接走路由打开），
+     * 这时标记还是 false，不补上会叠出第二个登录页
+     */
     public static void onLoginShown() {
         sLoginShowing.set(true);
     }
