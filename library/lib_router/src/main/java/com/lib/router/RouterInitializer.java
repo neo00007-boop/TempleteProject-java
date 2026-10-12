@@ -4,7 +4,7 @@ import android.app.Application;
 import android.content.pm.ApplicationInfo;
 
 import com.alibaba.android.arouter.launcher.ARouter;
-import com.lib.common.init.ModuleInitializer;
+import com.lib.startup.ModuleInitializer;
 
 public class RouterInitializer implements ModuleInitializer {
 

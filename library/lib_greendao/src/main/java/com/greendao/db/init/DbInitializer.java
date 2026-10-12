@@ -9,7 +9,7 @@ import com.greendao.db.bean.CityBean;
 import com.greendao.db.helper.CityBeanDao;
 import com.greendao.db.util.GsonUtil;
 import com.greendao.db.util.LocalRepository;
-import com.lib.common.init.ModuleInitializer;
+import com.lib.startup.ModuleInitializer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;

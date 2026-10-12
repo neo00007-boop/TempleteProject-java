@@ -28,7 +28,7 @@ android {
 }
 
 dependencies {
-    api project(':library:lib_common')
+    api project(':library:lib_startup')
     api "com.alibaba:arouter-api:${config.dependencies.route_version}"
 
     testImplementation "junit:junit:${config.dependencies.junit_version}"

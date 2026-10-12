@@ -13,7 +13,7 @@
 3.lib_greendao:greendao数据库,含 GsonFactory json容错解析(解析数据时不会crash,同时会打印解析报错字段和后台返回值类型);
 4.lib_view:强大的shape框架(不用再写任何xml shape文件,0学习成本)+Tab控件;
 5.lib_res:公共颜色、屏幕适配尺寸、文字、动画、图片(由 lib_view 带出);
-6.lib_common:最底层,模块初始化接口 ModuleInitializer;
+6.lib_startup:最底层,模块初始化接口 ModuleInitializer;
 7.权限(XXPermissions)、banner 直接在 lib_base 里依赖.
 
            <com.youth.banner.Banner

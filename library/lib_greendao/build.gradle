@@ -47,7 +47,7 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:${config.dependencies.espresso_core_version}"
 
     //ModuleInitializer
-    api project(':library:lib_common')
+    api project(':library:lib_startup')
     //db
     api "org.greenrobot:greendao:${config.dependencies.greendao_version}"
     implementation "org.greenrobot:greendao-generator:${config.dependencies.greendao_version}"

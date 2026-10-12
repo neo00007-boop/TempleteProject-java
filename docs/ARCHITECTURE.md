@@ -20,7 +20,7 @@ TempleteProject
 ├── module_player/               播放实现（暂无对外服务，不建 api）
 ├── module_login/                登录实现（暂无对外服务，不建 api）
 └── library/
-    ├── lib_common/              最底层：模块初始化接口
+    ├── lib_startup/             最底层：模块初始化接口（ServiceLoader 收集各模块的初始化类）
     ├── lib_router/              路由封装（ARouter）、全局路由表 RoutePath
     ├── lib_network/             网络（Retrofit / OkHttp）
     ├── lib_greendao/            数据库（GreenDao）
@@ -29,6 +29,8 @@ TempleteProject
     ├── lib_view/                通用控件，含 Tab 控件（源自 FlycoTabLayout）
     └── lib_base/                UI 基础：Base 类、工具、App
 ```
+
+每个模块根目录都有 `README.md`，写了该模块的作用、依赖、主要类、用法和注意事项。本文档讲整体结构，具体用法看各模块的 README。
 
 ## 3. 分层
 
@@ -45,7 +47,7 @@ TempleteProject
               ▼
 基础能力    lib_router    lib_network    lib_greendao    lib_room    lib_view
               ▼
-最底层      lib_common    lib_res
+最底层      lib_startup    lib_res
 ```
 
 每个模块具体依赖谁：
@@ -59,10 +61,10 @@ TempleteProject
 | `module_login` | `lib_base` |
 | `module_square_api` | `lib_router` |
 | `lib_base` | `lib_router`、`lib_network`、`lib_greendao`、`lib_room`、`lib_view` |
-| `lib_router` | `lib_common` |
-| `lib_greendao` | `lib_common` |
+| `lib_router` | `lib_startup` |
+| `lib_greendao` | `lib_startup` |
 | `lib_view` | `lib_res` |
-| `lib_network`、`lib_room`、`lib_common`、`lib_res` | 无 |
+| `lib_network`、`lib_room`、`lib_startup`、`lib_res` | 无 |
 
 业务接口层是可选的：只有要给别的模块提供能力的业务模块才建 `_api`，目前只有广场有，所以播放和登录直接依赖 `lib_base`。
 
@@ -87,12 +89,12 @@ TempleteProject
 | module_square | `implementation` lib_base；`api` module_square_api | module_square_api、lib_base 及其带出的全部基础库 |
 | module_player | `implementation` lib_base | lib_base 及其带出的全部基础库 |
 | module_login | `implementation` lib_base | lib_base 及其带出的全部基础库 |
-| module_square_api | `api` lib_router | lib_router、lib_common |
-| lib_base | `api` lib_router、lib_network、lib_greendao、lib_room、lib_view | lib_router、lib_common、lib_network、lib_greendao、lib_room、lib_view、lib_res |
+| module_square_api | `api` lib_router | lib_router、lib_startup |
+| lib_base | `api` lib_router、lib_network、lib_greendao、lib_room、lib_view | lib_router、lib_startup、lib_network、lib_greendao、lib_room、lib_view、lib_res |
 | lib_view | `api` lib_res | lib_res |
-| lib_greendao | `api` lib_common | lib_common |
-| lib_router | `api` lib_common | lib_common |
-| lib_network、lib_room、lib_res、lib_common | 无 | 无（只依赖第三方库） |
+| lib_greendao | `api` lib_startup | lib_startup |
+| lib_router | `api` lib_startup | lib_startup |
+| lib_network、lib_room、lib_res、lib_startup | 无 | 无（只依赖第三方库） |
 
 ### 4.2 展开后的完整依赖树
 
@@ -102,10 +104,10 @@ TempleteProject
 module_login
 └── lib_base                      ← module_login 写 implementation
     ├── lib_router                ← lib_base 手写 api
-    │   └── lib_common            ← lib_router 手写 api
+    │   └── lib_startup           ← lib_router 手写 api
     ├── lib_network               ← lib_base 手写 api
     ├── lib_greendao              ← lib_base 手写 api
-    │   └── lib_common
+    │   └── lib_startup
     ├── lib_room                  ← lib_base 手写 api
     └── lib_view                  ← lib_base 手写 api
         └── lib_res               ← lib_view 手写 api
@@ -117,7 +119,7 @@ module_player 完全一样；module_square 在此基础上多一条：
 module_square
 ├── module_square_api             ← module_square 写 api
 │   └── lib_router                ← module_square_api 写 api
-│       └── lib_common
+│       └── lib_startup
 └── lib_base（同上）
 ```
 
@@ -210,13 +212,13 @@ module_player         ui/PlayerActivity
 
 - 路由路径和参数名放 `lib_router` 的 `RoutePath`；服务接口、跨模块要用的实体放 `_api`；页面、ViewModel、接口请求放实现
 - 接口按业务归属放：登录、用户相关接口放登录模块，广场接口放广场模块，不要因为谁先用到就放谁那里
-- 资源加前缀：module_square 用 `square_`，module_player 用 `player_`，module_login 用 `login_`
+- 资源加前缀：module_square 用 `sq_`，module_player 用 `py_`，module_login 用 `lg_`
 - 实现模块不写 Application、不写 launcher 图标和主题，统一用壳工程的
 
 ### 5.3 基础库
 
 ```
-lib_common       ModuleInitializer、ModuleInitializers
+lib_startup      ModuleInitializer、ModuleInitializers
 lib_router       Router（build / open / service / inject）
                  RoutePath（全部路由路径和参数名，按模块分段）
                  RouteExtras（NEED_LOGIN）
@@ -230,7 +232,7 @@ lib_room         AppDatabase（全局唯一的库，VERSION 为当前版本）
                  migration/Migrations（版本迁移，改表结构的步骤写在类注释里）
                  repository/NoteRepository（写操作切子线程，结果回调主线程）
                  schemas/（每个版本的表结构 json，要提交），androidTest/MigrationTest
-lib_res          colors、dimens（dp_/sp_）、strings、anim、公共图片
+lib_res          colors、x/y 屏幕适配尺寸（lay_x、lay_y）、strings、anim、公共图片
 lib_view         通用控件（包名 com.hjq.shape）
                  Tab 控件（包名保留 com.flyco.tablayout，属性在 tablayout_attrs.xml）
 lib_base         BaseActivity / Fragment / Dialog、Pop、MVP / MVVM
@@ -239,7 +241,7 @@ lib_base         BaseActivity / Fragment / Dialog、Pop、MVP / MVVM
 
 ## 6. 初始化流程
 
-各模块在 `META-INF/services/com.lib.common.init.ModuleInitializer` 里登记实现类，启动时 `ModuleInitializers` 用 ServiceLoader 收集，按优先级从小到大执行。
+各模块在 `META-INF/services/com.lib.startup.ModuleInitializer` 里登记实现类，启动时 `ModuleInitializers` 用 ServiceLoader 收集，按优先级从小到大执行。
 
 ```
 App.onCreate
@@ -291,7 +293,7 @@ app / demo       launcher 图标、主题
 
 ## 9. 混淆
 
-- `lib_common`：保留 `ModuleInitializer` 实现类的无参构造（ServiceLoader 反射创建）
+- `lib_startup`：保留 `ModuleInitializer` 实现类的无参构造（ServiceLoader 反射创建）
 - `lib_router`：ARouter 生成类和 IProvider 实现的 keep 规则
 - `module_login`：保留 `bean` 包，Gson 按字段名解析接口数据
 - 各库通过 `consumer-rules.pro` 随依赖带到壳工程，壳工程不用重复写

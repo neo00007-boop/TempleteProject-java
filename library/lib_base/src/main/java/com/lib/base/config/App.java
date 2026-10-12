@@ -28,7 +28,7 @@ import com.lib.base.util.ContextUtil;
 import com.lib.base.util.DebugUtil;
 import com.lib.base.util.LoginUtil;
 import com.lib.base.util.SPUtil;
-import com.lib.common.init.ModuleInitializers;
+import com.lib.startup.ModuleInitializers;
 import com.lib.network.HttpConfig;
 import com.lib.network.Hosts;
 import com.lib.network.RetrofitHelper;
@@ -208,7 +208,9 @@ public abstract class App extends Application implements ViewModelStoreOwner, Lo
 
     private void setViewModel() {
         globalViewModelStore = new ViewModelStore();
-        globalViewModel = new ViewModelProvider(this).get(GlobalViewModel.class);
+        //GlobalViewModel 构造要传 Application，必须用 AndroidViewModelFactory，默认工厂只会调无参构造
+        globalViewModel = new ViewModelProvider(this,
+                ViewModelProvider.AndroidViewModelFactory.getInstance(this)).get(GlobalViewModel.class);
         globalViewModel.init();
     }
 

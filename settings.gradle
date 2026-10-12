@@ -7,9 +7,9 @@ include ':module_square_api'
 include ':module_square'
 include ':module_player'
 include ':module_login'
-//基础组件，自下而上：common → network/router/res/greendao/room/view → base
+//基础组件，自下而上：startup → network/router/res/greendao/room/view → base
 include ':library'
-include ':library:lib_common'
+include ':library:lib_startup'
 include ':library:lib_router'
 include ':library:lib_network'
 include ':library:lib_res'

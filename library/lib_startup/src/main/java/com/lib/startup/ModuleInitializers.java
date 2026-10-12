@@ -1,4 +1,4 @@
-package com.lib.common.init;
+package com.lib.startup;
 
 import android.app.Application;
 import android.util.Log;

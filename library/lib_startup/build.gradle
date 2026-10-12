@@ -2,9 +2,10 @@ plugins {
     id 'com.android.library'
 }
 def config = rootProject.ext
-// 最底层：不依赖任何 UI、网络、数据库，其它基础库和业务模块都可以依赖它
+// 模块启动初始化（最底层）：只有 ModuleInitializer 接口和收集执行它的 ModuleInitializers，不放通用工具类
+// 不依赖任何 UI、网络、数据库，需要在启动时初始化的库都依赖它
 android {
-    namespace 'com.lib.common'
+    namespace 'com.lib.startup'
     compileSdkVersion config.android.compileSdkVersion
 
     defaultConfig {
