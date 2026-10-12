@@ -4,18 +4,25 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.PlayerActivity"
-    tools:ignore="ResourceName">
+    tools:context=".ui.SquareActivity">
 
 
     <TextView
         android:id="@+id/tv"
         android:layout_width="match_parent"
         android:layout_height="@dimen/x100"
-        android:text="@string/player_app_name"
         android:gravity="center"
+        android:text="@string/sq_app_name"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_play"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/x30"
+        android:text="播放视频（跳播放模块）"
+        app:layout_constraintTop_toBottomOf="@id/tv" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

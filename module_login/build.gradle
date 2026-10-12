@@ -6,7 +6,7 @@ def config = rootProject.ext
 android {
     namespace 'com.module.login'
     compileSdkVersion config.android.compileSdkVersion
-    //资源名必须以 login_ 开头，防止和其它模块同名被覆盖。只做检查，不会自动改名
+    //资源名必须以 lg_ 开头，防止和其它模块同名被覆盖。只做检查，不会自动改名
     resourcePrefix 'lg_'
 
     defaultConfig {

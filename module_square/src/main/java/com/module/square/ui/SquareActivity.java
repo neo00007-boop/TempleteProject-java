@@ -5,12 +5,12 @@ import com.lib.router.Router;
 import com.lib.router.RoutePath;
 import com.lib.base.bean.User;
 import com.lib.base.ui.activity.BaseActivity;
-import com.module.square.databinding.SquareActivityBinding;
+import com.module.square.databinding.SqActivityBinding;
 
 import io.reactivex.rxjava3.disposables.Disposable;
 
 @Route(path = RoutePath.SQUARE_ACTIVITY)
-public class SquareActivity extends BaseActivity<SquareActivityBinding> {
+public class SquareActivity extends BaseActivity<SqActivityBinding> {
     public static final String TAG = "sssss";
     //    @Autowired
     public int age;
@@ -42,7 +42,7 @@ public class SquareActivity extends BaseActivity<SquareActivityBinding> {
     }
 
     @Override
-    public SquareActivityBinding viewBinding() {
-        return SquareActivityBinding.inflate(getLayoutInflater());
+    public SqActivityBinding viewBinding() {
+        return SqActivityBinding.inflate(getLayoutInflater());
     }
 }

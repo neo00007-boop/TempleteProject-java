@@ -22,7 +22,7 @@ import com.lib.base.ui.activity.TitleBarTheme;
 import com.lib.base.util.LoginUtil;
 import com.module.login.R;
 import com.lib.router.RoutePath;
-import com.module.login.databinding.LoginActivityBinding;
+import com.module.login.databinding.LgActivityBinding;
 import com.module.login.http.LoginHttp;
 import com.module.login.mvvm.LoginViewModel;
 /**
@@ -33,7 +33,7 @@ import com.module.login.mvvm.LoginViewModel;
  */
 
 @Route(path = RoutePath.LOGIN_ACTIVITY)
-public class LoginActivity extends BaseMvvmActivity<LoginActivityBinding, LoginViewModel> implements View.OnClickListener {
+public class LoginActivity extends BaseMvvmActivity<LgActivityBinding, LoginViewModel> implements View.OnClickListener {
     public static final String TAG = "LoginActivity_LOG";
     @Autowired
     public String data;
@@ -44,8 +44,8 @@ public class LoginActivity extends BaseMvvmActivity<LoginActivityBinding, LoginV
     }
 
     @Override
-    public LoginActivityBinding viewBinding() {
-        return LoginActivityBinding.inflate(getLayoutInflater());
+    public LgActivityBinding viewBinding() {
+        return LgActivityBinding.inflate(getLayoutInflater());
     }
 
     @Override

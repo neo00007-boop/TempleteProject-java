@@ -139,7 +139,6 @@ dependencies {
     //处理 @Route 注解，生成路由表
     annotationProcessor "com.alibaba:arouter-compiler:${config.dependencies.route_version}"
     implementation "androidx.multidex:multidex:${config.dependencies.multidex_version}"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     //oaid
     implementation(name: 'oaid_sdk_1.0.25', ext: 'aar')
     //业务模块：壳工程只依赖实现做组装，代码里不要直接引用模块内部的类

@@ -1,9 +1,9 @@
 <resources>
-    <string name="login_str_wx_login">微信登录已获取微信官方授权</string>
-    <string name="login_str_wx_smart_login">微信快速登录</string>
-    <string name="login_str_zhidetui_info">登录即代表接受《什么值得推用户协议和隐私政策》</string>
-    <string name="login_str_login_info">未注册过的用户将直接创建新账户</string>
-    <string name="login_str_one_click_login">一键登录</string>
-    <string name="login_str_login_type">其他登录方式</string>
-    <string name="login_ste_kefu">客服</string>
+    <string name="lg_str_wx_login">微信登录已获取微信官方授权</string>
+    <string name="lg_str_wx_smart_login">微信快速登录</string>
+    <string name="lg_str_zhidetui_info">登录即代表接受《什么值得推用户协议和隐私政策》</string>
+    <string name="lg_str_login_info">未注册过的用户将直接创建新账户</string>
+    <string name="lg_str_one_click_login">一键登录</string>
+    <string name="lg_str_login_type">其他登录方式</string>
+    <string name="lg_ste_kefu">客服</string>
 </resources>

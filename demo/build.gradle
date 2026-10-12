@@ -9,7 +9,6 @@ dependencies {
     implementation(name: 'oaid_sdk_1.0.25', ext: 'aar')
     //只放基础库示例，业务模块示例在 app 的 ModuleSampleActivity；登录页只在运行时提供给登录拦截示例
     runtimeOnly project(path: ':module_login')
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     //test
     testImplementation "junit:junit:${config.dependencies.junit_version}"
     //noinspection GradleDependency

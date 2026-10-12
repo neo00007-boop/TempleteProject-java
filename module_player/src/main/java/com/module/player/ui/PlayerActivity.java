@@ -5,16 +5,16 @@ import com.alibaba.android.arouter.facade.annotation.Route;
 import com.lib.router.Router;
 import com.lib.router.RoutePath;
 import com.lib.base.ui.activity.BaseActivity;
-import com.module.player.databinding.PlayerActivityBinding;
+import com.module.player.databinding.PyActivityBinding;
 
 @Route(path = RoutePath.PLAYER_ACTIVITY)
-public class PlayerActivity extends BaseActivity<PlayerActivityBinding> {
+public class PlayerActivity extends BaseActivity<PyActivityBinding> {
     @Autowired(name = RoutePath.PLAYER_KEY_VIDEO_ID)
     String videoId;
 
     @Override
-    public PlayerActivityBinding viewBinding() {
-        return PlayerActivityBinding.inflate(getLayoutInflater());
+    public PyActivityBinding viewBinding() {
+        return PyActivityBinding.inflate(getLayoutInflater());
     }
 
     @Override

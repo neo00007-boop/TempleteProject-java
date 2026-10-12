@@ -6,7 +6,7 @@ def config = rootProject.ext
 android {
     namespace 'com.module.square'
     compileSdkVersion config.android.compileSdkVersion
-    //资源名必须以 square_ 开头，防止和其它模块同名被覆盖。只做检查，不会自动改名
+    //资源名必须以 sq_ 开头，防止和其它模块同名被覆盖。只做检查，不会自动改名
     resourcePrefix 'sq_'
 
     defaultConfig {
