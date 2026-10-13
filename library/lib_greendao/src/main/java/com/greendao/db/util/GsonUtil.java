@@ -5,14 +5,12 @@ import android.text.TextUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.TypeAdapterFactory;
-import com.google.gson.internal.bind.ObjectTypeAdapter;
+import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.hjq.gson.factory.GsonFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -34,29 +32,7 @@ public class GsonUtil {
             synchronized (GsonUtil.class.getName()) {
                 if (gson == null) {
                     gson = new GsonBuilder().serializeNulls().create();
-                    // 解决gsonut默认将int转化为double问题
-                    try {
-                        Field factories = Gson.class.getDeclaredField("factories");
-                        factories.setAccessible(true);
-                        Object o = factories.get(gson);
-                        Class<?>[] declaredClasses = Collections.class.getDeclaredClasses();
-                        for (Class<?> c : declaredClasses) {
-                            if ("java.util.Collections$UnmodifiableList".equals(c.getName())) {
-                                Field listField = c.getDeclaredField("list");
-                                listField.setAccessible(true);
-                                List<TypeAdapterFactory> list = (List<TypeAdapterFactory>) listField.get(o);
-                                if (list != null) {
-                                    int i = list.indexOf(ObjectTypeAdapter.FACTORY);
-                                    if (i >= 0) {
-                                        list.set(i, MapTypeAdapter.FACTORY);
-                                    }
-                                }
-                                break;
-                            }
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    useMapTypeAdapter(gson);
                 }
             }
         }
@@ -74,33 +50,29 @@ public class GsonUtil {
             synchronized (GsonFactory.class) {
                 if (gsonNoCrash == null) {
                     gsonNoCrash = GsonFactory.newGsonBuilder().create();
-                    // 解决gsonut默认将int转化为double问题
-                    try {
-                        Field factories = Gson.class.getDeclaredField("factories");
-                        factories.setAccessible(true);
-                        Object o = factories.get(gsonNoCrash);
-                        Class<?>[] declaredClasses = Collections.class.getDeclaredClasses();
-                        for (Class<?> c : declaredClasses) {
-                            if ("java.util.Collections$UnmodifiableList".equals(c.getName())) {
-                                Field listField = c.getDeclaredField("list");
-                                listField.setAccessible(true);
-                                List<TypeAdapterFactory> list = (List<TypeAdapterFactory>) listField.get(o);
-                                if (list != null) {
-                                    int i = list.indexOf(ObjectTypeAdapter.FACTORY);
-                                    if (i >= 0) {
-                                        list.set(i, MapTypeAdapter.FACTORY);
-                                    }
-                                }
-                                break;
-                            }
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    useMapTypeAdapter(gsonNoCrash);
                 }
             }
         }
         return gsonNoCrash;
+    }
+
+    /**
+     * 解决 Gson 解析成 Object / Map 时把 int 转成 double 的问题。
+     * Gson 2.8.6 没有公开接口替换 Object 的解析，这里往 Gson 自己的适配器缓存里预先放入 MapTypeAdapter，
+     * 不能反射 Collections 内部字段，Android 9 起属于非公开接口，会抛 NoSuchFieldException
+     */
+    @SuppressWarnings("unchecked")
+    private static void useMapTypeAdapter(Gson target) {
+        try {
+            Field cacheField = Gson.class.getDeclaredField("typeTokenCache");
+            cacheField.setAccessible(true);
+            Map<TypeToken<?>, TypeAdapter<?>> cache = (Map<TypeToken<?>, TypeAdapter<?>>) cacheField.get(target);
+            TypeToken<Object> objectType = TypeToken.get(Object.class);
+            cache.put(objectType, MapTypeAdapter.FACTORY.create(target, objectType));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**

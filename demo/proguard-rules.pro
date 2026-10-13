@@ -76,9 +76,8 @@
 }
 # Keep native methods
 -dontwarn com.laiy.lyapp.**
--keep class com.templete.project.** {*;}
--keep class com.lib.base.** {*;}
--keep class com.greendao.db.** {*;}
+# 示例页的数据类用 Gson 按字段名解析，字段不能被混淆
+-keep class com.templete.project.bean.** { *; }
 -keepclassmembers class * {
     native <methods>;
 }

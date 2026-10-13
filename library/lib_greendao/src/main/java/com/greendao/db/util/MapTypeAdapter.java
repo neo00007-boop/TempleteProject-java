@@ -92,7 +92,7 @@ public final class MapTypeAdapter extends TypeAdapter<Object> {
             return;
         }
         TypeAdapter<Object> typeAdapter = (TypeAdapter<Object>) gson.getAdapter(value.getClass());
-        if (typeAdapter instanceof ObjectTypeAdapter) {
+        if (typeAdapter instanceof ObjectTypeAdapter || typeAdapter instanceof MapTypeAdapter) {
             out.beginObject();
             out.endObject();
             return;
