@@ -6,12 +6,7 @@ import com.google.gson.annotations.SerializedName;
 import com.greendao.db.util.GsonUtil;
 import com.lib.base.util.encrypt.base.TextUtils;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.lang.reflect.Type;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import androidx.annotation.NonNull;
@@ -68,22 +63,15 @@ public class DoubleCacheUtil {
             return false;
         }
         CacheBean bean = new CacheBean(obj, cacheTimeSeconds);
-        String content = GsonUtil.toJson(bean);
-        if (TextUtils.isEmpty(content)) {
+        if (!(obj instanceof String) && TextUtils.isEmpty(bean.content)) {
             return false;
         }
-        // 剔除data属性,只保留content,缓存时间,超时时间
-        try {
-            JSONObject jsonObject = new JSONObject(content);
-            if (jsonObject.has("data")) {
-                jsonObject.remove("data");
-            }
-            content = jsonObject.toString();
-        } catch (JSONException e) {
-            e.printStackTrace();
+        String json = GsonUtil.toJson(bean);
+        if (TextUtils.isEmpty(json)) {
+            return false;
         }
         mMemoryCache.put(key, bean);
-        SPUtil.put(key, content);
+        SPUtil.put(key, json);
         return true;
     }
 
@@ -97,109 +85,54 @@ public class DoubleCacheUtil {
      * @return
      */
     public static <T> T get(String key, Class<T> clazz) {
-        try {
-            if (TextUtils.isEmpty(key) || clazz == null) {
-                return null;
-            }
-            CacheBean cacheBean = mMemoryCache.get(key);
-            if (cacheBean != null) {
-                if (cacheBean.cacheTimeSeconds > 0) {
-                    long outTime = cacheBean.timeWhenCache + cacheBean.cacheTimeSeconds * 1000;
-                    long timeNow = System.currentTimeMillis();
-                    if (outTime < timeNow) {
-                        mMemoryCache.remove(key);
-                        SPUtil.put(key, "");
-                        return null;
-                    } else {
-                        return get(clazz, cacheBean);
-                    }
-                } else {
-                    return get(clazz, cacheBean);
-                }
-            } else {
-                String string = SPUtil.getString(key);
-                if (TextUtils.isEmpty(string)) {
-                    return null;
-                }
-                CacheBean bean = GsonUtil.fromJsonObj(string, CacheBean.class);
-                if (bean == null) {
-                    return null;
-                }
-                if (bean.cacheTimeSeconds > 0) {
-                    long outTime = bean.timeWhenCache + bean.cacheTimeSeconds * 1000;
-                    long timeNow = System.currentTimeMillis();
-                    if (outTime < timeNow) {
-                        mMemoryCache.remove(key);
-                        SPUtil.put(key, "");
-                        return null;
-                    } else {
-                        return get(key, clazz, bean);
-                    }
-                } else {
-                    return get(key, clazz, bean);
-                }
-            }
-        } catch (Exception e) {
-            return null;
-        }
+        return get(key, (Type) clazz);
     }
 
-    private static <T> T get(String key, Class<T> clazz, @NonNull CacheBean bean) {
-        T t = String.class.equals(clazz) ? (T) bean.content : GsonUtil.fromJsonObj(bean.content, clazz);
-        bean.data = t;
-        mMemoryCache.put(key, bean);
-        return t;
-    }
-
-    @Nullable
-    private static <T> T get(Class<T> clazz, @NonNull CacheBean cacheBean) {
-        Object data = cacheBean.data;
-        if (data != null) {
-            if (data.getClass().equals(clazz)) {
-                return (T) data;
-            } else {
-                // 处理一些特殊情况,比如浮点默认double,如果要用float接收需要重新解析一下
-                return !TextUtils.isEmpty(cacheBean.content) ? GsonUtil.fromJsonObj(cacheBean.content, clazz) : null;
-            }
-        } else {
-            return null;
-        }
-    }
-
+    /**
+     * 每次都从 content 重新解析出新对象，调用方修改返回值不会影响缓存
+     */
     public static <T> T get(String key, Type type) {
         try {
-            if (TextUtils.isEmpty(key) || type == null) return null;
-
-            CacheBean cacheBean = mMemoryCache.get(key);
-
-            if (cacheBean == null) {
-                String string = SPUtil.getString(key);
-                if (TextUtils.isEmpty(string)) return null;
-
-                cacheBean = GsonUtil.fromJsonObj(string, CacheBean.class);
-                if (cacheBean == null) return null;
+            if (TextUtils.isEmpty(key) || type == null) {
+                return null;
             }
-
-            // 过期判断统一
-            if (cacheBean.cacheTimeSeconds > 0) {
-                long outTime = cacheBean.timeWhenCache + cacheBean.cacheTimeSeconds * 1000;
-                if (System.currentTimeMillis() > outTime) {
-                    mMemoryCache.remove(key);
-                    SPUtil.put(key, "");
-                    return null;
-                }
+            CacheBean bean = getCacheBean(key);
+            if (bean == null) {
+                return null;
             }
-
-            Object result = GsonUtil.fromJson(cacheBean.content, type);
-
-            cacheBean.data = result;
-            mMemoryCache.put(key, cacheBean);
-
-            return (T) result;
-
+            if (String.class.equals(type)) {
+                return (T) bean.content;
+            }
+            return GsonUtil.fromJson(bean.content, type);
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * 先查内存再查 sp，过期则两边都清掉
+     */
+    @Nullable
+    private static CacheBean getCacheBean(@NonNull String key) {
+        CacheBean bean = mMemoryCache.get(key);
+        if (bean == null) {
+            String json = SPUtil.getString(key);
+            if (TextUtils.isEmpty(json)) {
+                return null;
+            }
+            bean = GsonUtil.fromJsonObj(json, CacheBean.class);
+            if (bean == null) {
+                return null;
+            }
+            mMemoryCache.put(key, bean);
+        }
+        if (bean.cacheTimeSeconds > 0
+                && bean.timeWhenCache + bean.cacheTimeSeconds * 1000 < System.currentTimeMillis()) {
+            mMemoryCache.remove(key);
+            SPUtil.put(key, "");
+            return null;
+        }
+        return bean;
     }
 
     public static class CacheBean {
@@ -210,24 +143,18 @@ public class DoubleCacheUtil {
         public long cacheTimeSeconds;
         @SerializedName("content")
         public String content;
-        @SerializedName("data")
-        public Object data;
 
         private CacheBean() {
         }
 
         public CacheBean(Object data, long cacheTimeSeconds) {
-            this.data = data;
             this.content = data instanceof String ? (String) data : GsonUtil.toJson(data);
             this.cacheTimeSeconds = cacheTimeSeconds > 0 ? cacheTimeSeconds : -1;
             this.timeWhenCache = cacheTimeSeconds > 0 ? System.currentTimeMillis() : -1;
         }
 
         public CacheBean(Object data) {
-            this.data = data;
-            this.content = data instanceof String ? (String) data : GsonUtil.toJson(data);
-            this.cacheTimeSeconds = -1;
-            this.timeWhenCache = -1;
+            this(data, -1);
         }
 
         @Override
