@@ -31,17 +31,33 @@ public class RetryInterceptor implements Interceptor {
     @Override
     public Response intercept(@NonNull Chain chain) throws IOException {
         Request request = chain.request();
+        //只重试 GET/HEAD，POST 等重复提交可能产生副作用
         boolean idempotent = "GET".equals(request.method()) || "HEAD".equals(request.method());
-        //假如设置为2次重试的话，则最大可能请求3次（默认1次+2次重试）
-        int retryNum = 0;
-        Response response = chain.proceed(request);
-        HttpLog.d(TAG, "retryNum=" + retryNum + ",maxRetry=" + maxRetry);
-        while (idempotent && !response.isSuccessful() && retryNum < maxRetry) {
-            retryNum++;
-            HttpLog.d(TAG, "retryNum=" + retryNum + ",maxRetry=" + maxRetry);
-            response.close();
-            response = chain.proceed(request);
+        if (!idempotent) {
+            return chain.proceed(request);
         }
-        return response;
+        //假如设置为2次重试的话，则最大可能请求3次（默认1次+2次重试）
+        for (int retryNum = 0; ; retryNum++) {
+            Response response;
+            try {
+                response = chain.proceed(request);
+            } catch (IOException e) {
+                if (retryNum >= maxRetry || chain.call().isCanceled()) {
+                    throw e;
+                }
+                HttpLog.d(TAG, "retry " + (retryNum + 1) + " after " + e);
+                continue;
+            }
+            if (!shouldRetry(response.code()) || retryNum >= maxRetry) {
+                return response;
+            }
+            HttpLog.d(TAG, "retry " + (retryNum + 1) + " after code " + response.code());
+            response.close();
+        }
+    }
+
+    /** 只重试临时性错误：超时、限流、服务端错误；400/401/404 等重试也不会成功 */
+    private static boolean shouldRetry(int code) {
+        return code == 408 || code == 429 || code >= 500;
     }
 }

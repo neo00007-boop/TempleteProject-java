@@ -22,25 +22,19 @@
 
 package com.lib.base.util.encrypt.symmetric;
 
-import android.annotation.SuppressLint;
-
-import com.lib.base.util.encrypt.base.CryptoProvider;
-
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import androidx.annotation.IntDef;
+import androidx.annotation.Nullable;
 
 import static com.lib.base.util.encrypt.base.BaseUtils.parseByte2HexStr;
 import static com.lib.base.util.encrypt.base.BaseUtils.parseHexStr2Byte;
@@ -48,9 +42,19 @@ import static com.lib.base.util.encrypt.base.BaseUtils.parseHexStr2Byte;
 
 /**
  * AES 工具类
+ * <p>
+ * 密钥用 PBKDF2 从密码派生，加密用 AES-GCM（自带完整性校验，密码错或密文被改都会解密失败）。
+ * 每次加密随机生成盐和 IV，同样的明文每次密文都不同；密文格式：十六进制(盐16字节 + IV12字节 + 密文)
  */
 public class AESUtil {
-    private final static String SHA1PRNG = "SHA1PRNG";
+    private static final String TRANSFORMATION = "AES/GCM/NoPadding";
+    //minSdk 24 不支持 PBKDF2WithHmacSHA256（API 26 起才有）
+    private static final String KEY_DERIVATION = "PBKDF2WithHmacSHA1";
+    private static final int ITERATIONS = 10000;
+    private static final int KEY_BITS = 256;
+    private static final int SALT_BYTES = 16;
+    private static final int IV_BYTES = 12;
+    private static final int TAG_BITS = 128;
 
     @IntDef({Cipher.ENCRYPT_MODE, Cipher.DECRYPT_MODE})
     @interface AESType {}
@@ -58,43 +62,63 @@ public class AESUtil {
     /**
      * Aes加密/解密
      *
-     * @param content  字符串
-     * @param password 密钥
+     * @param content  加密时为明文，解密时为 aes 加密得到的十六进制字符串
+     * @param password 密码
      * @param type     加密：{@link Cipher#ENCRYPT_MODE}，解密：{@link Cipher#DECRYPT_MODE}
-     * @return 加密/解密结果字符串
+     * @return 加密/解密结果字符串，失败返回 null
      */
+    @Nullable
     public static String aes(String content, String password, @AESType int type) {
-        try {
-            KeyGenerator generator = KeyGenerator.getInstance("AES");
-
-            SecureRandom secureRandom;
-            if (android.os.Build.VERSION.SDK_INT >= 24) {
-                secureRandom = SecureRandom.getInstance(SHA1PRNG, new CryptoProvider());
-            } else if (android.os.Build.VERSION.SDK_INT >= 17) {
-                secureRandom = SecureRandom.getInstance(SHA1PRNG, "Crypto");
-            } else {
-                secureRandom = SecureRandom.getInstance(SHA1PRNG);
-            }
-            secureRandom.setSeed(password.getBytes());
-            generator.init(128, secureRandom);
-            SecretKey secretKey = generator.generateKey();
-            byte[] enCodeFormat = secretKey.getEncoded();
-            SecretKeySpec key = new SecretKeySpec(enCodeFormat, "AES");
-            @SuppressLint("GetInstance") Cipher cipher = Cipher.getInstance("AES");
-            cipher.init(type, key);
-
-            if (type == Cipher.ENCRYPT_MODE) {
-                byte[] byteContent = content.getBytes("utf-8");
-                return parseByte2HexStr(cipher.doFinal(byteContent));
-            } else {
-                byte[] byteContent = parseHexStr2Byte(content);
-                return new String(cipher.doFinal(byteContent));
-            }
-        } catch (NoSuchAlgorithmException | BadPaddingException | IllegalBlockSizeException |
-                UnsupportedEncodingException | InvalidKeyException | NoSuchPaddingException |
-                NoSuchProviderException e) {
-            e.printStackTrace();
+        if (content == null || password == null) {
+            return null;
         }
-        return null;
+        try {
+            return type == Cipher.ENCRYPT_MODE ? encrypt(content, password) : decrypt(content, password);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static String encrypt(String content, String password) throws GeneralSecurityException {
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[SALT_BYTES];
+        byte[] iv = new byte[IV_BYTES];
+        random.nextBytes(salt);
+        random.nextBytes(iv);
+
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+        cipher.init(Cipher.ENCRYPT_MODE, deriveKey(password, salt), new GCMParameterSpec(TAG_BITS, iv));
+        byte[] encrypted = cipher.doFinal(content.getBytes(StandardCharsets.UTF_8));
+
+        ByteBuffer buffer = ByteBuffer.allocate(SALT_BYTES + IV_BYTES + encrypted.length);
+        buffer.put(salt).put(iv).put(encrypted);
+        return parseByte2HexStr(buffer.array());
+    }
+
+    private static String decrypt(String content, String password) throws GeneralSecurityException {
+        byte[] all = parseHexStr2Byte(content);
+        if (all == null || all.length <= SALT_BYTES + IV_BYTES) {
+            return null;
+        }
+        ByteBuffer buffer = ByteBuffer.wrap(all);
+        byte[] salt = new byte[SALT_BYTES];
+        byte[] iv = new byte[IV_BYTES];
+        byte[] encrypted = new byte[all.length - SALT_BYTES - IV_BYTES];
+        buffer.get(salt).get(iv).get(encrypted);
+
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+        cipher.init(Cipher.DECRYPT_MODE, deriveKey(password, salt), new GCMParameterSpec(TAG_BITS, iv));
+        return new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);
+    }
+
+    private static SecretKeySpec deriveKey(String password, byte[] salt) throws GeneralSecurityException {
+        PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, KEY_BITS);
+        try {
+            byte[] key = SecretKeyFactory.getInstance(KEY_DERIVATION).generateSecret(spec).getEncoded();
+            return new SecretKeySpec(key, "AES");
+        } finally {
+            spec.clearPassword();
+        }
     }
 }

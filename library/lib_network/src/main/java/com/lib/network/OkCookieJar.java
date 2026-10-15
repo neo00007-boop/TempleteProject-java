@@ -12,7 +12,7 @@ import okhttp3.CookieJar;
 import okhttp3.HttpUrl;
 
 /**
- * 处理cookie
+ * 处理cookie，只存内存，进程重启后清空
  *
  * @author xwchen
  * Date         2022/2/22.
@@ -41,12 +41,22 @@ public class OkCookieJar implements CookieJar {
     }
 
     /**
-     * 取出域名关联的cookie
+     * 取出域名关联的cookie，过期的不带，secure 的只在 https 请求里带
      */
     @NonNull
     @Override
     public List<Cookie> loadForRequest(@NonNull HttpUrl httpUrl) {
         List<Cookie> cookies = cookieStore.get(httpUrl.host());
-        return cookies != null ? cookies : new ArrayList<>();
+        List<Cookie> result = new ArrayList<>();
+        if (cookies == null) {
+            return result;
+        }
+        long now = System.currentTimeMillis();
+        for (Cookie cookie : cookies) {
+            if (cookie.expiresAt() > now && (!cookie.secure() || httpUrl.isHttps())) {
+                result.add(cookie);
+            }
+        }
+        return result;
     }
 }

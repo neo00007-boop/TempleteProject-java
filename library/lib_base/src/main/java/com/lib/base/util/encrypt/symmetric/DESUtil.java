@@ -45,7 +45,10 @@ import static com.lib.base.util.encrypt.base.BaseUtils.parseHexStr2Byte;
 
 /**
  * DES 工具类
+ *
+ * @deprecated DES 只有 56 位密钥且是 ECB 模式，已不安全，仅用于对接只支持 DES 的老接口；新代码用 {@link AESUtil}
  */
+@Deprecated
 public class DESUtil {
     @IntDef({Cipher.ENCRYPT_MODE, Cipher.DECRYPT_MODE})
     @interface DESType {}

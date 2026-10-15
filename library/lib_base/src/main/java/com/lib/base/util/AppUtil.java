@@ -6,8 +6,11 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+
+import androidx.annotation.Nullable;
 
 import com.lib.base.config.App;
 
@@ -100,9 +103,21 @@ public class AppUtil {
         return result;
     }
 
+    /**
+     * 获取 IMEI，拿不到返回 null。
+     * Android 10 起普通应用无权获取，直接返回 null；Android 9 及以下需要 READ_PHONE_STATE 权限，且要在用户同意隐私政策后再调用
+     */
+    @Nullable
     @SuppressLint({"MissingPermission", "HardwareIds"})
     public static String getImei() {
-        TelephonyManager tm = (TelephonyManager) App.getContext().getSystemService(TELEPHONY_SERVICE);
-        return tm.getDeviceId();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return null;
+        }
+        try {
+            TelephonyManager tm = (TelephonyManager) App.getContext().getSystemService(TELEPHONY_SERVICE);
+            return tm != null ? tm.getDeviceId() : null;
+        } catch (SecurityException e) {
+            return null;
+        }
     }
 }

@@ -15,8 +15,8 @@ com.lib.network
 ├── Hosts                   多域名切换的 key 和请求头
 ├── NetworkInterceptor      加公共请求头、token，识别登录失效
 ├── UrlManagerInterceptor   按 Hosts 请求头切换域名
-├── RetryInterceptor        失败重试
-├── OkCookieJar             Cookie 持久化
+├── RetryInterceptor        GET/HEAD 遇到网络异常、408、429、5xx 时重试，最多 2 次
+├── OkCookieJar             Cookie 管理（只存内存，进程重启后清空）
 └── HttpLog、HttpEventListener   请求日志
 ```
 

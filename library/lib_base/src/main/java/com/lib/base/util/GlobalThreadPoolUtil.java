@@ -20,21 +20,17 @@ public class GlobalThreadPoolUtil {
 
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
     /**
-     * 线程池核心线程数
+     * 线程数，核心线程数和最大线程数相同：无界队列下线程数永远不会超过核心线程数
      */
-    private static final int CORE_POOL_SIZE = Math.max(2, Math.min(CPU_COUNT - 1, 4));
+    private static final int POOL_SIZE = CPU_COUNT + 2;
     /**
-     * 线程池最大线程数为核心线程数+2
-     */
-    private static final int MAX_POOL_SIZE = CPU_COUNT + 2;
-    /**
-     * 额外线程空状态生存时间,不允许
+     * 线程空闲超过该时间会被回收
      */
     private static final int KEEP_ALIVE_TIME = 60;
     /**
-     * 阻塞队列。当核心线程都被占用，且阻塞队列已满的情况下，才会开启额外线程。
+     * 无界队列，线程都忙时任务排队等待，不会被丢弃
      */
-    private static final BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>(20);
+    private static final BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>();
 
     /**
      * 线程工厂
@@ -52,19 +48,11 @@ public class GlobalThreadPoolUtil {
 
     private static final Handler mHandler = new Handler(Looper.getMainLooper());
 
-    /*
-      拒绝策略
-      AbortPolicy:抛出RejectedExecutionException;
-      DiscardPolicy:什么也不做，直接忽略;
-      DiscardOldestPolicy:丢弃执行队列中最老的任务，尝试为当前提交的任务腾出位置;
-      CallerRunsPolicy:直接由提交任务者执行这个任务
-     */
     static {
         sExecutor = new ThreadPoolExecutor(
-                CORE_POOL_SIZE, MAX_POOL_SIZE,
+                POOL_SIZE, POOL_SIZE,
                 KEEP_ALIVE_TIME, TimeUnit.SECONDS,
-                workQueue, threadFactory,
-                new ThreadPoolExecutor.DiscardPolicy());
+                workQueue, threadFactory);
         sExecutor.allowCoreThreadTimeOut(true);//不设置,即使核心线程闲置也会一直保持
     }
 

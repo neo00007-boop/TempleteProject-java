@@ -23,8 +23,6 @@
 package com.lib.base.util.encrypt.unsymmetric;
 
 
-import android.os.Build;
-
 import com.lib.base.util.encrypt.base.Base64;
 
 import java.io.ByteArrayOutputStream;
@@ -32,11 +30,10 @@ import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
+import java.security.interfaces.RSAKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -50,8 +47,16 @@ import androidx.annotation.IntDef;
 
 /**
  * RSA 工具类
+ * <p>
+ * 加密方式固定为 RSA/ECB/PKCS1Padding，与 Java 服务端默认的 "RSA" 一致。
+ * 不能写 Cipher.getInstance("RSA")：Android 上默认是 NoPadding；也不能指定 "BC" 提供者：Android 9 起会抛 NoSuchAlgorithmException
  */
 public class RSAUtil {
+    private static final String ALGORITHM = "RSA";
+    private static final String TRANSFORMATION = "RSA/ECB/PKCS1Padding";
+    private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
+    /** PKCS1Padding 每段明文最多 模长 - 11 字节 */
+    private static final int PKCS1_PADDING_SIZE = 11;
 
     /**
      * 随机获取密钥(公钥和私钥), 客户端公钥加密，服务器私钥解密
@@ -60,8 +65,8 @@ public class RSAUtil {
      * @throws Exception 异常
      */
     public static Map<String, Object> getKeyPair() throws Exception {
-        KeyPairGenerator keyPairGen = getKeyPairGenerator();
-        keyPairGen.initialize(1024);
+        KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance(ALGORITHM);
+        keyPairGen.initialize(2048);
 
         KeyPair keyPair = keyPairGen.generateKeyPair();
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
@@ -96,10 +101,10 @@ public class RSAUtil {
     public static String sign(byte[] data, String privateKey) throws Exception {
         byte[] keyBytes = Base64.decode(privateKey.getBytes(), Base64.DEFAULT);
         PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(keyBytes);
-        KeyFactory keyFactory = getKeyFactory();
+        KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
         PrivateKey privateK = keyFactory.generatePrivate(pkcs8KeySpec);
 
-        Signature signature = Signature.getInstance("MD5withRSA");
+        Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
         signature.initSign(privateK);
         signature.update(data);
         return new String(Base64.encode(signature.sign(), Base64.DEFAULT));
@@ -118,45 +123,13 @@ public class RSAUtil {
         byte[] keyBytes = Base64.decode(publicKey.getBytes(), Base64.DEFAULT);
 
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
-        KeyFactory keyFactory = getKeyFactory();
+        KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
         PublicKey publicK = keyFactory.generatePublic(keySpec);
 
-        Signature signature = Signature.getInstance("MD5withRSA");
+        Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
         signature.initVerify(publicK);
         signature.update(data);
         return signature.verify(Base64.decode(sign.getBytes(), Base64.DEFAULT));
-    }
-
-    /**
-     * 获取 KeyFactory
-     *
-     * @throws NoSuchAlgorithmException 异常
-     */
-    private static KeyFactory getKeyFactory() throws NoSuchAlgorithmException,
-            NoSuchProviderException {
-        KeyFactory keyFactory;
-        if (Build.VERSION.SDK_INT >= 16) {
-            keyFactory = KeyFactory.getInstance("RSA", "BC");
-        } else {
-            keyFactory = KeyFactory.getInstance("RSA");
-        }
-        return keyFactory;
-    }
-
-    /**
-     * 获取 KeyFactory
-     *
-     * @throws NoSuchAlgorithmException 异常
-     */
-    private static KeyPairGenerator getKeyPairGenerator() throws NoSuchProviderException,
-            NoSuchAlgorithmException {
-        KeyPairGenerator keyPairGen;
-        if (Build.VERSION.SDK_INT >= 16) {
-            keyPairGen = KeyPairGenerator.getInstance("RSA", "BC");
-        } else {
-            keyPairGen = KeyPairGenerator.getInstance("RSA");
-        }
-        return keyPairGen;
     }
 
 
@@ -197,61 +170,25 @@ public class RSAUtil {
         byte[] keyBytes = Base64.decode(string, Base64.DEFAULT);
 
         Key key;
-        KeyFactory keyFactory = getKeyFactory();
+        KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
         if (type == RSA_PUBLIC_ENCRYPT || type == RSA_PUBLIC_DECRYPT) {
-            X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(keyBytes);
-            key = keyFactory.generatePublic(x509KeySpec);
+            key = keyFactory.generatePublic(new X509EncodedKeySpec(keyBytes));
         } else {
-            PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(keyBytes);
-            key = keyFactory.generatePrivate(pkcs8KeySpec);
+            key = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(keyBytes));
         }
 
-        // 对数据加密
-        Cipher cipher = Cipher.getInstance(keyFactory.getAlgorithm());
-        int inputLen = data.length;
+        boolean encrypt = type == RSA_PUBLIC_ENCRYPT || type == RSA_PRIVATE_ENCRYPT;
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+        cipher.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, key);
+        //分段长度由密钥长度决定：加密每段 模长-11，解密每段 模长
+        int modulusBytes = (((RSAKey) key).getModulus().bitLength() + 7) / 8;
+        int blockSize = encrypt ? modulusBytes - PKCS1_PADDING_SIZE : modulusBytes;
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int offSet = 0;
-        byte[] cache;
-        int i = 0;
-
-        // 对数据分段加密
-        if (type == RSA_PUBLIC_ENCRYPT || type == RSA_PRIVATE_ENCRYPT) {
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-
-            while (inputLen - offSet > 0) {
-                if (inputLen - offSet > 117) {
-                    cache = cipher.doFinal(data, offSet, 117);
-                } else {
-                    cache = cipher.doFinal(data, offSet, inputLen - offSet);
-                }
-
-                out.write(cache, 0, cache.length);
-                out.flush();
-                i++;
-                offSet = i * 117;
-            }
-        } else {
-            cipher.init(Cipher.DECRYPT_MODE, key);
-            while (inputLen - offSet > 0) {
-                if (inputLen - offSet > 128) {
-                    cache = cipher.doFinal(data, offSet, 128);
-                    // 当最前面的数据是0，解密工具会错误的认为这是padding，因此导致长度不正确
-                    if (cache.length < 117) {
-                        byte[] temp = new byte[117];
-                        System.arraycopy(cache, 0, temp, 117 - cache.length, cache.length);
-                        cache = temp;
-                    }
-                } else {
-                    cache = cipher.doFinal(data, offSet, inputLen - offSet);
-                }
-                out.write(cache, 0, cache.length);
-                out.flush();
-                i++;
-                offSet = i * 128;
-            }
+        for (int offset = 0; offset < data.length; offset += blockSize) {
+            int len = Math.min(blockSize, data.length - offset);
+            out.write(cipher.doFinal(data, offset, len));
         }
-        byte[] result = out.toByteArray();
-        out.close();
-        return result;
+        return out.toByteArray();
     }
 }

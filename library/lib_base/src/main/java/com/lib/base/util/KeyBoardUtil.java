@@ -2,6 +2,7 @@ package com.lib.base.util;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Build;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -74,6 +75,10 @@ public class KeyBoardUtil {
      * @param imm
      */
     private static void release(InputMethodManager imm) {
+        //Android 9 起系统禁止反射这类非公开字段，反射只会抛异常
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            return;
+        }
         try {
             String[] arr = new String[]{"mLastSrvView"};
             for (String param : arr) {

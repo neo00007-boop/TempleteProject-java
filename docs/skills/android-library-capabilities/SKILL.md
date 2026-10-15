@@ -52,7 +52,7 @@ description: TempleteProject 工程 library 目录下各基础库（lib_base、l
 | 富文本 | `TxtUtil`（多段变色、加粗、图片标签）、`Spanny`、`SuperSpanUtil` | 手写 SpannableString |
 | 正则校验 | `PatternUtil.isValidPhone()`、`isValidEmail()`、`isValidPassword()`、`isValidCode()`、`isUrl()` | 业务里散落正则 |
 | 日期 | `DateUtil`（格式化、时间戳互转、相对时间、星期、日期差） | 每处 new SimpleDateFormat |
-| 加解密 | `MD5Util`、`SHAUtil`、`AESUtil`、`DESUtil`、`RSAUtil`、`Base64Util` | |
+| 加解密 | `MD5Util`、`SHAUtil`、`AESUtil`、`DESUtil`、`RSAUtil`、`Base64Util` | `DESUtil` 已弃用，对称加密用 `AESUtil`（输出十六进制，失败返回 null） |
 | 骨架屏 | `ShimmerView`、androidveil 的 `VeilLayout`；列表页默认带骨架加载 | |
 | 模块启动初始化 | 实现 `ModuleInitializer`，在本模块 `META-INF/services/com.lib.startup.ModuleInitializer` 登记 | 在 `App` 里逐个手动 init |
 

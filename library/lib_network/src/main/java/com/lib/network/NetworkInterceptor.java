@@ -6,12 +6,9 @@ import android.text.TextUtils;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Objects;
 
-import androidx.annotation.NonNull;
 import okhttp3.CacheControl;
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
@@ -69,63 +66,19 @@ public class NetworkInterceptor implements Interceptor {
     public Response intercept(@NotNull Chain chain) throws IOException {
         //①添加Header参数
         Request request = buildRequest(chain);
-        //②解析Response
         Response response = chain.proceed(request);
+        //②只看 json 响应；图片、文件下载、没有 Content-Type 的响应不读，避免整个读进内存
         ResponseBody responseBody = response.body();
-        /*
-         * 注意此处需要过率非json http请求,非图片或者文件下载类型的http请求调用bodey.string()会出异常:
-         * 1.glide加载图片时type为:image/xxx;
-         * 2.http请求为:application/xxx.
-         */
-        if (responseBody != null && responseBody.contentType() != null) {
-            String type = responseBody.contentType().type() + File.separator + responseBody.contentType().subtype();
-            if (!TextUtils.isEmpty(type) && !type.equals("application/json")) {
-                return response;
-            }
+        MediaType mediaType = responseBody != null ? responseBody.contentType() : null;
+        if (mediaType == null || !"json".equals(mediaType.subtype())) {
+            return response;
         }
-        String str = null;
-        try {
-            if (responseBody != null) {
-                str = responseBody.string();
-                if (!TextUtils.isEmpty(str)) {
-                    //③重登陆判断
-                    checkLoginCode(str);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        //③peekBody 只读一份副本，原响应原样交给 Retrofit；读失败直接抛出，按网络错误处理
+        String str = response.peekBody(Long.MAX_VALUE).string();
+        if (!TextUtils.isEmpty(str)) {
+            checkLoginCode(str);
         }
-        //④返回Response
-        Response responseNew = response
-                .newBuilder()
-                .body(ResponseBody.create(
-                        str != null ? str : getDefaultStr(),
-                        getMediaType(responseBody)))
-                .build();
-        if (responseBody != null) {
-            responseBody.close();
-        }
-        response.close();
-        return responseNew;
-    }
-
-    /**
-     * 缺省数据
-     *
-     * @return
-     */
-    @NonNull
-    private String getDefaultStr() {
-        return "{\"code\":-1,\"message\":\"body.string() error,please check data!\"}";
-    }
-
-    @NonNull
-    private MediaType getMediaType(ResponseBody responseBody) {
-        if (responseBody != null && responseBody.contentType() != null) {
-            return Objects.requireNonNull(responseBody.contentType());
-        } else {
-            return Objects.requireNonNull(MediaType.Companion.parse("application/json;charset=utf-8"));
-        }
+        return response;
     }
 
     @NotNull
