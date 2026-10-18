@@ -39,8 +39,10 @@ public final class GlideConfig extends AppGlideModule {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public void applyOptions(@NonNull Context context, @NonNull GlideBuilder builder) {
+        // 【最小改动：加一行三元运算符判空，防止 getExternalCacheDir() 为 null 导致崩溃】
+        File cacheDir = context.getExternalCacheDir() != null ? context.getExternalCacheDir() : context.getCacheDir();
         // 读写外部缓存目录不需要申请存储权限
-        File diskCacheFile = new File(context.getExternalCacheDir(), "glide");
+        File diskCacheFile = new File(cacheDir, "glide");
         // 如果这个路径是一个文件
         if (diskCacheFile.exists() && diskCacheFile.isFile()) {
             // 执行删除操作
