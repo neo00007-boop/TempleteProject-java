@@ -27,11 +27,11 @@ public class UrlManagerInterceptor implements Interceptor {
     @Override
     public Response intercept(@NonNull Chain chain) throws IOException {
         Request request = chain.request();
-        List<String> headerValues = request.headers(Hosts.HEADER);
+        List<String> headerValues = request.headers(Hosts.hostKey);
         if (headerValues.isEmpty()) {
             return chain.proceed(request);
         }
-        Request.Builder builder = request.newBuilder().removeHeader(Hosts.HEADER);
+        Request.Builder builder = request.newBuilder().removeHeader(Hosts.hostKey);
         String key = headerValues.get(0);
         HttpLog.d(TAG, "headerValue=" + key);
         String url = config.hosts.get(key);

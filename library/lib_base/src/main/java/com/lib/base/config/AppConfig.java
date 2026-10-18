@@ -14,9 +14,10 @@ import androidx.annotation.NonNull;
 public interface AppConfig {
     //host ip，多域名切换见 com.lib.network.Hosts
     String COOKIE_URL_PATH = "";//cookie 指定path
-    String API_BASE_URL_FINAL1 = "http://192.168.3.6:8888";
-    String API_BASE_URL_FINAL2 = "http://app.jnprsc.com";//url2前缀
-
+    String API_BASE_URL_TEST = "http://192.168.3.6:8888";
+    String API_BASE_URL_PRO = "http://192.168.3.6:8888";
+    String API_BASE_URL2= "http://app.jnprsc.com";//url2前缀
+    boolean IS_TEST_ENV = true; // true测试环境，false生产环境
     /**
      * 切换环境:开发/测试/生产...
      *
@@ -24,7 +25,7 @@ public interface AppConfig {
      */
     @NonNull
     static String getUrl() {
-        return DebugUtil.isDebug ? API_BASE_URL_FINAL1 : API_BASE_URL_FINAL2;
+        return IS_TEST_ENV ? API_BASE_URL_TEST : API_BASE_URL_PRO;
     }
 
     //user

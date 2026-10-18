@@ -30,7 +30,7 @@ public interface LoginApi {
     Single<RisksRecord> getRisks(@QueryMap Map<String, String> keyMaps);
 
     @FormUrlEncoded
-    @Headers({Hosts.HOST2})
+    @Headers({Hosts.hostHeader2})
     @POST("/omma_server/api/121")
     Single<VideoOmma> getVideoUrl(@Field("versionNumber") String versionNumber);
 
@@ -45,7 +45,7 @@ public interface LoginApi {
      * @param password
      * @return
      */
-    @Headers({Hosts.HOST2})
+    @Headers({Hosts.hostHeader2})
     @POST("/service/user/doLogin")
     Single<LoginBean/*ResponseBody*/> login(@Query("mobile") String loginName,
                                             @Query("userPwd") String password);

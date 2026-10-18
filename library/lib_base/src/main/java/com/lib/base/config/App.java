@@ -108,15 +108,15 @@ public abstract class App extends Application implements ViewModelStoreOwner, Lo
 
     private void initNetwork() {
         RetrofitHelper.init(new HttpConfig.Builder(AppConfig.getUrl())
-                .host(Hosts.KEY1, AppConfig.API_BASE_URL_FINAL1)
-                .host(Hosts.KEY2, AppConfig.API_BASE_URL_FINAL2)
+                // .host(Hosts.host1, AppConfig.API_BASE_URL_FINAL1)
+                .host(Hosts.host2, AppConfig.API_BASE_URL2)
                 .header("client_type", "android")
                 .header("version_code", String.valueOf(AppUtil.getVersionCode(this)))
                 .header("version_name", String.valueOf(AppUtil.getVersionName(this)))
                 .tokenProvider(() -> SPUtil.getString(AppConfig.USER_TOKEN))
                 .onTokenExpired(LoginUtil::toLogin)
                 .gson(GsonUtil.getInstance())
-                .cookiePath(AppConfig.COOKIE_URL_PATH)
+                // .cookiePath(AppConfig.COOKIE_URL_PATH)
                 .debug(DebugUtil.isDebug)
                 .build());
     }
@@ -209,8 +209,7 @@ public abstract class App extends Application implements ViewModelStoreOwner, Lo
     private void setViewModel() {
         globalViewModelStore = new ViewModelStore();
         //GlobalViewModel 构造要传 Application，必须用 AndroidViewModelFactory，默认工厂只会调无参构造
-        globalViewModel = new ViewModelProvider(this,
-                ViewModelProvider.AndroidViewModelFactory.getInstance(this)).get(GlobalViewModel.class);
+        globalViewModel = new ViewModelProvider(this).get(GlobalViewModel.class);
         globalViewModel.init();
     }
 
