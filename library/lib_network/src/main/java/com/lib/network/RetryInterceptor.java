@@ -1,6 +1,10 @@
 package com.lib.network;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.net.ProtocolException;
+import java.security.cert.CertificateException;
+import javax.net.ssl.SSLException;
 
 import androidx.annotation.NonNull;
 import okhttp3.Interceptor;
@@ -38,11 +42,12 @@ public class RetryInterceptor implements Interceptor {
         }
         //假如设置为2次重试的话，则最大可能请求3次（默认1次+2次重试）
         for (int retryNum = 0; ; retryNum++) {
-            Response response;
+            Response response = null; // 【必要修改：初始化置空】
             try {
                 response = chain.proceed(request);
             } catch (IOException e) {
-                if (retryNum >= maxRetry || chain.call().isCanceled()) {
+                // 【必要修改：加入 !isRecoverable(e) 校验，过滤掉无意义的证书和协议错误】
+                if (retryNum >= maxRetry || !isRecoverable(e) || chain.call().isCanceled()) {
                     throw e;
                 }
                 HttpLog.d(TAG, "retry " + (retryNum + 1) + " after " + e);
@@ -59,5 +64,13 @@ public class RetryInterceptor implements Interceptor {
     /** 只重试临时性错误：超时、限流、服务端错误；400/401/404 等重试也不会成功 */
     private static boolean shouldRetry(int code) {
         return code == 408 || code == 429 || code >= 500;
+    }
+
+    /** 【必要新增：过滤致命网络异常，避免无意义的重试等待】 */
+    private boolean isRecoverable(IOException e) {
+        if (e instanceof ProtocolException) return false; // 协议错误
+        if (e instanceof InterruptedIOException) return e instanceof java.net.SocketTimeoutException; // 仅允许超时重试
+        if (e instanceof SSLException && e.getCause() instanceof CertificateException) return false; // 证书错误
+        return true;
     }
 }

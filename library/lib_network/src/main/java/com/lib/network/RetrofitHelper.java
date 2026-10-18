@@ -36,9 +36,9 @@ public class RetrofitHelper {
         //OkHttpClient
         mOkHttpClient = new OkHttpClient
                 .Builder()
-                .cookieJar(new OkCookieJar(config.cookiePath))//---------------//处理cookie
+                // .cookieJar(new OkCookieJar(config.cookiePath))//---------------//处理cookie
                 //.retryOnConnectionFailure(true)//默认重试一次,使用RetryInterceptor可以自定义重试次数
-                .followRedirects(true)//允许重定向
+                // .followRedirects(true)//允许重定向
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .writeTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(10, TimeUnit.SECONDS)
