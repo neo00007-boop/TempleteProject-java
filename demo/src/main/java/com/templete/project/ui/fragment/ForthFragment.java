@@ -18,6 +18,7 @@ import com.templete.project.ui.activity.IndexActivity;
 import com.templete.project.ui.activity.NavsActivity;
 import com.templete.project.ui.activity.PatternActivity;
 import com.templete.project.ui.activity.PinnedActivity;
+import com.templete.project.ui.activity.PostAudioActivity;
 import com.templete.project.ui.activity.ShimmerActivity;
 import com.templete.project.ui.activity.SoftActivity;
 import com.templete.project.ui.activity.TxtActivity;
@@ -85,6 +86,8 @@ public class ForthFragment extends BaseFragment<ForthFragmentBinding> {
                         clazz = FreshMultiListDemoActivity.class;
                     } else if (v.equals(mViewBinding.tv15)) {
                         clazz = PatternActivity.class;
+                    } else if (v.equals(mViewBinding.tv16)) {
+                        clazz = PostAudioActivity.class;
                     }
                     if (clazz != null) {
                         ((BaseActivity<?>) requireActivity()).startAty(requireActivity(), clazz);
@@ -95,7 +98,8 @@ public class ForthFragment extends BaseFragment<ForthFragmentBinding> {
                 /*mViewBinding.tv5,*/ mViewBinding.tv6,
                 mViewBinding.tv8, mViewBinding.tv9,
                 mViewBinding.tv10, mViewBinding.tv11, mViewBinding.tv12,
-                mViewBinding.tv13, mViewBinding.tv14, mViewBinding.tv15);
+                mViewBinding.tv13, mViewBinding.tv14, mViewBinding.tv15,
+                mViewBinding.tv16);
 
         mViewBinding.tv7.setOnClickListener(v -> IntentUtil.startActivity(requireActivity(), DatabindingActivity.class));
     }

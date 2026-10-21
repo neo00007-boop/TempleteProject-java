@@ -9,6 +9,11 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.view.Gravity;
 
+import androidx.annotation.NonNull;
+import androidx.camera.camera2.Camera2Config;
+import androidx.camera.core.CameraXConfig;
+import androidx.core.content.ContextCompat;
+
 import com.greendao.db.util.GsonUtil;
 import com.hjq.gson.factory.GsonFactory;
 import com.hjq.shape.view.horizontal.SmartRefreshHorizontal;
@@ -28,27 +33,18 @@ import com.lib.base.util.ContextUtil;
 import com.lib.base.util.DebugUtil;
 import com.lib.base.util.LoginUtil;
 import com.lib.base.util.SPUtil;
-import com.lib.startup.ModuleInitializers;
-import com.lib.network.HttpConfig;
 import com.lib.network.Hosts;
+import com.lib.network.HttpConfig;
 import com.lib.network.RetrofitHelper;
+import com.lib.startup.ModuleInitializers;
 import com.scwang.smart.refresh.footer.ClassicsFooter;
 import com.scwang.smart.refresh.header.ClassicsHeader;
 import com.scwang.smart.refresh.header.MaterialHeader;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import com.scwang.smart.refresh.layout.wrapper.RefreshFooterWrapper;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.lang.ref.SoftReference;
 
-import androidx.annotation.NonNull;
-import androidx.camera.camera2.Camera2Config;
-import androidx.camera.core.CameraXConfig;
-import androidx.core.content.ContextCompat;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelStore;
-import androidx.lifecycle.ViewModelStoreOwner;
 import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 
 /**
@@ -60,12 +56,12 @@ import io.reactivex.rxjava3.plugins.RxJavaPlugins;
  * Date         2019-11-27.
  */
 @SuppressLint("CheckResult")
-public abstract class App extends Application implements ViewModelStoreOwner, LogAction, CameraXConfig.Provider {
+public abstract class App extends Application implements /*ViewModelStoreOwner,*/ LogAction, CameraXConfig.Provider {
     public static final String TAG = "BaseApplication";
     @SuppressLint("StaticFieldLeak")
     private static App mContext;
     private SoftReference<Activity> topActivity;
-    private ViewModelStore globalViewModelStore;
+    // private ViewModelStore globalViewModelStore;
     private GlobalViewModel globalViewModel;
 
     public static App getContext() {
@@ -207,9 +203,9 @@ public abstract class App extends Application implements ViewModelStoreOwner, Lo
     }
 
     private void setViewModel() {
-        globalViewModelStore = new ViewModelStore();
-        //GlobalViewModel 构造要传 Application，必须用 AndroidViewModelFactory，默认工厂只会调无参构造
-        globalViewModel = new ViewModelProvider(this).get(GlobalViewModel.class);
+        // globalViewModelStore = new ViewModelStore();
+        // AndroidViewModel 需 Application 入参；此处全局单例直接构造即可
+        globalViewModel = new GlobalViewModel(this);
         globalViewModel.init();
     }
 
@@ -278,11 +274,11 @@ public abstract class App extends Application implements ViewModelStoreOwner, Lo
         RxJavaPlugins.setErrorHandler(throwable -> DebugUtil.logE("RxJavaError", "error msg=" + throwable.getMessage()));
     }
 
-    @NotNull
-    @Override
-    public ViewModelStore getViewModelStore() {
-        return globalViewModelStore;
-    }
+//    @NotNull
+//    @Override
+//    public ViewModelStore getViewModelStore() {
+//        return globalViewModelStore;
+//    }
 
     @Override
     public void onTerminate() {

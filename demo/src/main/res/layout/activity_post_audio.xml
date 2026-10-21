@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/llPostAudioPage"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/common_window_background_color"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="false"
+        android:paddingStart="@dimen/x40"
+        android:paddingTop="@dimen/x30"
+        android:paddingEnd="@dimen/x40"
+        android:paddingBottom="@dimen/x10"
+        android:textColor="@color/cl_666"
+        android:textSize="@dimen/x32"
+        tools:ignore="HardcodedText"
+        tools:text="波形由 url 确定性生成；同时只能播一条" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvAudioList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingStart="@dimen/x30"
+        android:paddingTop="@dimen/x20"
+        android:paddingEnd="@dimen/x30"
+        android:paddingBottom="@dimen/x40"
+        tools:listitem="@layout/item_post_audio" />
+</LinearLayout>
