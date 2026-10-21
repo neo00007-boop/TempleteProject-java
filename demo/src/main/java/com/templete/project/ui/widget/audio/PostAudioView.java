@@ -66,26 +66,30 @@ public class PostAudioView extends FrameLayout {
     private int durationToken;
     private MediaMetadataRetriever durationRetriever;
 
+    /** 主线程 Handler；所有 delay 必须在 pause/release/detach 时 clearHandlerTasks() */
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable progressTicker = new Runnable() {
         @Override
         public void run() {
+            if (!isAttachedToWindow()) {
+                return;
+            }
             updateProgressUi();
-            // 播放中或缓冲中都继续刷，保证波形缓冲段跟手
-            if (isPlaying() || buffering || preparing) {
+            // 播放中或缓冲中都继续刷；仅复用本 Runnable，不会堆积实例
+            if (isAttachedToWindow() && (isPlaying() || buffering || preparing)) {
                 handler.postDelayed(this, 80);
             }
         }
     };
     private final Runnable prepareTimeout = () -> {
-        if (!preparing) {
+        if (!isAttachedToWindow() || !preparing) {
             return;
         }
         Log.e(TAG, "prepare timeout url=" + audioUrl);
         resetForError("音频加载超时");
     };
     private final Runnable coalesceSeekRunnable = () -> {
-        if (!prepared || player == null || pendingSeekPercent < 0f) {
+        if (!isAttachedToWindow() || !prepared || player == null || pendingSeekPercent < 0f) {
             return;
         }
         Log.d(TAG, "coalesceSeek apply pending=" + pendingSeekPercent);
@@ -98,6 +102,11 @@ public class PostAudioView extends FrameLayout {
         }
         startProgressTicker();
     };
+
+    /** 摘掉所有已 post 的 delay，避免 Handler 间接持有 View */
+    private void clearHandlerTasks() {
+        handler.removeCallbacksAndMessages(null);
+    }
 
     private final Player.Listener playerListener = new Player.Listener() {
         @Override
@@ -317,9 +326,7 @@ public class PostAudioView extends FrameLayout {
         pendingSeekPercent = -1f;
         seekHoldPercent = -1f;
         buffering = false;
-        handler.removeCallbacks(progressTicker);
-        handler.removeCallbacks(prepareTimeout);
-        handler.removeCallbacks(coalesceSeekRunnable);
+        clearHandlerTasks();
         if (preparing) {
             preparing = false;
             releasePlayerOnly();
@@ -394,6 +401,7 @@ public class PostAudioView extends FrameLayout {
         Log.d(TAG, "onEnded url=" + audioUrl);
         handler.removeCallbacks(progressTicker);
         handler.removeCallbacks(coalesceSeekRunnable);
+        // 保留 prepareTimeout 不在 ended 清：此时已 prepared，超时回调会因 !preparing 直接 return
         buffering = false;
         playWhenReady = false;
         pendingSeekPercent = -1f;
@@ -433,9 +441,7 @@ public class PostAudioView extends FrameLayout {
     }
 
     private void resetForError(String toast) {
-        handler.removeCallbacks(prepareTimeout);
-        handler.removeCallbacks(progressTicker);
-        handler.removeCallbacks(coalesceSeekRunnable);
+        clearHandlerTasks();
         preparing = false;
         prepared = false;
         buffering = false;
@@ -463,7 +469,7 @@ public class PostAudioView extends FrameLayout {
     }
 
     public void release() {
-        handler.removeCallbacksAndMessages(null);
+        clearHandlerTasks();
         if (pbLoading != null) {
             pbLoading.animate().cancel();
         }
@@ -685,9 +691,7 @@ public class PostAudioView extends FrameLayout {
         pendingSeekPercent = -1f;
         seekHoldPercent = -1f;
         buffering = false;
-        handler.removeCallbacks(progressTicker);
-        handler.removeCallbacks(prepareTimeout);
-        handler.removeCallbacks(coalesceSeekRunnable);
+        clearHandlerTasks();
         abortDurationFetch();
         releasePlayerOnly();
         prepared = false;
