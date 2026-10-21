@@ -13,7 +13,7 @@
         app:barBackVisible="false"
         app:barInitModel="initBlueTheme"
         app:barStatuesVisible="true"
-        app:barTitleStr="三页" />
+        app:barTitleStr="页面交互" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -33,7 +33,7 @@
                 android:layout_height="@dimen/x150"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="Txt标签"
+                android:text="ViewPager 多级导航"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -48,7 +48,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="索引"
+                android:text="单元素共享转场"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -63,7 +63,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="输入法"
+                android:text="多元素共享转场"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -76,205 +76,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/x150"
                 android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="图形绘制"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />
-
-            <!--<com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv5"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="recyclerview添加header和footer"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />-->
-
-            <com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv6"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="ViewPager 多级导航"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />
-
-            <!--<com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv11"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="ViewPager2 多级导航"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />-->
-
-            <com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv7"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="databinding"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />
-
-            <com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv8"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="pinned"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />
-
-            <com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv9"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="livedatabus"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />
-
-            <com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv10"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="shimmer"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />
-
-            <com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv11"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="刷新列表基类 Demo"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />
-
-            <com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv12"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="多类型刷新列表 Demo"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />
-
-            <com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv13"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="刷新列表 Fragment Demo"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />
-
-            <com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv14"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="多类型刷新列表 Fragment Demo"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />
-
-            <com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv15"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="PatternUtil 正则"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />
-
-            <com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv16"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
                 android:layout_marginBottom="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="帖子音频组件"
+                android:text="输入法适配"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"

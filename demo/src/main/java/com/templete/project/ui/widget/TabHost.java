@@ -50,7 +50,7 @@ public class TabHost extends LinearLayout {
     @SuppressLint("FindViewByIdCast")
     private void initView(Context context) {
         TabContainerBinding binding = TabContainerBinding.inflate(LayoutInflater.from(context), this, true);
-        tabViewList = new View[]{binding.tab1, binding.tab2, binding.tab3, binding.tab5};
+        tabViewList = new View[]{binding.tab1, binding.tab2, binding.tab3, binding.tab4, binding.tab5};
     }
 
     private void setTabs() {
@@ -226,7 +226,7 @@ public class TabHost extends LinearLayout {
         public Builder() {
             manager = null;
             containerId = -1;
-            fragmentList = new BaseFragment[4];
+            fragmentList = new BaseFragment[0];
             lastTab = -1;
         }
 
@@ -253,6 +253,10 @@ public class TabHost extends LinearLayout {
          */
         @SafeVarargs
         public final Builder setFragments(Class<? extends BaseFragment<?>>... clazz) {
+            if (clazz == null || clazz.length == 0) {
+                throw new RuntimeException("fragments is empty!");
+            }
+            fragmentList = new BaseFragment[clazz.length];
             for (int i = 0; i < clazz.length; i++) {
                 Class<?> aClass = clazz[i];
                 BaseFragment<?> fragment = (BaseFragment<?>) manager.findFragmentByTag(aClass.getSimpleName());

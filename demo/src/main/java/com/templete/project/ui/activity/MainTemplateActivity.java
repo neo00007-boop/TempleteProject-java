@@ -10,6 +10,7 @@ import com.lib.base.util.LoginUtil;
 import com.templete.project.R;
 import com.templete.project.databinding.MainTempleteActivityBinding;
 import com.templete.project.mvvm.MainViewModel;
+import com.templete.project.ui.fragment.FifthFragment;
 import com.templete.project.ui.fragment.FirstFragment;
 import com.templete.project.ui.fragment.ForthFragment;
 import com.templete.project.ui.fragment.SecondFragment;
@@ -62,9 +63,14 @@ public class MainTemplateActivity extends BaseMvvmActivity<MainTempleteActivityB
                 .newBuilder()
                 .setManager(getSupportFragmentManager())
                 .setContainerId(R.id.fl_container)
-                .setFragments(FirstFragment.class, SecondFragment.class, ThirdFragment.class, ForthFragment.class)
+                .setFragments(
+                        FirstFragment.class,
+                        SecondFragment.class,
+                        ThirdFragment.class,
+                        ForthFragment.class,
+                        FifthFragment.class)
                 .build(mViewBinding.tabHost)
-                .setOnLoginListener(false, 3, LoginUtil::toLogin)
+                .setOnLoginListener(false, 4, LoginUtil::toLogin)
                 .setOnTabChangedListener(tabIndex -> logD(TAG, "tabIndex=" + tabIndex))
                 .over();
     }

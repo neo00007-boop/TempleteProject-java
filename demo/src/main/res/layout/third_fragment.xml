@@ -13,7 +13,7 @@
         app:barBackVisible="false"
         app:barInitModel="initBlueTheme"
         app:barStatuesVisible="true"
-        app:barTitleStr="三页" />
+        app:barTitleStr="列表刷新" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -33,22 +33,7 @@
                 android:layout_height="@dimen/x150"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="官方FlowLayout"
-                android:textColor="@color/white"
-                android:textSize="@dimen/x45"
-                app:shape_radius="@dimen/x75"
-                app:shape_solidColor="@color/common_accent_color"
-                app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />
-
-            <com.hjq.shape.view.ShapeTextView
-                android:id="@+id/tv10"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/x150"
-                android:layout_marginTop="@dimen/x65"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="FlowLayout"
+                android:text="下拉刷新 · Grass"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -63,7 +48,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="BottomSheet"
+                android:text="下拉刷新 · Sun"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -78,7 +63,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="图片视频选择器"
+                android:text="横向刷新"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -93,7 +78,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="超级Intent"
+                android:text="悬浮刷新（Coordinator）"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -108,7 +93,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="单元素转场"
+                android:text="列表整体位移"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -123,7 +108,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="多元素转场"
+                android:text="刷新列表基类 · Activity"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -138,7 +123,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="自定义刷新-grass"
+                android:text="多类型刷新列表 · Activity"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -153,7 +138,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="自定义刷新-sun"
+                android:text="刷新列表基类 · Fragment"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -168,13 +153,60 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="横向刷新"
+                android:text="多类型刷新列表 · Fragment"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
                 app:shape_solidColor="@color/common_accent_color"
                 app:shape_textColor="@color/white"
                 tools:ignore="HardcodedText" />
+
+            <com.hjq.shape.view.ShapeTextView
+                android:id="@+id/tv10"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/x150"
+                android:layout_marginTop="@dimen/x65"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="字母索引列表"
+                android:textColor="@color/white"
+                android:textSize="@dimen/x45"
+                app:shape_radius="@dimen/x75"
+                app:shape_solidColor="@color/common_accent_color"
+                app:shape_textColor="@color/white"
+                tools:ignore="HardcodedText" />
+
+            <com.hjq.shape.view.ShapeTextView
+                android:id="@+id/tv11"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/x150"
+                android:layout_marginTop="@dimen/x65"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="吸顶 Pinned"
+                android:textColor="@color/white"
+                android:textSize="@dimen/x45"
+                app:shape_radius="@dimen/x75"
+                app:shape_solidColor="@color/common_accent_color"
+                app:shape_textColor="@color/white"
+                tools:ignore="HardcodedText" />
+
+            <com.hjq.shape.view.ShapeTextView
+                android:id="@+id/tv12"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/x150"
+                android:layout_marginTop="@dimen/x65"
+                android:layout_marginBottom="@dimen/x65"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="WrapRecyclerView Header/Footer"
+                android:textColor="@color/white"
+                android:textSize="@dimen/x45"
+                app:shape_radius="@dimen/x75"
+                app:shape_solidColor="@color/common_accent_color"
+                app:shape_textColor="@color/white"
+                tools:ignore="HardcodedText" />
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

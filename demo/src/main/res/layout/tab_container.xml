@@ -20,7 +20,7 @@
 
         <TextView
             style="@style/bottom_host_tv"
-            android:text="探索"
+            android:text="控件"
             tools:ignore="HardcodedText" />
     </LinearLayout>
 
@@ -37,7 +37,7 @@
 
         <TextView
             style="@style/bottom_host_tv"
-            android:text="精选"
+            android:text="工具"
             tools:ignore="HardcodedText" />
     </LinearLayout>
 
@@ -53,7 +53,23 @@
 
         <TextView
             style="@style/bottom_host_tv"
-            android:text="收藏"
+            android:text="列表"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/tab4"
+        style="@style/bottom_host_ll"
+        tools:ignore="UseCompoundDrawables">
+
+        <ImageView
+            style="@style/bottom_host_iv"
+            android:src="@drawable/tab2"
+            tools:ignore="ContentDescription" />
+
+        <TextView
+            style="@style/bottom_host_tv"
+            android:text="页面"
             tools:ignore="HardcodedText" />
     </LinearLayout>
 
@@ -70,7 +86,7 @@
 
         <TextView
             style="@style/bottom_host_tv"
-            android:text="我的"
+            android:text="音视频"
             tools:ignore="HardcodedText" />
     </LinearLayout>
 </LinearLayout>

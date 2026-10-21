@@ -5,8 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
-    <!--ic_more_do-->
-    <!--ic_home_search-->
+
     <com.lib.base.ui.widget.TitleBar
         android:id="@+id/title_bar"
         android:layout_width="match_parent"
@@ -15,7 +14,7 @@
         app:barInitModel="initBlueTheme"
         app:barRightIconResource="@drawable/ic_more_do"
         app:barStatuesVisible="true"
-        app:barTitleStr="首页" />
+        app:barTitleStr="常用控件" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -35,7 +34,7 @@
                 android:layout_height="@dimen/x150"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="popView"
+                android:text="Popup 弹窗"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
                 app:shape_solidColor="@color/common_accent_color"
@@ -49,7 +48,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="shapeView"
+                android:text="Shape 圆角背景"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -64,7 +63,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="最强dialog"
+                android:text="Dialog 对话框"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -79,7 +78,22 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="FlycoTabLayout"
+                android:text="BottomSheet 底部弹层"
+                android:textColor="@color/white"
+                android:textSize="@dimen/x45"
+                app:shape_radius="@dimen/x75"
+                app:shape_solidColor="@color/common_accent_color"
+                app:shape_textColor="@color/white"
+                tools:ignore="HardcodedText,TextContrastCheck" />
+
+            <com.hjq.shape.view.ShapeTextView
+                android:id="@+id/tv5"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/x150"
+                android:layout_marginTop="@dimen/x65"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="TabLayout 多样式"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -94,7 +108,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="AndRatingBar + glide + http"
+                android:text="评分条 RatingBar"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -124,7 +138,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="glide transform"
+                android:text="Glide 图片变换"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -139,7 +153,7 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="沉浸式UI"
+                android:text="沉浸式状态栏"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
@@ -154,7 +168,83 @@
                 android:layout_marginTop="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="双缓存(内存+sp)"
+                android:text="Txt 富文本标签"
+                android:textColor="@color/white"
+                android:textSize="@dimen/x45"
+                app:shape_radius="@dimen/x75"
+                app:shape_solidColor="@color/common_accent_color"
+                app:shape_textColor="@color/white"
+                tools:ignore="HardcodedText" />
+
+            <com.hjq.shape.view.ShapeTextView
+                android:id="@+id/tv11"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/x150"
+                android:layout_marginTop="@dimen/x65"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="Shimmer 骨架屏"
+                android:textColor="@color/white"
+                android:textSize="@dimen/x45"
+                app:shape_radius="@dimen/x75"
+                app:shape_solidColor="@color/common_accent_color"
+                app:shape_textColor="@color/white"
+                tools:ignore="HardcodedText" />
+
+            <com.hjq.shape.view.ShapeTextView
+                android:id="@+id/tv12"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/x150"
+                android:layout_marginTop="@dimen/x65"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="官方 FlowLayout"
+                android:textColor="@color/white"
+                android:textSize="@dimen/x45"
+                app:shape_radius="@dimen/x75"
+                app:shape_solidColor="@color/common_accent_color"
+                app:shape_textColor="@color/white"
+                tools:ignore="HardcodedText" />
+
+            <com.hjq.shape.view.ShapeTextView
+                android:id="@+id/tv13"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/x150"
+                android:layout_marginTop="@dimen/x65"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="自定义 FlowLayout"
+                android:textColor="@color/white"
+                android:textSize="@dimen/x45"
+                app:shape_radius="@dimen/x75"
+                app:shape_solidColor="@color/common_accent_color"
+                app:shape_textColor="@color/white"
+                tools:ignore="HardcodedText" />
+
+            <com.hjq.shape.view.ShapeTextView
+                android:id="@+id/tv14"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/x150"
+                android:layout_marginTop="@dimen/x65"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="Canvas 图形绘制"
+                android:textColor="@color/white"
+                android:textSize="@dimen/x45"
+                app:shape_radius="@dimen/x75"
+                app:shape_solidColor="@color/common_accent_color"
+                app:shape_textColor="@color/white"
+                tools:ignore="HardcodedText" />
+
+            <com.hjq.shape.view.ShapeTextView
+                android:id="@+id/tv15"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/x150"
+                android:layout_marginTop="@dimen/x65"
+                android:layout_marginBottom="@dimen/x65"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="Lottie 动画"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
