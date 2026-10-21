@@ -1,5 +1,7 @@
 package com.templete.project.ui.widget.audio;
 
+import android.util.Log;
+
 import java.lang.ref.WeakReference;
 
 /**
@@ -7,6 +9,7 @@ import java.lang.ref.WeakReference;
  */
 public final class AudioPlayManager {
 
+    private static final String TAG = "AudioPlayManager";
     private static volatile AudioPlayManager sInstance;
 
     private WeakReference<PostAudioView> currentPlayer;
@@ -34,9 +37,11 @@ public final class AudioPlayManager {
         }
         PostAudioView current = currentPlayer == null ? null : currentPlayer.get();
         if (current != null && current != player) {
+            Log.d(TAG, "requestPlay switch, pause other url=" + current.getAudioUrl());
             current.pauseByManager();
         }
         currentPlayer = new WeakReference<>(player);
+        Log.d(TAG, "requestPlay current url=" + player.getAudioUrl());
     }
 
     /**
@@ -79,7 +84,7 @@ public final class AudioPlayManager {
     }
 
     /**
-     * 页面退出时调用：完整 release，避免 MediaPlayer / Handler 残留。
+     * 页面退出时调用：完整 release，避免 ExoPlayer / Handler 残留。
      */
     public synchronized void releaseAll() {
         PostAudioView current = currentPlayer == null ? null : currentPlayer.get();

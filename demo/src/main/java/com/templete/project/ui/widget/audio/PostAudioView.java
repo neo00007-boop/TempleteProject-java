@@ -1,11 +1,11 @@
 package com.templete.project.ui.widget.audio;
 
 import android.content.Context;
-import android.media.AudioAttributes;
 import android.media.MediaMetadataRetriever;
-import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -19,6 +19,11 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.media3.common.C;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.PlaybackException;
+import androidx.media3.common.Player;
+import androidx.media3.exoplayer.ExoPlayer;
 
 import com.lib.base.util.GlobalThreadPoolUtil;
 import com.templete.project.R;
@@ -26,36 +31,38 @@ import com.templete.project.R;
 import java.util.HashMap;
 
 /**
- * 帖子音频组件：URL 确定性波形 + 全局互斥播放。
+ * 帖子音频：确定性波形 + ExoPlayer + {@link AudioPlayManager} 互斥。
  */
 public class PostAudioView extends FrameLayout {
 
     private static final String TAG = "PostAudioView";
-    private static final int MAX_PREPARE_RETRY = 1;
-    /** prepareAsync 超时兜底，避免一直转圈 */
     private static final long PREPARE_TIMEOUT_MS = 15_000L;
+    /** 同一条波形连点不同进度：合并为最后一次 seek，减轻 Exo 压力 */
+    private static final long SEEK_COALESCE_MS = 80L;
+    /** seek 后进度条按住目标，避免 ticker 短暂拉回旧位置 */
+    private static final long SEEK_HOLD_MS = 900L;
 
+    private View flPlayBtn;
     private ImageView ivPlay;
     private ImageView ivPause;
     private ProgressBar pbLoading;
     private WaveformSeekBar waveformSeekBar;
     private TextView tvDuration;
 
-    private MediaPlayer mediaPlayer;
+    private ExoPlayer player;
     private String audioUrl;
     private boolean prepared;
     private boolean preparing;
     private boolean buffering;
     private boolean seekDragging;
+    private boolean playWhenReady;
     private int durationMs;
-    /** 0~100，MediaPlayer 缓冲百分比 */
     private int bufferPercent;
+    /** 待跳转 0~1；&lt;0 表示当前位置续播 */
     private float pendingSeekPercent = -1f;
-    private boolean playAfterPrepare;
-    private int prepareRetry;
-    private int prepareToken;
-    /** 每次暂停/取消播放 +1，作废未完成的 seekComplete / start */
-    private int playSession;
+    /** seek 过程中 UI 按住的目标进度 */
+    private float seekHoldPercent = -1f;
+    private long seekHoldUntilElapsed;
     private int durationToken;
     private MediaMetadataRetriever durationRetriever;
 
@@ -64,9 +71,87 @@ public class PostAudioView extends FrameLayout {
         @Override
         public void run() {
             updateProgressUi();
-            if (isPlaying()) {
-                handler.postDelayed(this, 50);
+            // 播放中或缓冲中都继续刷，保证波形缓冲段跟手
+            if (isPlaying() || buffering || preparing) {
+                handler.postDelayed(this, 80);
             }
+        }
+    };
+    private final Runnable prepareTimeout = () -> {
+        if (!preparing) {
+            return;
+        }
+        Log.e(TAG, "prepare timeout url=" + audioUrl);
+        resetForError("音频加载超时");
+    };
+    private final Runnable coalesceSeekRunnable = () -> {
+        if (!prepared || player == null || pendingSeekPercent < 0f) {
+            return;
+        }
+        Log.d(TAG, "coalesceSeek apply pending=" + pendingSeekPercent);
+        applyPendingSeekIfNeeded();
+        player.setPlayWhenReady(true);
+        if (player.isPlaying() && !buffering) {
+            showPlaying();
+        } else {
+            showBuffering();
+        }
+        startProgressTicker();
+    };
+
+    private final Player.Listener playerListener = new Player.Listener() {
+        @Override
+        public void onPlaybackStateChanged(int state) {
+            if (player == null) {
+                return;
+            }
+            Log.d(TAG, "state=" + stateName(state)
+                    + " playWhenReady=" + player.getPlayWhenReady()
+                    + " pos=" + player.getCurrentPosition()
+                    + " buf=" + player.getBufferedPercentage() + "%"
+                    + " current=" + isCurrentPlayer());
+            switch (state) {
+                case Player.STATE_BUFFERING:
+                    buffering = true;
+                    syncBufferProgress();
+                    if (playWhenReady || player.getPlayWhenReady()) {
+                        showBuffering();
+                        // 未起播/卡顿时也要刷缓冲条
+                        startProgressTicker();
+                    }
+                    refreshTimeText(uiPercent());
+                    break;
+                case Player.STATE_READY:
+                    onPlayerReady();
+                    break;
+                case Player.STATE_ENDED:
+                    onPlayerEnded();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        @Override
+        public void onIsPlayingChanged(boolean playing) {
+            if (player == null) {
+                return;
+            }
+            Log.d(TAG, "isPlaying=" + playing + " pos=" + player.getCurrentPosition());
+            syncBufferProgress();
+            if (!playing) {
+                return;
+            }
+            buffering = false;
+            showPlaying();
+            startProgressTicker();
+        }
+
+        @Override
+        public void onPlayerError(@NonNull PlaybackException error) {
+            Log.e(TAG, "onPlayerError code=" + error.errorCode + " " + error.getMessage()
+                    + " url=" + audioUrl);
+            resetForError("音频播放失败");
         }
     };
 
@@ -87,14 +172,22 @@ public class PostAudioView extends FrameLayout {
 
     private void init(Context context) {
         LayoutInflater.from(context).inflate(R.layout.view_post_audio, this, true);
+        flPlayBtn = findViewById(R.id.flPlayBtn);
         ivPlay = findViewById(R.id.ivPlay);
         ivPause = findViewById(R.id.ivPause);
         pbLoading = findViewById(R.id.pbLoading);
         waveformSeekBar = findViewById(R.id.waveformSeekBar);
         tvDuration = findViewById(R.id.tvDuration);
 
-        ivPlay.setOnClickListener(v -> play());
-        ivPause.setOnClickListener(v -> pause());
+        ivPlay.setClickable(false);
+        ivPause.setClickable(false);
+        flPlayBtn.setOnClickListener(v -> {
+            if (preparing || buffering || isPlaying()) {
+                pause();
+            } else {
+                play();
+            }
+        });
         waveformSeekBar.setOnSeekListener(new WaveformSeekBar.OnSeekListener() {
             @Override
             public void onSeekStart() {
@@ -115,40 +208,34 @@ public class PostAudioView extends FrameLayout {
             @Override
             public void onSeekCancel() {
                 seekDragging = false;
+                if (prepared && player != null) {
+                    updateProgressUi();
+                }
             }
         });
         showIdle();
     }
 
-    /**
-     * 绑定音频地址：立即生成波形，并异步拉时长（与播放互斥，避免抢连接）。
-     */
     public void setAudioUrl(String url) {
         if (TextUtils.equals(audioUrl, url) && (prepared || preparing)) {
             return;
         }
         Log.d(TAG, "setAudioUrl=" + url);
-        // 换绑前若自己是当前播放者，先从 Manager 摘掉，避免野指针
         if (isCurrentPlayer()) {
             AudioPlayManager.get().onStop(this);
         }
         releasePlayer();
         audioUrl = url;
-        prepared = false;
-        preparing = false;
         durationMs = 0;
         bufferPercent = 0;
         pendingSeekPercent = -1f;
-        playAfterPrepare = false;
-        prepareRetry = 0;
-        buffering = false;
+        playWhenReady = false;
         seekDragging = false;
         waveformSeekBar.setWaveFromUrl(url == null ? "" : url);
         waveformSeekBar.setProgressPercent(0f);
         waveformSeekBar.setBufferPercent(0f);
         tvDuration.setText("加载中...");
         showIdle();
-        // 初始化拉时长期间禁止拖波形；播放按钮仍可点
         setWaveSeekEnabled(false);
         fetchDuration(url);
     }
@@ -158,38 +245,7 @@ public class PostAudioView extends FrameLayout {
     }
 
     public void play() {
-        // 播放键：从当前位置续播，不带拖动 seek
         playFrom(-1f);
-    }
-
-    private void playFrom(float seekPercent) {
-        if (TextUtils.isEmpty(audioUrl) || !isAttachedToWindow()) {
-            return;
-        }
-        // 已在播且只是点播放键：忽略，避免快速连点反复 start
-        if (seekPercent < 0f && isPlaying() && isCurrentPlayer()) {
-            Log.d(TAG, "playFrom ignore already playing");
-            return;
-        }
-        Log.d(TAG, "playFrom seek=" + seekPercent
-                + " prepared=" + prepared + " preparing=" + preparing + " url=" + audioUrl);
-        AudioPlayManager.get().requestPlay(this);
-        if (seekPercent >= 0f) {
-            pendingSeekPercent = seekPercent;
-        } else {
-            pendingSeekPercent = -1f;
-        }
-        if (prepared && mediaPlayer != null) {
-            seekThenStart();
-            return;
-        }
-        if (preparing) {
-            playAfterPrepare = true;
-            return;
-        }
-        playAfterPrepare = true;
-        prepareRetry = 0;
-        preparePlayer();
     }
 
     private void seekAndPlay(float percent) {
@@ -197,68 +253,79 @@ public class PostAudioView extends FrameLayout {
             return;
         }
         pendingSeekPercent = percent;
+        waveformSeekBar.setProgressPercent(percent);
         refreshTimeText(percent);
         playFrom(percent);
     }
 
-    public void pause() {
-        // 加载中用户点停：直接取消 prepare，释放网络
-        if (preparing) {
-            Log.d(TAG, "pause cancel preparing");
-            abortPreparing(true);
+    private void playFrom(float seekPercent) {
+        if (TextUtils.isEmpty(audioUrl) || !isAttachedToWindow()) {
             return;
         }
+        // 已在播且只是点播放：忽略
+        if (seekPercent < 0f && isPlaying() && isCurrentPlayer()) {
+            Log.d(TAG, "playFrom ignore already playing");
+            return;
+        }
+        Log.d(TAG, "playFrom seek=" + seekPercent
+                + " prepared=" + prepared + " preparing=" + preparing
+                + " url=" + audioUrl);
+        AudioPlayManager.get().requestPlay(this);
+        if (seekPercent >= 0f) {
+            pendingSeekPercent = seekPercent;
+        } else if (!preparing) {
+            pendingSeekPercent = -1f;
+        }
+        playWhenReady = true;
+
+        if (prepared && player != null) {
+            if (seekPercent >= 0f) {
+                // 连点不同进度：合并成最后一次再 seekTo
+                waveformSeekBar.setProgressPercent(seekPercent);
+                seekHoldPercent = seekPercent;
+                seekHoldUntilElapsed = SystemClock.elapsedRealtime() + SEEK_HOLD_MS;
+                handler.removeCallbacks(coalesceSeekRunnable);
+                handler.postDelayed(coalesceSeekRunnable, SEEK_COALESCE_MS);
+                Log.d(TAG, "playFrom coalesce seek=" + seekPercent);
+            } else {
+                player.setPlayWhenReady(true);
+                showPlaying();
+                startProgressTicker();
+            }
+            return;
+        }
+        if (preparing) {
+            // 加载中又点了波形：只更新 pendingSeek，READY 后跳最后一次
+            Log.d(TAG, "playFrom preparing, keep pending=" + pendingSeekPercent);
+            return;
+        }
+        preparePlayer();
+    }
+
+    public void pause() {
         pauseInternal(true);
     }
 
     void pauseByManager() {
-        Log.d(TAG, "pauseByManager preparing=" + preparing + " url=" + audioUrl);
-        if (preparing) {
-            abortPreparing(false);
-            return;
-        }
         pauseInternal(false);
     }
 
-    /** 取消进行中的 prepare，回到空闲 */
-    private void abortPreparing(boolean notifyManager) {
-        cancelPendingStart();
-        preparing = false;
-        prepareToken++;
-        handler.removeCallbacks(prepareTimeout);
-        releasePlayerOnly();
-        prepared = false;
-        if (notifyManager) {
-            AudioPlayManager.get().onStop(this);
-        }
-        showIdle();
-    }
-
-    /** 取消未完成的 start/seek 意图，不释放已 prepare 的播放器 */
-    private void cancelPendingStart() {
-        playSession++;
-        playAfterPrepare = false;
+    private void pauseInternal(boolean notifyManager) {
+        Log.d(TAG, "pause notifyManager=" + notifyManager
+                + " preparing=" + preparing + " url=" + audioUrl);
+        playWhenReady = false;
         pendingSeekPercent = -1f;
+        seekHoldPercent = -1f;
         buffering = false;
         handler.removeCallbacks(progressTicker);
         handler.removeCallbacks(prepareTimeout);
-        if (mediaPlayer != null) {
-            try {
-                mediaPlayer.setOnSeekCompleteListener(null);
-            } catch (Exception ignored) {
-            }
-        }
-        Log.d(TAG, "cancelPendingStart session=" + playSession);
-    }
-
-    private void pauseInternal(boolean notifyManager) {
-        cancelPendingStart();
-        try {
-            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                mediaPlayer.pause();
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "pause error: " + e.getMessage());
+        handler.removeCallbacks(coalesceSeekRunnable);
+        if (preparing) {
+            preparing = false;
+            releasePlayerOnly();
+            prepared = false;
+        } else if (player != null) {
+            player.setPlayWhenReady(false);
         }
         if (notifyManager) {
             AudioPlayManager.get().onStop(this);
@@ -266,25 +333,122 @@ public class PostAudioView extends FrameLayout {
         showIdle();
     }
 
-    private final Runnable prepareTimeout = () -> {
-        if (!preparing) {
+    private void preparePlayer() {
+        if (TextUtils.isEmpty(audioUrl)) {
             return;
         }
-        Log.e(TAG, "prepare timeout url=" + audioUrl);
-        playSession++;
-        preparing = false;
-        playAfterPrepare = false;
-        pendingSeekPercent = -1f;
-        buffering = false;
-        prepareToken++;
-        releasePlayerOnly();
+        // 避免和拉时长抢同一连接
+        abortDurationFetch();
+        preparing = true;
         prepared = false;
+        showLoading();
+        releasePlayerOnly();
+
+        player = new ExoPlayer.Builder(getContext()).build();
+        player.addListener(playerListener);
+        player.setMediaItem(MediaItem.fromUri(Uri.parse(audioUrl)));
+        player.setPlayWhenReady(playWhenReady);
+        Log.d(TAG, "prepare playWhenReady=" + playWhenReady
+                + " pendingSeek=" + pendingSeekPercent + " url=" + audioUrl);
+        handler.removeCallbacks(prepareTimeout);
+        handler.postDelayed(prepareTimeout, PREPARE_TIMEOUT_MS);
+        player.prepare();
+        startProgressTicker();
+    }
+
+    private void onPlayerReady() {
+        preparing = false;
+        prepared = true;
+        handler.removeCallbacks(prepareTimeout);
+        long d = player.getDuration();
+        if (isDurationValid(d)) {
+            durationMs = (int) d;
+        }
+        buffering = false;
+        Log.d(TAG, "onReady duration=" + durationMs
+                + " pendingSeek=" + pendingSeekPercent
+                + " current=" + isCurrentPlayer());
+
+        // 准备完成时已不是当前播放者（被其它条目抢播）
+        if (!isCurrentPlayer()) {
+            Log.d(TAG, "onReady lost focus, pause");
+            playWhenReady = false;
+            pendingSeekPercent = -1f;
+            player.setPlayWhenReady(false);
+            showIdle();
+            return;
+        }
+
+        applyPendingSeekIfNeeded();
+        if (player.getPlayWhenReady()) {
+            showPlaying();
+            startProgressTicker();
+        } else {
+            showIdle();
+        }
+        refreshTimeText(uiPercent());
+        setWaveSeekEnabled(true);
+    }
+
+    private void onPlayerEnded() {
+        Log.d(TAG, "onEnded url=" + audioUrl);
+        handler.removeCallbacks(progressTicker);
+        handler.removeCallbacks(coalesceSeekRunnable);
+        buffering = false;
+        playWhenReady = false;
+        pendingSeekPercent = -1f;
+        seekHoldPercent = -1f;
+        bufferPercent = 0;
+        waveformSeekBar.setProgressPercent(0f);
+        waveformSeekBar.setBufferPercent(0f);
+        if (player != null) {
+            player.seekTo(0);
+            player.setPlayWhenReady(false);
+        }
+        AudioPlayManager.get().onStop(this);
+        refreshTimeText(0f);
+        showIdle();
+    }
+
+    private void applyPendingSeekIfNeeded() {
+        if (player == null || pendingSeekPercent < 0f) {
+            return;
+        }
+        long duration = player.getDuration();
+        if (!isDurationValid(duration)) {
+            duration = durationMs;
+        }
+        if (!isDurationValid(duration)) {
+            return;
+        }
+        float seek = pendingSeekPercent;
+        long position = (long) (duration * seek);
+        position = Math.max(0L, Math.min(duration - 1, position));
+        Log.d(TAG, "seekTo " + position + "/" + duration);
+        waveformSeekBar.setProgressPercent(seek);
+        seekHoldPercent = seek;
+        seekHoldUntilElapsed = SystemClock.elapsedRealtime() + SEEK_HOLD_MS;
+        player.seekTo(position);
+        pendingSeekPercent = -1f;
+    }
+
+    private void resetForError(String toast) {
+        handler.removeCallbacks(prepareTimeout);
+        handler.removeCallbacks(progressTicker);
+        handler.removeCallbacks(coalesceSeekRunnable);
+        preparing = false;
+        prepared = false;
+        buffering = false;
+        playWhenReady = false;
+        pendingSeekPercent = -1f;
+        seekHoldPercent = -1f;
+        releasePlayerOnly();
         showIdle();
         if (isCurrentPlayer()) {
+            Toast.makeText(getContext(), toast, Toast.LENGTH_SHORT).show();
             AudioPlayManager.get().onStop(this);
-            Toast.makeText(getContext(), "音频加载超时", Toast.LENGTH_SHORT).show();
         }
-    };
+    }
 
     private boolean isCurrentPlayer() {
         return AudioPlayManager.get().getCurrent() == this;
@@ -292,7 +456,7 @@ public class PostAudioView extends FrameLayout {
 
     public boolean isPlaying() {
         try {
-            return mediaPlayer != null && mediaPlayer.isPlaying();
+            return player != null && player.isPlaying();
         } catch (Exception e) {
             return false;
         }
@@ -303,9 +467,10 @@ public class PostAudioView extends FrameLayout {
         if (pbLoading != null) {
             pbLoading.animate().cancel();
         }
-        pauseInternal(true);
+        if (isCurrentPlayer()) {
+            AudioPlayManager.get().onStop(this);
+        }
         releasePlayer();
-        AudioPlayManager.get().onStop(this);
     }
 
     private void fetchDuration(String url) {
@@ -322,7 +487,6 @@ public class PostAudioView extends FrameLayout {
             }
             int ms = 0;
             try {
-                Log.d(TAG, "fetchDuration start token=" + token + " url=" + target);
                 if (target.startsWith("http")) {
                     retriever.setDataSource(target, new HashMap<>());
                 } else {
@@ -332,9 +496,8 @@ public class PostAudioView extends FrameLayout {
                 if (!TextUtils.isEmpty(value)) {
                     ms = Integer.parseInt(value);
                 }
-                Log.d(TAG, "fetchDuration ok token=" + token + " duration=" + ms);
             } catch (Exception e) {
-                Log.e(TAG, "fetchDuration fail token=" + token + " msg=" + e.getMessage());
+                Log.e(TAG, "fetchDuration: " + e.getMessage());
             } finally {
                 synchronized (this) {
                     if (durationRetriever == retriever) {
@@ -351,7 +514,7 @@ public class PostAudioView extends FrameLayout {
                 if (token != durationToken || !TextUtils.equals(audioUrl, target)) {
                     return;
                 }
-                if (duration > 0 && !(prepared && mediaPlayer != null)) {
+                if (duration > 0 && !prepared) {
                     durationMs = duration;
                     if (!seekDragging) {
                         refreshTimeText(waveformSeekBar.getProgressPercent());
@@ -359,7 +522,6 @@ public class PostAudioView extends FrameLayout {
                 } else if (durationMs <= 0) {
                     tvDuration.setText("00:00 / --:--");
                 }
-                // 时长拉完且未在 prepare，恢复波形拖动
                 if (!preparing) {
                     setWaveSeekEnabled(true);
                 }
@@ -369,11 +531,9 @@ public class PostAudioView extends FrameLayout {
 
     private synchronized void abortDurationFetchLocked() {
         if (durationRetriever != null) {
-            Log.d(TAG, "abortDurationFetch");
             try {
                 durationRetriever.release();
-            } catch (Exception e) {
-                Log.e(TAG, "abortDurationFetch error: " + e.getMessage());
+            } catch (Exception ignored) {
             }
             durationRetriever = null;
         }
@@ -386,324 +546,134 @@ public class PostAudioView extends FrameLayout {
         }
     }
 
-    private void preparePlayer() {
-        if (TextUtils.isEmpty(audioUrl)) {
-            return;
-        }
-        // 先掐掉拉时长，避免和 MediaPlayer 抢同一 url 连接（偶发 what=1 extra=-1004）
-        abortDurationFetch();
-
-        preparing = true;
-        final int token = ++prepareToken;
-        final String targetUrl = audioUrl;
-        showLoading();
-        releasePlayerOnly();
-        mediaPlayer = new MediaPlayer();
-        Log.d(TAG, "prepareAsync token=" + token + " playAfter=" + playAfterPrepare
-                + " url=" + targetUrl);
-        handler.removeCallbacks(prepareTimeout);
-        handler.postDelayed(prepareTimeout, PREPARE_TIMEOUT_MS);
-        try {
-            mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build());
-            mediaPlayer.setDataSource(targetUrl);
-            mediaPlayer.setOnBufferingUpdateListener((mp, percent) -> {
-                if (token != prepareToken) {
-                    return;
-                }
-                bufferPercent = Math.max(0, Math.min(100, percent));
-                waveformSeekBar.setBufferPercent(bufferPercent / 100f);
-                // prepare / 播放卡顿时都刷新文案
-                if (preparing || buffering) {
-                    refreshTimeText(waveformSeekBar.getProgressPercent());
-                }
-            });
-            mediaPlayer.setOnInfoListener((mp, what, extra) -> {
-                if (token != prepareToken || !isCurrentPlayer()) {
-                    return false;
-                }
-                if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START) {
-                    Log.d(TAG, "buffering start");
-                    buffering = true;
-                    if (isPlaying()) {
-                        showBuffering();
-                    }
-                    refreshTimeText(waveformSeekBar.getProgressPercent());
-                    return true;
-                }
-                if (what == MediaPlayer.MEDIA_INFO_BUFFERING_END) {
-                    Log.d(TAG, "buffering end percent=" + bufferPercent);
-                    buffering = false;
-                    if (isPlaying() && isCurrentPlayer()) {
-                        showPlaying();
-                    }
-                    refreshTimeText(waveformSeekBar.getProgressPercent());
-                    return true;
-                }
-                return false;
-            });
-            mediaPlayer.setOnPreparedListener(mp -> {
-                if (token != prepareToken || !TextUtils.equals(audioUrl, targetUrl)) {
-                    Log.d(TAG, "onPrepared ignore stale token=" + token);
-                    return;
-                }
-                handler.removeCallbacks(prepareTimeout);
-                preparing = false;
-                prepared = true;
-                prepareRetry = 0;
-                durationMs = mp.getDuration();
-                Log.d(TAG, "onPrepared ok duration=" + durationMs
-                        + " playAfter=" + playAfterPrepare + " current=" + isCurrentPlayer());
-                refreshTimeText(waveformSeekBar.getProgressPercent());
-                if (playAfterPrepare && isCurrentPlayer() && isAttachedToWindow()) {
-                    playAfterPrepare = false;
-                    seekThenStart();
-                } else {
-                    // 已被其它条目抢播 / 取消 / 已 detach
-                    playAfterPrepare = false;
-                    buffering = false;
-                    showIdle();
-                }
-            });
-            mediaPlayer.setOnCompletionListener(mp -> {
-                if (token != prepareToken) {
-                    return;
-                }
-                handler.removeCallbacks(progressTicker);
-                buffering = false;
-                pendingSeekPercent = -1f;
-                bufferPercent = 0;
-                waveformSeekBar.setProgressPercent(0f);
-                waveformSeekBar.setBufferPercent(0f);
-                try {
-                    mp.seekTo(0);
-                } catch (Exception ignored) {
-                }
-                AudioPlayManager.get().onStop(this);
-                refreshTimeText(0f);
-                showIdle();
-            });
-            mediaPlayer.setOnErrorListener((mp, what, extra) -> {
-                if (token != prepareToken) {
-                    Log.d(TAG, "onError ignore stale token=" + token);
-                    return true;
-                }
-                // what: 1=MEDIA_ERROR_UNKNOWN, 100=SERVER_DIED
-                // extra: -1004=IO, -1007=MALFORMED, -1010=UNSUPPORTED, -110=TIMED_OUT
-                Log.e(TAG, "onError what=" + what + " extra=" + extra
-                        + " retry=" + prepareRetry + " url=" + targetUrl);
-                handler.removeCallbacks(prepareTimeout);
-                preparing = false;
-                buffering = false;
-                prepared = false;
-                releasePlayerOnly();
-
-                if (prepareRetry < MAX_PREPARE_RETRY
-                        && TextUtils.equals(audioUrl, targetUrl)
-                        && isAttachedToWindow()) {
-                    prepareRetry++;
-                    // 错误时 playAfterPrepare 可能已被清空，以是否仍是当前播放者为准
-                    final boolean needPlay = isCurrentPlayer();
-                    Log.d(TAG, "auto retry prepare #" + prepareRetry + " needPlay=" + needPlay);
-                    handler.postDelayed(() -> {
-                        if (token != prepareToken || !TextUtils.equals(audioUrl, targetUrl)) {
-                            return;
-                        }
-                        if (!isAttachedToWindow() || prepared || preparing) {
-                            return;
-                        }
-                        // 已非当前且不需要播：不再重试，避免后台空转
-                        if (!needPlay && !isCurrentPlayer()) {
-                            showIdle();
-                            return;
-                        }
-                        playAfterPrepare = needPlay || isCurrentPlayer();
-                        preparePlayer();
-                    }, 350);
-                    return true;
-                }
-
-                playAfterPrepare = false;
-                showIdle();
-                if (isCurrentPlayer()) {
-                    Toast.makeText(getContext(), "音频播放失败", Toast.LENGTH_SHORT).show();
-                    AudioPlayManager.get().onStop(this);
-                }
-                return true;
-            });
-            mediaPlayer.prepareAsync();
-        } catch (Exception e) {
-            Log.e(TAG, "prepare exception: " + e.getMessage() + " url=" + targetUrl);
-            handler.removeCallbacks(prepareTimeout);
-            preparing = false;
-            prepared = false;
-            playAfterPrepare = false;
-            releasePlayerOnly();
-            showIdle();
-            if (isCurrentPlayer()) {
-                Toast.makeText(getContext(), "音频加载失败", Toast.LENGTH_SHORT).show();
-                AudioPlayManager.get().onStop(this);
-            }
-        }
+    private void startProgressTicker() {
+        handler.removeCallbacks(progressTicker);
+        handler.post(progressTicker);
     }
 
-    /**
-     * 先 start 再异步 seek。网络流「先 seek 再等 complete」容易长时间转圈甚至 onError。
-     */
-    private void seekThenStart() {
-        if (mediaPlayer == null || !prepared || !isCurrentPlayer() || !isAttachedToWindow()) {
-            showIdle();
-            return;
-        }
-        final int session = playSession;
-        final float seek = pendingSeekPercent;
-        pendingSeekPercent = -1f;
-
-        startPlayback(session);
-        if (session != playSession || mediaPlayer == null || !isCurrentPlayer()) {
-            return;
-        }
-        if (seek < 0f) {
-            return;
-        }
-        int duration = mediaPlayer.getDuration();
-        if (duration <= 0) {
-            return;
-        }
-        final int position = (int) (duration * seek);
-        if (position <= 120) {
-            return;
-        }
-        waveformSeekBar.setProgressPercent(seek);
-        Log.d(TAG, "seekAfterStart pos=" + position + "/" + duration + " session=" + session);
-        try {
-            // 不阻塞 UI；seek 失败也不影响已 start 的播放
-            mediaPlayer.seekTo(position);
-        } catch (Exception e) {
-            Log.e(TAG, "seekTo error: " + e.getMessage());
-        }
-    }
-
-    private void startPlayback(int session) {
-        if (session != playSession || !isCurrentPlayer() || !isAttachedToWindow()) {
-            Log.d(TAG, "startPlayback ignored stale session=" + session);
-            return;
-        }
-        try {
-            if (mediaPlayer == null) {
-                return;
-            }
-            mediaPlayer.start();
-            Log.d(TAG, "start ok session=" + session);
-            buffering = false;
-            showPlaying();
-            handler.removeCallbacks(progressTicker);
-            handler.post(progressTicker);
-        } catch (Exception e) {
-            Log.e(TAG, "start error: " + e.getMessage());
-            buffering = false;
-            showIdle();
-            if (isCurrentPlayer()) {
-                AudioPlayManager.get().onStop(this);
+    private float uiPercent() {
+        if (player != null && prepared) {
+            long d = player.getDuration();
+            if (isDurationValid(d)) {
+                return clamp01(player.getCurrentPosition() * 1f / d);
             }
         }
+        return waveformSeekBar.getProgressPercent();
     }
 
     private void updateProgressUi() {
-        if (seekDragging || mediaPlayer == null || !prepared) {
+        if (player == null) {
             return;
         }
-        int duration = mediaPlayer.getDuration();
-        int position = mediaPlayer.getCurrentPosition();
-        if (duration <= 0) {
+        syncBufferProgress();
+        if (seekDragging || !prepared) {
+            if (preparing || buffering) {
+                refreshTimeText(seekHoldPercent >= 0f
+                        ? seekHoldPercent
+                        : waveformSeekBar.getProgressPercent());
+            }
             return;
         }
-        durationMs = duration;
-        waveformSeekBar.setProgressPercent(position * 1f / duration);
-        refreshTimeText(position * 1f / duration);
+        long duration = player.getDuration();
+        if (!isDurationValid(duration)) {
+            return;
+        }
+        durationMs = (int) duration;
+        float actual = clamp01(player.getCurrentPosition() * 1f / duration);
+        // 连点/seek 后：未落地前 UI 停在目标点，避免闪回旧进度
+        if (seekHoldPercent >= 0f) {
+            float target = seekHoldPercent;
+            long slackMs = Math.max(1200L, (long) (duration * 0.03f));
+            boolean landed = Math.abs(player.getCurrentPosition() - (long) (duration * target))
+                    <= slackMs;
+            if (!landed && SystemClock.elapsedRealtime() < seekHoldUntilElapsed) {
+                waveformSeekBar.setProgressPercent(target);
+                refreshTimeText(target);
+                return;
+            }
+            seekHoldPercent = -1f;
+        }
+        waveformSeekBar.setProgressPercent(actual);
+        refreshTimeText(actual);
+    }
+
+    /** 同步波形已缓冲段 + 文案百分比 */
+    private void syncBufferProgress() {
+        if (player == null) {
+            return;
+        }
+        int percent = player.getBufferedPercentage();
+        if (percent <= 0) {
+            long duration = player.getDuration();
+            long buffered = player.getBufferedPosition();
+            if (isDurationValid(duration) && buffered > 0) {
+                percent = (int) Math.max(0, Math.min(100, buffered * 100f / duration));
+            }
+        }
+        bufferPercent = Math.max(0, Math.min(100, percent));
+        waveformSeekBar.setBufferPercent(bufferPercent / 100f);
     }
 
     private void refreshTimeText(float percent) {
         int duration = durationMs;
-        if (prepared && mediaPlayer != null) {
-            try {
-                int d = mediaPlayer.getDuration();
-                if (d > 0) {
-                    duration = d;
-                    durationMs = d;
-                }
-            } catch (Exception ignored) {
+        if (prepared && player != null) {
+            long d = player.getDuration();
+            if (isDurationValid(d)) {
+                duration = (int) d;
+                durationMs = duration;
             }
         }
         if (preparing) {
-            if (bufferPercent > 0) {
-                tvDuration.setText("缓冲中 " + bufferPercent + "%");
-            } else {
-                tvDuration.setText("加载中...");
-            }
+            tvDuration.setText(bufferPercent > 0 ? ("缓冲中 " + bufferPercent + "%") : "加载中...");
             return;
         }
         if (duration <= 0) {
-            tvDuration.setText(buffering ? ("缓冲中 " + Math.max(bufferPercent, 0) + "%") : "00:00 / --:--");
+            tvDuration.setText(buffering ? ("缓冲中 " + bufferPercent + "%") : "00:00 / --:--");
             return;
         }
-        float p = Math.max(0f, Math.min(1f, percent));
-        int position = (int) (duration * p);
-        String time = formatTime(position) + " / " + formatTime(duration);
-        if (buffering) {
-            tvDuration.setText(time + "  缓冲" + bufferPercent + "%");
-        } else {
-            tvDuration.setText(time);
-        }
+        String time = formatTime((int) (duration * clamp01(percent))) + " / " + formatTime(duration);
+        tvDuration.setText(buffering ? (time + "  缓冲" + bufferPercent + "%") : time);
     }
 
     private void showIdle() {
         buffering = false;
         pbLoading.animate().cancel();
-        ivPlay.setVisibility(View.VISIBLE);
-        ivPlay.setAlpha(1f);
-        ivPause.setVisibility(View.GONE);
-        pbLoading.setVisibility(View.GONE);
-        pbLoading.setAlpha(1f);
+        ivPlay.setVisibility(VISIBLE);
+        ivPause.setVisibility(GONE);
+        pbLoading.setVisibility(GONE);
         setWaveSeekEnabled(true);
     }
 
     private void showPlaying() {
         buffering = false;
         pbLoading.animate().cancel();
-        ivPlay.setVisibility(View.GONE);
-        ivPause.setVisibility(View.VISIBLE);
-        ivPause.setAlpha(1f);
-        pbLoading.setVisibility(View.GONE);
+        ivPlay.setVisibility(GONE);
+        ivPause.setVisibility(VISIBLE);
+        pbLoading.setVisibility(GONE);
         setWaveSeekEnabled(true);
     }
 
     private void showLoading() {
-        // 圆底始终在 flPlayBtn 上；图标 INVISIBLE 占位，转圈淡入，避免空白闪一下
-        ivPlay.setVisibility(View.INVISIBLE);
-        ivPause.setVisibility(View.GONE);
+        ivPlay.setVisibility(INVISIBLE);
+        ivPause.setVisibility(GONE);
         pbLoading.animate().cancel();
-        pbLoading.setVisibility(View.VISIBLE);
         pbLoading.setAlpha(0f);
+        pbLoading.setVisibility(VISIBLE);
         pbLoading.animate().alpha(1f).setDuration(160).start();
         setWaveSeekEnabled(false);
         refreshTimeText(waveformSeekBar.getProgressPercent());
     }
 
-    /** 播放过程中缓冲：转圈 + 保留可点暂停区域逻辑（转圈盖住） */
     private void showBuffering() {
-        ivPlay.setVisibility(View.GONE);
-        ivPause.setVisibility(View.INVISIBLE);
+        buffering = true;
+        ivPlay.setVisibility(GONE);
+        ivPause.setVisibility(INVISIBLE);
         pbLoading.animate().cancel();
-        pbLoading.setVisibility(View.VISIBLE);
         pbLoading.setAlpha(1f);
-        // 缓冲时仍允许拖进度换位置
+        pbLoading.setVisibility(VISIBLE);
         setWaveSeekEnabled(true);
     }
 
-    /** 加载中禁用波形拖动 */
     private void setWaveSeekEnabled(boolean enabled) {
         if (waveformSeekBar != null) {
             waveformSeekBar.setSeekEnabled(enabled);
@@ -711,43 +681,62 @@ public class PostAudioView extends FrameLayout {
     }
 
     private void releasePlayer() {
-        cancelPendingStart();
+        playWhenReady = false;
+        pendingSeekPercent = -1f;
+        seekHoldPercent = -1f;
+        buffering = false;
+        handler.removeCallbacks(progressTicker);
+        handler.removeCallbacks(prepareTimeout);
+        handler.removeCallbacks(coalesceSeekRunnable);
         abortDurationFetch();
-        prepareToken++;
         releasePlayerOnly();
         prepared = false;
         preparing = false;
-        buffering = false;
         bufferPercent = 0;
-        prepareRetry = 0;
         if (waveformSeekBar != null) {
             waveformSeekBar.setBufferPercent(0f);
         }
     }
 
     private void releasePlayerOnly() {
-        if (mediaPlayer != null) {
-            try {
-                mediaPlayer.setOnPreparedListener(null);
-                mediaPlayer.setOnCompletionListener(null);
-                mediaPlayer.setOnErrorListener(null);
-                mediaPlayer.setOnBufferingUpdateListener(null);
-                mediaPlayer.setOnInfoListener(null);
-                mediaPlayer.setOnSeekCompleteListener(null);
-                mediaPlayer.reset();
-                mediaPlayer.release();
-            } catch (Exception e) {
-                Log.e(TAG, "release error: " + e.getMessage());
-            }
-            mediaPlayer = null;
+        if (player == null) {
+            return;
+        }
+        try {
+            player.removeListener(playerListener);
+            player.release();
+        } catch (Exception e) {
+            Log.e(TAG, "release: " + e.getMessage());
+        }
+        player = null;
+    }
+
+    private static boolean isDurationValid(long duration) {
+        return duration > 0 && duration != C.TIME_UNSET;
+    }
+
+    private static float clamp01(float v) {
+        return Math.max(0f, Math.min(1f, v));
+    }
+
+    private static String stateName(int state) {
+        switch (state) {
+            case Player.STATE_IDLE:
+                return "IDLE";
+            case Player.STATE_BUFFERING:
+                return "BUFFERING";
+            case Player.STATE_READY:
+                return "READY";
+            case Player.STATE_ENDED:
+                return "ENDED";
+            default:
+                return String.valueOf(state);
         }
     }
 
     private static String formatTime(int millis) {
         int totalSec = Math.max(0, millis / 1000);
-        int m = totalSec / 60;
-        int s = totalSec % 60;
-        return String.format("%02d:%02d", m, s);
+        return String.format("%02d:%02d", totalSec / 60, totalSec % 60);
     }
 
     @Override

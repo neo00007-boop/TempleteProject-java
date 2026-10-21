@@ -5,6 +5,8 @@ dependencies {
     implementation project(path: ':library:lib_base')
     annotationProcessor "com.alibaba:arouter-compiler:${config.dependencies.route_version}"
     implementation "androidx.multidex:multidex:${config.dependencies.multidex_version}"
+    // 帖子音频：ExoPlayer（datasource 由 exoplayer 传递依赖带入）
+    implementation "androidx.media3:media3-exoplayer:${config.dependencies.media3_version}"
     //oaid
     implementation(name: 'oaid_sdk_1.0.25', ext: 'aar')
     //只放基础库示例，业务模块示例在 app 的 ModuleSampleActivity；登录页只在运行时提供给登录拦截示例
