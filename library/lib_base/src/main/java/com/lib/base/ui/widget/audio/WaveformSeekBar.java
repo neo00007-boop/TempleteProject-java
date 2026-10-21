@@ -1,4 +1,4 @@
-package com.templete.project.ui.widget.audio;
+package com.lib.base.ui.widget.audio;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -11,7 +11,7 @@ import android.view.View;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
-import com.templete.project.R;
+import com.lib.base.R;
 
 /**
  * 帖子音频波形进度条：柱状波形 + 拖动 seek。

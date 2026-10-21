@@ -1,4 +1,4 @@
-package com.templete.project.ui.widget.audio;
+package com.lib.base.ui.widget.audio;
 
 import android.content.Context;
 import android.media.MediaMetadataRetriever;
@@ -26,7 +26,7 @@ import androidx.media3.common.Player;
 import androidx.media3.exoplayer.ExoPlayer;
 
 import com.lib.base.util.GlobalThreadPoolUtil;
-import com.templete.project.R;
+import com.lib.base.R;
 
 import java.util.HashMap;
 

@@ -1,4 +1,4 @@
-package com.templete.project.ui.widget.audio;
+package com.lib.base.ui.widget.audio;
 
 import android.text.TextUtils;
 

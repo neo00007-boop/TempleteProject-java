@@ -12,8 +12,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.lib.base.ui.activity.BaseActivity;
 import com.templete.project.R;
 import com.templete.project.databinding.ActivityPostAudioBinding;
-import com.templete.project.ui.widget.audio.AudioPlayManager;
-import com.templete.project.ui.widget.audio.PostAudioView;
+import com.lib.base.ui.widget.audio.AudioPlayManager;
+import com.lib.base.ui.widget.audio.PostAudioView;
 
 import java.util.ArrayList;
 import java.util.List;

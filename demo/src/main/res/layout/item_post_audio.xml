@@ -18,7 +18,7 @@
         android:textSize="@dimen/x36"
         tools:text="测试音频 1" />
 
-    <com.templete.project.ui.widget.audio.PostAudioView
+    <com.lib.base.ui.widget.audio.PostAudioView
         android:id="@+id/postAudioView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
