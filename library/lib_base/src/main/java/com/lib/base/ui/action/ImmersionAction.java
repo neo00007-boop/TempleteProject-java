@@ -24,10 +24,10 @@ public interface ImmersionAction extends ContextAction {
     }
 
     /**
-     * 着色状态栏，内容从状态栏下方开始排。
+     * 着色状态栏。
      */
     default void setImmersionBar(int statusBarColor) {
-        applyImmersionBar(statusBarColor, true, darkStatusBarFont());
+        applyImmersionBar(statusBarColor, false, darkStatusBarFont());
     }
 
     /**
