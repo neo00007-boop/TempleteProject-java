@@ -17,7 +17,6 @@ import com.templete.project.ui.activity.PinnedActivity;
 import com.templete.project.ui.activity.ScrollActivity;
 import com.templete.project.ui.activity.SunFreshActivity;
 import com.templete.project.ui.activity.TranslateActivity;
-import com.templete.project.ui.activity.WrapActivity;
 
 /**
  * Demo 第三页：列表刷新。
@@ -70,9 +69,9 @@ public class ThirdFragment extends BaseFragment<ThirdFragmentBinding> {
                         clazz = IndexActivity.class;
                     } else if (v.equals(mViewBinding.tv11)) {
                         clazz = PinnedActivity.class;
-                    } else if (v.equals(mViewBinding.tv12)) {
+                    }/* else if (v.equals(mViewBinding.tv12)) {
                         clazz = WrapActivity.class;
-                    }
+                    }*/
                     if (clazz != null) {
                         ((BaseActivity<?>) requireActivity()).startAty(requireActivity(), clazz);
                     }
@@ -80,7 +79,7 @@ public class ThirdFragment extends BaseFragment<ThirdFragmentBinding> {
                 mViewBinding.tv1, mViewBinding.tv2, mViewBinding.tv3,
                 mViewBinding.tv4, mViewBinding.tv5, mViewBinding.tv6,
                 mViewBinding.tv7, mViewBinding.tv8, mViewBinding.tv9,
-                mViewBinding.tv10, mViewBinding.tv11, mViewBinding.tv12);
+                mViewBinding.tv10, mViewBinding.tv11/*, mViewBinding.tv12*/);
     }
 
     @Override
