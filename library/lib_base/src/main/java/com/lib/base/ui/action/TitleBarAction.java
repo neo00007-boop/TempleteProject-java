@@ -8,37 +8,29 @@ import com.lib.base.ui.activity.TitleBarTheme;
 import com.lib.base.ui.widget.TitleBar;
 
 /**
- * 处理TitleBar{@link TitleBar}
- * ProjectName  TempleteProject-java
- * PackageName  com.lib.base.ui.action
- *
- * @author xwchen
- * Date         2022/1/27.
+ * 处理 {@link TitleBar}：主题、返回、标题、右侧按钮。
+ * <p>
+ * 状态栏图标深浅默认跟随 {@link #getTitleTheme()}，无需再手写蓝/白两套。
  */
+public interface TitleBarAction extends ImmersionAction {
 
-public interface TitleBarAction extends ImmersionAvtion {
-    /**
-     * 获取TitleBar,结果可能为空
-     *
-     * @return
-     */
     TitleBar getTitleBar();
 
     /**
-     * 获取TitleBar主题
-     *
-     * @return
+     * 标题栏主题，默认蓝底。无标题栏返回 {@link TitleBarTheme#THEME_NONE}。
      */
     default int getTitleTheme() {
         return TitleBarTheme.THEME_BLUE;
     }
 
     /**
-     * 初始化TitleBar
-     *
-     * @param context
-     * @param theme
+     * 状态栏图标是否深色：跟标题栏主题走（白底深色 / 蓝底浅色）。
      */
+    @Override
+    default boolean darkStatusBarFont() {
+        return TitleBarTheme.darkStatusBarFont(getTitleTheme());
+    }
+
     default void initTitleBar(Context context, int theme) {
         TitleBar titleBar = getTitleBar();
         titleBar.initView(context, theme);
@@ -51,71 +43,40 @@ public interface TitleBarAction extends ImmersionAvtion {
     }
 
     /**
-     * 返回键或标题栏返回按钮事件
-     *
-     * @param keyBack true返回键返回,false标题返回
-     * @return 注意return true时候, 如果是返回键返回会消费返回事件;标题返回无影响
+     * @param keyBack true 系统返回键，false 标题栏返回
+     * @return true 消费事件（仅对返回键有意义）
      */
     default boolean actionTitleBackClick(boolean keyBack) {
         return false;
     }
 
-    /**
-     * 关闭activity事件
-     */
     void actionFinish();
 
-    /**
-     * 默认不拦截标题栏返回事件
-     *
-     * @return
-     */
     default boolean backClickIntercept() {
         return false;
     }
 
-    /**
-     * 设置返回文字
-     *
-     * @param str
-     */
     default void setBackStr(String str) {
         hasTitle();
         getTitleBar().setBackStr(str);
     }
 
-    /**
-     * 是否使用了TitleBar
-     */
     default void hasTitle() {
         if (getTitleBar() == null) {
             throw new RuntimeException("no title");
         }
     }
 
-    /**
-     * 隐藏箭头
-     *
-     * @param strBack 返回str
-     */
     default void setLeftStrWithNoArrow(String strBack) {
         hasTitle();
         getTitleBar().setLeftWithNoArrow(strBack);
     }
 
-    /**
-     * 隐藏返回按钮
-     */
     default void hideBackView() {
         hasTitle();
         getTitleBar().hideBackView();
     }
 
-    /**
-     * 设置标题名字
-     *
-     * @param titleName 标题str
-     */
     default void setTitleStr(String titleName) {
         hasTitle();
         if (!TextUtils.isEmpty(titleName)) {
@@ -123,11 +84,6 @@ public interface TitleBarAction extends ImmersionAvtion {
         }
     }
 
-    /**
-     * 设置标题名字+加粗
-     *
-     * @param titleName 标题str
-     */
     default void setTitleStrWithBold(String titleName) {
         hasTitle();
         if (!TextUtils.isEmpty(titleName)) {
@@ -136,33 +92,23 @@ public interface TitleBarAction extends ImmersionAvtion {
     }
 
     /**
-     * 标题栏右侧添加点击view和点击事件回调:
-     * 1.两个以下时直接添加按钮;
-     * 2.超过两个时直接添加PopView.
-     *
-     * @param onRightClickViewsListener 事件监听
-     * @param hasSelect                 勾选
-     * @param rightClickViews           资源,可以传R.drawble.xxx,string,view
+     * 右侧按钮：≤2 直接展示，&gt;2 收进 Pop。
      */
-    default void setRightClickViews(TitleBar.OnRightViewsClickListener onRightClickViewsListener, boolean hasSelect, BtnBean... rightClickViews) {
+    default void setRightClickViews(TitleBar.OnRightViewsClickListener onRightClickViewsListener,
+                                    boolean hasSelect, BtnBean... rightClickViews) {
         hasTitle();
         if (null != rightClickViews && rightClickViews.length > 0 && null != onRightClickViewsListener) {
             getTitleBar().setRightClickViews(onRightClickViewsListener, hasSelect, rightClickViews);
         }
     }
 
-    /**
-     * 清除右上角按钮
-     */
     default void clearRightBtns() {
         hasTitle();
         getTitleBar().clearRightBtns();
     }
 
     /**
-     * 标题栏设置背景图
-     *
-     * @param backGroundResource
+     * 标题栏铺背景图：透明状态栏 + 内部 StatuesBar 占位。
      */
     default void setTitleBg(int backGroundResource) {
         hasTitle();

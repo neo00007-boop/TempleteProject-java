@@ -33,11 +33,6 @@ public class ImmersionActivity extends BaseActivity<ImmersionActivityBinding> {
     }
 
     @Override
-    public boolean darkStatusBarFont() {
-        return true;
-    }
-
-    @Override
     public void initView() {
         mViewBinding.tv1.setOnClickListener(v -> {
             setTitleStr("我是设置的标题");

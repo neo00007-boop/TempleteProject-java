@@ -65,7 +65,7 @@ description: TempleteProject 工程 library 目录下各基础库（lib_base、l
 - **config**：`App`（Application 基类，已完成启动初始化、网络、Toast、全局 ViewModel）、`AppConfig`（地址、SP 键）、`ActivityLifecycleCallback`
 - **ui/activity**：`BaseActivity`、`BaseMvvmActivity`、`BaseMvpActivity`、`BaseFreshActivity`、`BaseFreshListActivity`、`VideoPlayActivity`
 - **ui/fragment**：`BaseFragment`、`BaseMvvmFragment`、`BaseMvpFragment`、`BaseFreshFragment`、`BaseFreshListFragment`
-- **ui/action**（基类已实现的能力接口）：`ToastAction`、`LogAction`、`TitleBarAction`、`StatusAction`（占位视图）、`KeyboardAction`、`HandlerAction`、`ClickAction`、`ImmersionAvtion`、`IntentAction`、`BundleAction`、`AnimAction`
+- **ui/action**（基类已实现的能力接口）：`ToastAction`、`LogAction`、`TitleBarAction`、`StatusAction`（占位视图）、`KeyboardAction`、`HandlerAction`、`ClickAction`、`ImmersionAction`、`IntentAction`、`BundleAction`、`AnimAction`
 - **ui/fresh**：`FreshListKit`（刷新分页列表的通用实现）、`FreshListEmptySupport`
 - **ui/dialog**：`BaseDialog`（Builder 基类）、`MessageDialog`、`ConfirmDialog`、`CommonDialog`、`InputDialog`、`MenuDialog`、`SelectDialog`、`DateDialog`、`TimeDialog`、`AddressDialog`、`ShareDialog`、`UpdateDialog`、`PayPasswordDialog`、`TipsDialog`、`WaitDialog`、`LoadingDialog`、`BottomSheetDialog`、`PhotoSelBottomDialog`、`SafeDialog`；`DialogManager`（弹窗队列）；`@SingleClick`
 - **ui/pop**：`PopView`、`PopMenuView`

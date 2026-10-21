@@ -70,13 +70,10 @@ public class TitleBar extends FrameLayout {
         int barInitModel = a.getInt(R.styleable.TitleBar_barInitModel, -1);
         boolean result;
         if (barInitModel == -1 && isInEditMode()) {
-            //开启预览模式
             result = initView(context, TitleBarTheme.THEME_BLUE);
-        } else if (barInitModel == 0) {
-            //blue title theme
+        } else if (barInitModel == TitleBarTheme.THEME_BLUE) {
             result = initView(context, TitleBarTheme.THEME_BLUE);
-        } else if (barInitModel == 1) {
-            //white title theme
+        } else if (barInitModel == TitleBarTheme.THEME_WHITE) {
             result = initView(context, TitleBarTheme.THEME_WHITE);
         } else {
             return;
@@ -129,8 +126,7 @@ public class TitleBar extends FrameLayout {
         }
         this.theme = theme;
         layoutInflater = LayoutInflater.from(context);
-        int layoutId = TitleBarTheme.THEME_BLUE == theme ? R.layout.blue_title_layout : R.layout.white_title_layout;
-        View rootView = layoutInflater.inflate(layoutId, this, true);
+        View rootView = layoutInflater.inflate(TitleBarTheme.titleLayoutRes(theme), this, true);
         statuesBar = rootView.findViewById(R.id.statues_bar);
         tvBackNoArrow = rootView.findViewById(R.id.tv_back_no_arrow);
         tvBackArrow = rootView.findViewById(R.id.tv_back_arrow);
@@ -244,9 +240,7 @@ public class TitleBar extends FrameLayout {
                 view = layoutInflater.inflate(R.layout.title_right_click_tv_view, null);
                 TextView tv_right = view.findViewById(R.id.tv_right);
                 tv_right.setText(btnBean.str);
-                if (TitleBarTheme.THEME_WHITE == theme) {
-                    tv_right.setTextColor(getResources().getColor(R.color.cl_333333));
-                }
+                tv_right.setTextColor(getResources().getColor(TitleBarTheme.rightTextColorRes(theme)));
             } else if (btnBean.view != null) {
                 view = btnBean.view;
             }
