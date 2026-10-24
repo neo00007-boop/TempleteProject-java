@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:background="@color/common_accent_color">
 
-    <com.hjq.shape.view.ratioLayout.StatuesBar
+    <com.hjq.shape.view.ratioLayout.StatusBar
         android:id="@+id/statues_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -17,7 +17,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
-import com.hjq.shape.view.ratioLayout.StatuesBar;
+import com.hjq.shape.view.ratioLayout.StatusBar;
 import com.lib.base.R;
 import com.lib.base.bean.BtnBean;
 import com.lib.base.ui.activity.BaseActivity;
@@ -30,7 +30,7 @@ import com.lib.base.util.OUtil;
 /**
  * 标题TitleBar,可以设置主题和对应主题下返回按钮,中间标题,右边按钮(支持pop列表)等样式属性:
  * 1.默认主题有蓝色(背景)和白色(背景)两个颜色,可以配置多个,对应{@link TitleBarTheme}中配置;
- * 2.{@link BaseActivity}中默认实现沉浸式效果,故默认不展示内部占位的StatuesBar{@link com.hjq.shape.view.ratioLayout.StatuesBar};
+ * 2.{@link BaseActivity}中默认实现沉浸式效果,故默认不展示内部占位的StatuesBar{@link StatusBar};
  * 3.需要展示StatuesBar的时候调用{@link TitleBar#showStatuesBar()}即可;
  * 4.给整个TitleBar设置背景图或者背景色调用{@link TitleBar#setTitleBGResource(int)}即可;
  * 5.当没有主动初始化init{@link TitleBar#init(int)}或者initView{@link TitleBar#initView(android.content.Context, int)}时,
@@ -47,7 +47,7 @@ public class TitleBar extends FrameLayout {
     private static final int TITLE_MARQUEE_COUNT = 10;
     private int theme = THEME_NONE;
     private LayoutInflater layoutInflater;
-    private StatuesBar statuesBar;
+    private StatusBar statusBar;
     private TextView tvBackNoArrow;
     private TextView tvBackArrow;
     private TextView tvTitle;
@@ -129,13 +129,13 @@ public class TitleBar extends FrameLayout {
         this.theme = theme;
         layoutInflater = LayoutInflater.from(context);
         View rootView = layoutInflater.inflate(TitleBarTheme.titleLayoutRes(theme), this, true);
-        statuesBar = rootView.findViewById(R.id.statues_bar);
+        statusBar = rootView.findViewById(R.id.statues_bar);
         tvBackNoArrow = rootView.findViewById(R.id.tv_back_no_arrow);
         tvBackArrow = rootView.findViewById(R.id.tv_back_arrow);
         tvTitle = rootView.findViewById(R.id.tv_title);
         llRight = rootView.findViewById(R.id.ll_right);
         ivRight = rootView.findViewById(R.id.iv_right);
-        statuesBar.setVisibility(barStatuesVisible ? VISIBLE : View.GONE);
+        statusBar.setVisibility(barStatuesVisible ? VISIBLE : View.GONE);
         return true;
     }
 
@@ -272,7 +272,7 @@ public class TitleBar extends FrameLayout {
     }
 
     public void showStatuesBar() {
-        statuesBar.setVisibility(VISIBLE);
+        statusBar.setVisibility(VISIBLE);
     }
 
     private void hasInit() {
@@ -286,8 +286,8 @@ public class TitleBar extends FrameLayout {
     }
 
 
-    public StatuesBar getStatuesBar() {
-        return statuesBar;
+    public StatusBar getStatuesBar() {
+        return statusBar;
     }
 
     public TextView getTvBackNoArrow() {
