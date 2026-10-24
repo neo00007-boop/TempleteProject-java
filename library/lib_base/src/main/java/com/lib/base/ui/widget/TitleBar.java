@@ -1,5 +1,7 @@
 package com.lib.base.ui.widget;
 
+import static com.lib.base.ui.activity.TitleBarTheme.THEME_NONE;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -13,18 +15,16 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+
 import com.hjq.shape.view.ratioLayout.StatuesBar;
 import com.lib.base.R;
 import com.lib.base.bean.BtnBean;
-import com.lib.base.ui.activity.TitleBarTheme;
 import com.lib.base.ui.activity.BaseActivity;
+import com.lib.base.ui.activity.TitleBarTheme;
 import com.lib.base.ui.pop.PopView;
 import com.lib.base.util.DebugUtil;
 import com.lib.base.util.OUtil;
-
-import androidx.annotation.NonNull;
-
-import static com.lib.base.ui.activity.TitleBarTheme.THEME_NONE;
 
 
 /**
@@ -54,6 +54,7 @@ public class TitleBar extends FrameLayout {
     private LinearLayout llRight;
     private ImageView ivRight;
     private OnRightViewsClickListener rightClickListener;
+    private boolean barStatuesVisible;
 
     public TitleBar(Context context) {
         this(context, null);
@@ -68,6 +69,7 @@ public class TitleBar extends FrameLayout {
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TitleBar);
         //主题
         int barInitModel = a.getInt(R.styleable.TitleBar_barInitModel, -1);
+        barStatuesVisible = a.getBoolean(R.styleable.TitleBar_barStatuesVisible, true);
         boolean result;
         if (barInitModel == -1 && isInEditMode()) {
             result = initView(context, TitleBarTheme.THEME_BLUE);
@@ -76,15 +78,15 @@ public class TitleBar extends FrameLayout {
         } else if (barInitModel == TitleBarTheme.THEME_WHITE) {
             result = initView(context, TitleBarTheme.THEME_WHITE);
         } else {
+            a.recycle();
             return;
         }
         DebugUtil.logD("result", "result=" + result);
-        //statuesBar
-        boolean barStatuesVisible = a.getBoolean(R.styleable.TitleBar_barStatuesVisible, false);
-        //statuesBar.setVisibility(barStatuesVisible ? VISIBLE : GONE);
-        if (barStatuesVisible) {
-            statuesBar.setVisibility(VISIBLE);
-        }
+        // statuesBar
+        // statuesBar.setVisibility(barStatuesVisible ? VISIBLE : GONE);
+        // if (barStatuesVisible) {
+        //     statuesBar.setVisibility(VISIBLE);
+        // }
         //返回按钮
         String barBackStr = a.getString(R.styleable.TitleBar_barBackStr);
         boolean barBackVisible = a.getBoolean(R.styleable.TitleBar_barBackVisible, true);
@@ -133,6 +135,7 @@ public class TitleBar extends FrameLayout {
         tvTitle = rootView.findViewById(R.id.tv_title);
         llRight = rootView.findViewById(R.id.ll_right);
         ivRight = rootView.findViewById(R.id.iv_right);
+        statuesBar.setVisibility(barStatuesVisible ? VISIBLE : View.GONE);
         return true;
     }
 

@@ -16,18 +16,22 @@ public interface ImmersionAction extends ContextAction {
         return true;
     }
 
+    default boolean fitsSystemWindows() {
+        return false;
+    }
+
     /**
      * 透明状态栏，内容顶到状态栏下方（全屏宿主页常用）。
      */
     default void setImmersionBar() {
-        applyImmersionBar(R.color.cl_no_color, false, darkStatusBarFont());
+        applyImmersionBar(R.color.cl_no_color, fitsSystemWindows(), darkStatusBarFont());
     }
 
     /**
      * 着色状态栏。
      */
     default void setImmersionBar(int statusBarColor) {
-        applyImmersionBar(statusBarColor, false, darkStatusBarFont());
+        applyImmersionBar(statusBarColor, fitsSystemWindows(), darkStatusBarFont());
     }
 
     /**
@@ -44,14 +48,14 @@ public interface ImmersionAction extends ContextAction {
      * 只改状态栏图标深浅（保留当前其它 Immersion 配置会被重新 init）。
      */
     default void setStatueBarTextColorDark(boolean dark) {
-        applyImmersionBar(R.color.cl_no_color, false, dark);
+        applyImmersionBar(R.color.cl_no_color, fitsSystemWindows(), dark);
     }
 
     /**
      * 标题栏铺背景图时：透明状态栏 + 浅色图标，并露出 TitleBar 内部占位条。
      */
     default void specialImmersion() {
-        applyImmersionBar(R.color.cl_no_color, false, false);
+        applyImmersionBar(R.color.cl_no_color, fitsSystemWindows(), darkStatusBarFont());
     }
 
     /**

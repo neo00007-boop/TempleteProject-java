@@ -74,7 +74,7 @@ public abstract class BaseActivity<T extends ViewBinding> extends ViewBindingAct
             titleBar = binding.titleBar;
             initTitleBar(this, theme);
             // 状态栏颜色 + 图标深浅统一跟 TitleBarTheme
-            setImmersionBar(TitleBarTheme.statusBarColorRes(theme));
+            setImmersionBar();
         } else {
             setContentView(innerView);
             // 透明沉浸，图标按 darkStatusBarFont()（默认深色）
