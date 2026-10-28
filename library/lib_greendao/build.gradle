@@ -1,6 +1,5 @@
 plugins {
     id 'com.android.library'
-    id 'org.greenrobot.greendao'
 }
 def config = rootProject.ext
 android {
@@ -28,14 +27,8 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    greendao {
-        //版本号
-        schemaVersion 2
-        //工程路径
-        targetGenDir 'src/main/java'
-        //包名
-        daoPackage 'com.greendao.db.helper'
-    }
+    // greendao-gradle-plugin 3.3.0 不兼容 Gradle 9（IncrementalTaskInputs 已移除）。
+    // Dao 源码已落在 src/main/java，改表时可用旧环境/独立生成器再提交生成代码。
 }
 
 dependencies {
@@ -51,5 +44,5 @@ dependencies {
     //db
     api "org.greenrobot:greendao:${config.dependencies.greendao_version}"
     api "com.squareup.retrofit2:converter-gson:${config.dependencies.retrofit_version}"
-    api 'com.github.getActivity:GsonFactory:5.2'
+    api "com.github.getActivity:GsonFactory:${config.dependencies.gson_factory_version}"
 }

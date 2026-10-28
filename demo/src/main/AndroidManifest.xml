@@ -36,7 +36,6 @@
     <application
         android:name=".DemoMainApp"
         android:allowBackup="false"
-        android:extractNativeLibs="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/mb_app_name"
         android:maxAspectRatio="2.4"

@@ -5,9 +5,10 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.hjq.shape.view.textview.CountdownView;
+import com.hjq.toast.Toaster;
 import com.lib.base.R;
 import com.lib.base.ui.dialog.inject.SingleClick;
-import com.hjq.shape.view.textview.CountdownView;
 import com.lib.base.util.DebugUtil;
 
 import androidx.annotation.Nullable;
@@ -79,19 +80,19 @@ public final class SafeDialog {
 
                             @Override
                             public void onSucceed(HttpData<Void> data) {
-                                ToastUtils.show(R.string.common_code_send_hint);
+                                Toaster.show(R.string.common_code_send_hint);
                                 mCountdownView.start();
                                 setCancelable(false);
                             }
 
                             @Override
                             public void onFail(Exception e) {
-                                ToastUtils.show(e.getMessage());
+                                Toaster.show(e.getMessage());
                             }
                         });*/
             } else if (viewId == R.id.tv_ui_confirm) {
                 /*if (mCodeView.getText().toString().length() != getResources().getInteger(R.integer.sms_code_length)) {
-                    ToastUtils.show(R.string.common_code_error_hint);
+                    Toaster.show(R.string.common_code_error_hint);
                     return;
                 }
 
@@ -122,7 +123,7 @@ public final class SafeDialog {
 
                             @Override
                             public void onFail(Exception e) {
-                                ToastUtils.show(e.getMessage());
+                                Toaster.show(e.getMessage());
                             }
                         });*/
             } else if (viewId == R.id.tv_ui_cancel) {

@@ -26,12 +26,13 @@ dependencies {
         force "androidx.core:core-ktx:${config.dependencies.androidx_core_version}"
         force "androidx.core:core:${config.dependencies.androidx_core_version}"
 
-        force "androidx.appcompat:appcompat:${config.dependencies.appcompat_version}"//1.3.0
-        force "androidx.activity:activity:${config.dependencies.appcompat_version}"
-        force "androidx.fragment:fragment:${config.dependencies.appcompat_version}"
+        force "androidx.appcompat:appcompat:${config.dependencies.appcompat_version}"
+        force "androidx.activity:activity:${config.dependencies.activity_version}"
+        force "androidx.fragment:fragment:${config.dependencies.fragment_version}"
     }
 }*/
 android {
+    namespace 'com.templete.project'
     compileSdkVersion config.android.compileSdkVersion
     // buildToolsVersion config.android.buildToolsVersion
 
@@ -97,11 +98,15 @@ android {
             jniLibs.srcDirs = ['libs']
         }
     }
-    viewBinding {
-        enabled = true
+    buildFeatures {
+        buildConfig true
+        viewBinding true
+        dataBinding true
     }
-    dataBinding {
-        enabled = true
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging true
+        }
     }
     repositories {
         flatDir {

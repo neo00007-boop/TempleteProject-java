@@ -1,3 +1,14 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    // 仍由根 build.gradle 的 allprojects.repositories 解析依赖
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+}
 rootProject.name = "TempleteProject-java"
 //壳工程
 include ':app'

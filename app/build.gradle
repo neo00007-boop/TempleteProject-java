@@ -29,8 +29,14 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     buildFeatures {
+        buildConfig true
         viewBinding true
         dataBinding true
+    }
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging true
+        }
     }
 
     buildTypes {

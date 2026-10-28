@@ -35,7 +35,7 @@ dependencies {
     implementation "com.squareup.okhttp3:logging-interceptor:${config.dependencies.okhttp_version}"
     //noinspection GradleDependency
     implementation "com.squareup.okio:okio:${config.dependencies.okio_version}"
-    implementation "androidx.annotation:annotation:1.2.0"
+    implementation "androidx.annotation:annotation:${config.dependencies.androidx_annotation_version}"
 
     testImplementation "junit:junit:${config.dependencies.junit_version}"
     androidTestImplementation "androidx.test.ext:junit:${config.dependencies.ext_junit_version}"

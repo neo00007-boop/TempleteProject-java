@@ -3,7 +3,7 @@ package com.lib.base.util;
 
 import android.util.Log;
 
-import com.hjq.toast.ToastUtils;
+import com.hjq.toast.Toaster;
 
 
 /**
@@ -30,11 +30,11 @@ public class DebugUtil {
     }
 
     public static void toast(String str) {
-        ToastUtils.show(str);
+        Toaster.show(str);
     }
 
     public static void debugToast(String str) {
-        ToastUtils.debugShow(str);
+        Toaster.debugShow(str);
     }
 
 }

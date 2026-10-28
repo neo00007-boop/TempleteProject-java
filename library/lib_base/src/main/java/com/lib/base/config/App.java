@@ -18,8 +18,9 @@ import com.greendao.db.util.GsonUtil;
 import com.hjq.gson.factory.GsonFactory;
 import com.hjq.shape.view.horizontal.SmartRefreshHorizontal;
 import com.hjq.toast.CustomToast;
+import com.hjq.toast.ToastParams;
 import com.hjq.toast.ToastStrategy;
-import com.hjq.toast.ToastUtils;
+import com.hjq.toast.Toaster;
 import com.hjq.toast.config.IToast;
 import com.lib.base.BuildConfig;
 import com.lib.base.R;
@@ -121,10 +122,10 @@ public abstract class App extends Application implements /*ViewModelStoreOwner,*
      * toast
      */
     private void initToast() {
-        ToastUtils.init(this, new ToastStrategy() {
+        Toaster.init(this, new ToastStrategy(this) {
             @Override
-            public IToast createToast(Application application) {
-                IToast toast = super.createToast(application);
+            public IToast createToast(ToastParams params) {
+                IToast toast = super.createToast(params);
                 if (toast instanceof CustomToast) {
                     CustomToast customToast = ((CustomToast) toast);
                     // 设置 Toast 动画效果
@@ -137,8 +138,8 @@ public abstract class App extends Application implements /*ViewModelStoreOwner,*
                 return toast;
             }
         });
-        ToastUtils.setStyle(new BlackToastStyle());
-        ToastUtils.setGravity(Gravity.CENTER);
+        Toaster.setStyle(new BlackToastStyle());
+        Toaster.setGravity(Gravity.CENTER);
     }
 
     @SuppressLint("MissingPermission")

@@ -37,6 +37,7 @@ android {
         }
     }
     buildFeatures {
+        buildConfig true
         viewBinding true
         dataBinding true
     }
@@ -54,18 +55,17 @@ dependencies {
     api project(':library:lib_room')
     //lib_view 已 api 依赖 lib_res，公共资源随它带出
     api project(':library:lib_view')
-    api 'com.github.getActivity:XXPermissions:13.5'
+    api "com.github.getActivity:XXPermissions:${config.dependencies.xxpermissions_version}"
     api "com.github.getActivity:ToastUtils:${config.dependencies.toastutils_version}"
     api "com.jakewharton.rxbinding4:rxbinding:${config.dependencies.rxbinding_version}"
 
-    api 'com.trello.rxlifecycle4:rxlifecycle:4.0.2'
-    api 'com.trello.rxlifecycle4:rxlifecycle-android:4.0.2'
-    api 'com.trello.rxlifecycle4:rxlifecycle-components:4.0.2'
+    api "com.trello.rxlifecycle4:rxlifecycle:${config.dependencies.rxlifecycle_version}"
+    api "com.trello.rxlifecycle4:rxlifecycle-android:${config.dependencies.rxlifecycle_version}"
+    api "com.trello.rxlifecycle4:rxlifecycle-components:${config.dependencies.rxlifecycle_version}"
 
     //title bar
     api "com.geyifeng.immersionbar:immersionbar:${config.dependencies.immersionbar_version}"
     //leakcanary
-    //noinspection GradleDependency
     debugApi "com.squareup.leakcanary:leakcanary-android:${config.dependencies.leakcanary_version}"
     annotationProcessor "com.github.bumptech.glide:compiler:${config.dependencies.glide_version}"
     // PictureSelector 基础 (必须)
@@ -77,7 +77,6 @@ dependencies {
     // 自定义相机 (按需引入)
     api "io.github.lucksiege:camerax:${config.dependencies.pictureselector_version}"
     //七牛
-    //noinspection GradleDependency
     implementation "com.qiniu:qiniu-android-sdk:${config.dependencies.qiniu_version}"
     implementation "androidx.lifecycle:lifecycle-runtime:${config.dependencies.androidx_lifecycle_version}"
     //glide
@@ -88,21 +87,21 @@ dependencies {
 
     //********************************************以下是view依赖**************************************************
     // 动画解析库：https://github.com/airbnb/lottie-android
-    api 'com.airbnb.android:lottie:4.1.0'
+    api "com.airbnb.android:lottie:${config.dependencies.lottie_version}"
     //banner
-    api 'io.github.youth5201314:banner:2.2.2'
+    api "io.github.youth5201314:banner:${config.dependencies.banner_version}"
     //AndRatingBar
-    api 'com.github.wdsqjq:AndRatingBar:1.0.6'
-    api "jp.co.cyberagent.android:gpuimage:2.1.0"
+    api "com.github.wdsqjq:AndRatingBar:${config.dependencies.andratingbar_version}"
+    api "jp.co.cyberagent.android:gpuimage:${config.dependencies.gpuimage_version}"
     //drag
-    api 'com.github.open-android:DragFooterView:0.1.0'
+    api "com.github.open-android:DragFooterView:${config.dependencies.drag_footer_version}"
     //flex
-    api 'com.google.android.flexbox:flexbox:3.0.0'
-    // 3.0.15+ 依赖 kotlin-stdlib 2.2.x，与工程 Kotlin 1.8.22 不兼容；3.0.14 API 同属 3.x
-    api "io.github.cymchad:BaseRecyclerViewAdapterHelper:3.0.14"
+    api "com.google.android.flexbox:flexbox:${config.dependencies.flexbox_version}"
+    // BRVAH 3.x；4.x API 大改暂不跟
+    api "io.github.cymchad:BaseRecyclerViewAdapterHelper:${config.dependencies.brvah_version}"
     // skeleton / shimmer
-    api 'com.github.skydoves:androidveil:1.1.3'
-    api "com.kunminx.arch:unpeek-livedata:7.8.0"
+    api "com.github.skydoves:androidveil:${config.dependencies.androidveil_version}"
+    api "com.kunminx.arch:unpeek-livedata:${config.dependencies.unpeek_livedata_version}"
 
     testImplementation "junit:junit:${config.dependencies.junit_version}"
     androidTestImplementation "androidx.test.ext:junit:${config.dependencies.ext_junit_version}"

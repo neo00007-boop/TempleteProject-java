@@ -79,7 +79,8 @@ public class PermissionUtil {
         if (o instanceof Activity) {
             XXPermissions.startPermissionActivity((Activity) o, permissions);
         } else if (o instanceof Fragment) {
-            XXPermissions.startPermissionActivity((Fragment) o, permissions);
+            // XXPermissions 18.x 无 androidx Fragment 重载，走 Context
+            XXPermissions.startPermissionActivity(((Fragment) o).requireContext(), permissions);
         } else if (o instanceof Context) {
             XXPermissions.startPermissionActivity((Context) o, permissions);
         } else {

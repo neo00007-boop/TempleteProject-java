@@ -35,17 +35,18 @@ android {
 dependencies {
     //颜色、x/y 适配尺寸在 lib_res
     api project(':library:lib_res')
-    //androidx support
-    //noinspection GradleDependency
+    //androidx / material（版本见根 config.gradle）
     api "com.google.android.material:material:${config.dependencies.material_version}"
-    //api "androidx.appcompat:appcompat:${config.dependencies.appcompat_version}"
+    api "androidx.appcompat:appcompat:${config.dependencies.appcompat_version}"
+    api "androidx.activity:activity:${config.dependencies.activity_version}"
+    api "androidx.fragment:fragment:${config.dependencies.fragment_version}"
+    api "androidx.core:core:${config.dependencies.androidx_core_version}"
     api "androidx.cardview:cardview:${config.dependencies.cardview_version}"
     api "androidx.recyclerview:recyclerview:${config.dependencies.recyclerview_version}"
-    //noinspection GradleDependency
     api "androidx.constraintlayout:constraintlayout:${config.dependencies.constraintlayout_version}"
     api "androidx.viewpager2:viewpager2:${config.dependencies.viewpager2_version}"
     //Tab 控件（com.flyco.tablayout，源自 FlycoTabLayout）用
-    api "androidx.viewpager:viewpager:1.0.0"
+    api "androidx.viewpager:viewpager:${config.dependencies.viewpager_version}"
     //api "com.nex3z:flow-layout:${config.dependencies.flow_layout_version}"
     //垂直刷新
     api "io.github.scwang90:refresh-layout-kernel:${config.dependencies.smart_refresh_version}"      //核心必须依赖

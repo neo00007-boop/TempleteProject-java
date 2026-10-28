@@ -2,37 +2,36 @@
 apply from: "config.gradle"
 buildscript {
     ext {
-        kotlin_version = '1.7.20'
+        // AGP 9.2 内置 Kotlin 依赖 KGP ≥ 2.2.10；关闭 builtInKotlin 时仍需显式声明
+        kotlin_version = '2.2.10'
     }
     repositories {
-        //noinspection JcenterRepositoryObsolete
-        jcenter()
-        mavenCentral()
         google()
+        mavenCentral()
         maven { url "https://www.jitpack.io" }
-        maven { url "https://maven.google.com" }
     }
     dependencies {
-        //noinspection AndroidGradlePluginVersion,GradleDependency
-        classpath 'com.android.tools.build:gradle:7.3.1'
+        // AGP 9.3.x ↔ Gradle 9.5.0（修复 9.2 R8 对 androidx.core 合成 lambda 的 NPE）
+        classpath 'com.android.tools.build:gradle:9.3.1'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'org.greenrobot:greendao-gradle-plugin:3.3.0'
+        // greendao-gradle-plugin 与 Gradle 9 不兼容，已改为手写/预生成 Dao
     }
 }
 allprojects {
     repositories {
-        //noinspection JcenterRepositoryObsolete
-        jcenter()
-        mavenCentral()
         google()
+        mavenCentral()
         maven { url "https://www.jitpack.io" }
-        maven { url "https://maven.google.com" }
+    }
+    // KGP 2.2 默认 jvmTarget=17，与现有 Java 1.8 对齐
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions.jvmTarget = '1.8'
     }
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+tasks.register('clean', Delete) {
+    delete rootProject.layout.buildDirectory
 }

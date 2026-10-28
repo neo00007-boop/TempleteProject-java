@@ -8,6 +8,7 @@ import android.widget.ImageView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
+import com.hjq.toast.Toaster;
 import com.lib.base.R;
 import com.lib.base.bean.Platform;
 
@@ -61,7 +62,7 @@ public final class ShareDialog {
                     if (mShareAction.getShareContent().getShareType() == ShareContent.WEB_STYLE) {
                         // 复制到剪贴板
                         getSystemService(ClipboardManager.class).setPrimaryClip(ClipData.newPlainText("url", mShareAction.getShareContent().mMedia.toUrl()));
-                        ToastUtils.show(R.string.share_platform_copy_hint);
+                        Toaster.show(R.string.share_platform_copy_hint);
                     }
                 }
                 dismiss();*/
