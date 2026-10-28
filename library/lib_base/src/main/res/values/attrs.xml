@@ -52,4 +52,37 @@
         <attr name="barTitleStr" format="string" />
         <attr name="barRightIconResource" format="reference" />
     </declare-styleable>
+
+    <!-- 九宫格图片 -->
+    <declare-styleable name="NineGridImageView">
+        <attr name="singleImgSize" format="dimension" />
+        <attr name="imgGap" format="dimension" />
+        <attr name="maxSize" format="integer" />
+        <attr name="showStyle">
+            <enum name="grid" value="0" />
+            <enum name="fill" value="1" />
+        </attr>
+        <!-- 图片圆角（dimension → px） -->
+        <attr name="ngiv_cornerRadius" format="dimension" />
+        <!-- 图片蒙层颜色（color，透明/alpha=0 无蒙层） -->
+        <attr name="ngiv_maskColor" format="color" />
+        <!-- 超 maxSize 末格图片蒙层颜色 -->
+        <attr name="ngiv_moreMaskColor" format="color" />
+        <!-- n+ 字号 -->
+        <attr name="ngiv_moreTextSize" format="dimension" />
+        <!-- n+ 字色 -->
+        <attr name="ngiv_moreTextColor" format="color" />
+        <!-- n+ 背景色 -->
+        <attr name="ngiv_moreTextBgColor" format="color" />
+        <!-- n+ 背景圆角 -->
+        <attr name="ngiv_moreTextCornerRadius" format="dimension" />
+        <!-- n+ 右下外边距：右边 -->
+        <attr name="ngiv_moreMarginEnd" format="dimension" />
+        <!-- n+ 右下外边距：下边 -->
+        <attr name="ngiv_moreMarginBottom" format="dimension" />
+        <!-- n+ 内边距：左右 -->
+        <attr name="ngiv_morePaddingHorizontal" format="dimension" />
+        <!-- n+ 内边距：上下 -->
+        <attr name="ngiv_morePaddingVertical" format="dimension" />
+    </declare-styleable>
 </resources>

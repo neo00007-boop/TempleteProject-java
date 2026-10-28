@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/x40"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="false"
+        android:textColor="@color/cl_333333"
+        android:textSize="@dimen/x36"
+        android:textStyle="bold"
+        tools:ignore="HardcodedText"
+        tools:text="3 张" />
+
+    <TextView
+        android:id="@+id/tvDesc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x10"
+        android:includeFontPadding="false"
+        android:textColor="@color/cl_666"
+        android:textSize="@dimen/x28"
+        tools:ignore="HardcodedText"
+        tools:text="宫格样式说明" />
+
+    <!--
+      可配置：
+      ngiv_cornerRadius      图片圆角
+      ngiv_maskColor         图片蒙层颜色
+      ngiv_moreMaskColor     超9张末格蒙层
+      ngiv_moreTextSize      n+ 字号
+      ngiv_moreTextColor     n+ 字色
+      ngiv_moreTextBgColor   n+ 背景色
+      ngiv_moreTextCornerRadius  n+ 背景圆角
+    -->
+    <com.lib.base.ui.widget.ninegrid.NineGridImageView
+        android:id="@+id/nineGrid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x20"
+        app:imgGap="@dimen/x12"
+        app:maxSize="9"
+        app:ngiv_cornerRadius="@dimen/x16"
+        app:ngiv_maskColor="#00000000"
+        app:ngiv_moreMaskColor="#66000000"
+        app:ngiv_moreTextBgColor="#99000000"
+        app:ngiv_moreTextColor="#FFFFFFFF"
+        app:ngiv_moreTextCornerRadius="@dimen/x8"
+        app:ngiv_moreTextSize="@dimen/x28"
+        app:ngiv_moreMarginEnd="@dimen/x12"
+        app:ngiv_moreMarginBottom="@dimen/x12"
+        app:ngiv_morePaddingHorizontal="@dimen/x12"
+        app:ngiv_morePaddingVertical="@dimen/x4"
+        app:showStyle="grid" />
+</LinearLayout>

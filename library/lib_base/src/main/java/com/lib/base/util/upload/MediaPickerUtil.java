@@ -20,7 +20,10 @@ import com.luck.picture.lib.style.TitleBarStyle;
 import com.luck.picture.lib.utils.DensityUtil;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 /**
@@ -252,27 +255,95 @@ public class MediaPickerUtil {
                 .forResult(callbackListener);
     }
 
-    // 预览图片、视频、音频
+    /** 外部预览删除回调（预览页点删除后）。 */
+    public interface OnPreviewDeleteListener {
+        void onDelete(int position);
+    }
+
+    // 预览图片、视频、音频（显示下载、删除）
     public static void preview(Context context, int position, ArrayList<LocalMedia> data) {
+        preview(context, position, data, true, true, null);
+    }
+
+    /**
+     * @param showDelete   标题栏是否显示删除
+     * @param showDownload 是否显示下载（false 则隐藏下载入口）
+     * @param deleteListener 删除后额外回调；为 null 时仍会从 data 中 remove
+     */
+    public static void preview(Context context, int position, ArrayList<LocalMedia> data,
+                               boolean showDelete, boolean showDownload,
+                               @Nullable OnPreviewDeleteListener deleteListener) {
+        if (data == null || data.isEmpty()) {
+            return;
+        }
+        int safePos = Math.max(0, Math.min(position, data.size() - 1));
         PictureSelector.create(context)
                 .openPreview()
                 .setImageEngine(GlideEngine.createGlideEngine())
                 .setSelectorUIStyle(getStyle(context))
                 .setLanguage(LanguageConfig.CHINESE)
                 .isPreviewFullScreenMode(true)
-                .isHidePreviewDownload(true)
+                .isHidePreviewDownload(!showDownload)
                 .setExternalPreviewEventListener(new OnExternalPreviewEventListener() {
                     @Override
-                    public void onPreviewDelete(int position) {
-                        data.remove(position);
+                    public void onPreviewDelete(int deletePosition) {
+                        if (deletePosition >= 0 && deletePosition < data.size()) {
+                            data.remove(deletePosition);
+                        }
+                        if (deleteListener != null) {
+                            deleteListener.onDelete(deletePosition);
+                        }
                     }
 
                     @Override
                     public boolean onLongPressDownload(LocalMedia media) {
+                        // false：走 PictureSelector 默认下载逻辑
                         return false;
                     }
                 })
-                .startActivityPreview(position, false, data);
+                .startActivityPreview(safePos, showDelete, data);
+    }
+
+    /**
+     * 网络/本地路径列表预览（九宫格等场景），默认显示下载与删除。
+     */
+    public static void preview(@NonNull Context context, int position, @Nullable List<String> urls) {
+        preview(context, position, urls, true, true, null);
+    }
+
+    public static void preview(@NonNull Context context, int position, @Nullable List<String> urls,
+                               boolean showDelete, boolean showDownload,
+                               @Nullable OnPreviewDeleteListener deleteListener) {
+        if (urls == null || urls.isEmpty()) {
+            return;
+        }
+        ArrayList<LocalMedia> data = new ArrayList<>(urls.size());
+        for (String url : urls) {
+            if (url == null || url.length() == 0) {
+                continue;
+            }
+            LocalMedia media = LocalMedia.generateLocalMedia(url, "image/jpeg");
+            if (media == null) {
+                media = new LocalMedia();
+                media.setPath(url);
+                media.setMimeType("image/jpeg");
+            }
+            data.add(media);
+        }
+        if (data.isEmpty()) {
+            return;
+        }
+        // 删除时同步回 urls（若为可修改 List）
+        OnPreviewDeleteListener wrap = deletePosition -> {
+            if (urls instanceof ArrayList && deletePosition >= 0 && deletePosition < urls.size()) {
+                urls.remove(deletePosition);
+            }
+            if (deleteListener != null) {
+                deleteListener.onDelete(deletePosition);
+            }
+        };
+        int safePos = Math.max(0, Math.min(position, data.size() - 1));
+        preview(context, safePos, data, showDelete, showDownload, wrap);
     }
 
     // 进入相册

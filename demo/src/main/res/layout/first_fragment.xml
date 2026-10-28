@@ -236,7 +236,7 @@
                 app:shape_textColor="@color/white"
                 tools:ignore="HardcodedText" />
 
-            <!--<com.hjq.shape.view.ShapeTextView
+            <com.hjq.shape.view.ShapeTextView
                 android:id="@+id/tv15"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/x150"
@@ -244,13 +244,13 @@
                 android:layout_marginBottom="@dimen/x65"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:text="Lottie 动画"
+                android:text="九宫格图片"
                 android:textColor="@color/white"
                 android:textSize="@dimen/x45"
                 app:shape_radius="@dimen/x75"
                 app:shape_solidColor="@color/common_accent_color"
                 app:shape_textColor="@color/white"
-                tools:ignore="HardcodedText" />-->
+                tools:ignore="HardcodedText" />
 
         </LinearLayout>
     </ScrollView>

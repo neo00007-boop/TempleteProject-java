@@ -17,6 +17,7 @@ import com.templete.project.ui.activity.FlexActivity;
 import com.templete.project.ui.activity.FlexBoxActivity;
 import com.templete.project.ui.activity.GlideActivity;
 import com.templete.project.ui.activity.ImmersionActivity;
+import com.templete.project.ui.activity.NineGridActivity;
 import com.templete.project.ui.activity.PopActivity;
 import com.templete.project.ui.activity.RatioActivity;
 import com.templete.project.ui.activity.ShapeActivity;
@@ -82,9 +83,9 @@ public class FirstFragment extends BaseFragment<FirstFragmentBinding> {
                         clazz = FlexActivity.class;
                     } else if (v.equals(mViewBinding.tv14)) {
                         clazz = CanvasActivity.class;
-                    }/* else if (v.equals(mViewBinding.tv15)) {
-                        clazz = LottieActivity.class;
-                    }*/
+                    } else if (v.equals(mViewBinding.tv15)) {
+                        clazz = NineGridActivity.class;
+                    }
                     if (clazz != null) {
                         getBaseActivity().startAty(requireActivity(), clazz);
                     }
@@ -93,7 +94,7 @@ public class FirstFragment extends BaseFragment<FirstFragmentBinding> {
                 mViewBinding.tv4, mViewBinding.tv5, mViewBinding.tv6,
                 mViewBinding.tv7, mViewBinding.tv8, mViewBinding.tv9,
                 mViewBinding.tv10, mViewBinding.tv11, mViewBinding.tv12,
-                mViewBinding.tv13, mViewBinding.tv14/*, mViewBinding.tv15*/);
+                mViewBinding.tv13, mViewBinding.tv14, mViewBinding.tv15);
     }
 
     @Override
