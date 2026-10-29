@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/common_window_background_color"
+    android:orientation="vertical">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingStart="@dimen/x40"
+        android:paddingTop="@dimen/x30"
+        android:paddingEnd="@dimen/x40"
+        android:paddingBottom="@dimen/x60">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:text="短标题（不足一行，无折叠按钮）"
+                android:textColor="@color/cl_666"
+                android:textSize="@dimen/x28"
+                tools:ignore="HardcodedText" />
+
+            <com.lib.base.ui.widget.FoldTextView
+                android:id="@+id/foldShort"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x16"
+                android:background="#FFFFFF"
+                android:paddingStart="@dimen/x24"
+                android:paddingEnd="@dimen/x24"
+                app:ctv_foldIconSize="@dimen/x32"
+                app:ctv_foldIconSrc="@drawable/ic_fold_arrow_down"
+                app:ctv_gapHeight="@dimen/x80"
+                app:ctv_iconTextGap="@dimen/x12"
+                app:ctv_text="哔哩哔哩大会员"
+                app:ctv_textColor="@color/cl_333333"
+                app:ctv_textSize="@dimen/x36" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x50"
+                android:includeFontPadding="false"
+                android:text="长标题（超一行，右侧箭头；默认收起省略号）"
+                android:textColor="@color/cl_666"
+                android:textSize="@dimen/x28"
+                tools:ignore="HardcodedText" />
+
+            <com.lib.base.ui.widget.FoldTextView
+                android:id="@+id/foldLong"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x16"
+                android:background="#FFFFFF"
+                android:paddingStart="@dimen/x24"
+                android:paddingEnd="@dimen/x24"
+                app:ctv_foldIconSize="@dimen/x32"
+                app:ctv_foldIconSrc="@drawable/ic_fold_arrow_down"
+                app:ctv_gapHeight="@dimen/x80"
+                app:ctv_iconTextGap="@dimen/x12"
+                app:ctv_text="【4K超清】2024 哔哩哔哩拜年纪完整回顾｜热门动画混剪 + 弹幕高能时刻合集，点击展开查看完整标题描述与更多细节内容展示效果"
+                app:ctv_textColor="@color/cl_333333"
+                app:ctv_textSize="@dimen/x36" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x50"
+                android:includeFontPadding="false"
+                android:text="自定义样式（更大字号 / 更大箭头 / 更大间距）"
+                android:textColor="@color/cl_666"
+                android:textSize="@dimen/x28"
+                tools:ignore="HardcodedText" />
+
+            <com.lib.base.ui.widget.FoldTextView
+                android:id="@+id/foldCustom"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x16"
+                android:background="#FFFFFF"
+                android:paddingStart="@dimen/x24"
+                android:paddingEnd="@dimen/x24"
+                app:ctv_foldIconSize="@dimen/x48"
+                app:ctv_foldIconSrc="@drawable/ic_fold_arrow_down"
+                app:ctv_gapHeight="@dimen/x100"
+                app:ctv_iconTextGap="@dimen/x20"
+                app:ctv_text="自定义属性演示：文字大小、颜色、间隙高度、折叠按钮大小与图片、图片文字间隙均可在 XML 中配置，点击箭头或整行可展开/收起"
+                app:ctv_textColor="#FB7299"
+                app:ctv_textSize="@dimen/x40" />
+
+            <TextView
+                android:id="@+id/tvFoldState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x40"
+                android:includeFontPadding="false"
+                android:textColor="@color/cl_666"
+                android:textSize="@dimen/x28"
+                tools:ignore="HardcodedText"
+                tools:text="展开状态" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

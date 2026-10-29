@@ -85,4 +85,23 @@
         <!-- n+ 内边距：上下 -->
         <attr name="ngiv_morePaddingVertical" format="dimension" />
     </declare-styleable>
+
+    <!-- 哔站标题式折叠 TextView：左文字右箭头，不足一行隐藏箭头 -->
+    <declare-styleable name="FoldTextView">
+        <attr name="ctv_text" format="string|reference" />
+        <attr name="ctv_textSize" format="dimension" />
+        <attr name="ctv_textColor" format="color" />
+        <!-- 折叠行最小高度 / 间隙高度 -->
+        <attr name="ctv_gapHeight" format="dimension" />
+        <!-- 折叠按钮边长 -->
+        <attr name="ctv_foldIconSize" format="dimension" />
+        <!-- 收起态箭头 -->
+        <attr name="ctv_foldIconSrc" format="reference" />
+        <!-- 展开态箭头；未设置则对 foldIconSrc 旋转 180° -->
+        <attr name="ctv_foldIconExpandSrc" format="reference" />
+        <!-- 文字与箭头间距 -->
+        <attr name="ctv_iconTextGap" format="dimension" />
+        <!-- 是否默认展开，默认 false -->
+        <attr name="ctv_expanded" format="boolean" />
+    </declare-styleable>
 </resources>

@@ -15,6 +15,7 @@ import com.templete.project.ui.activity.CanvasActivity;
 import com.templete.project.ui.activity.DialogActivity;
 import com.templete.project.ui.activity.FlexActivity;
 import com.templete.project.ui.activity.FlexBoxActivity;
+import com.templete.project.ui.activity.FoldTextActivity;
 import com.templete.project.ui.activity.GlideActivity;
 import com.templete.project.ui.activity.ImmersionActivity;
 import com.templete.project.ui.activity.NineGridActivity;
@@ -85,6 +86,8 @@ public class FirstFragment extends BaseFragment<FirstFragmentBinding> {
                         clazz = CanvasActivity.class;
                     } else if (v.equals(mViewBinding.tv15)) {
                         clazz = NineGridActivity.class;
+                    } else if (v.equals(mViewBinding.tv16)) {
+                        clazz = FoldTextActivity.class;
                     }
                     if (clazz != null) {
                         getBaseActivity().startAty(requireActivity(), clazz);
@@ -94,7 +97,8 @@ public class FirstFragment extends BaseFragment<FirstFragmentBinding> {
                 mViewBinding.tv4, mViewBinding.tv5, mViewBinding.tv6,
                 mViewBinding.tv7, mViewBinding.tv8, mViewBinding.tv9,
                 mViewBinding.tv10, mViewBinding.tv11, mViewBinding.tv12,
-                mViewBinding.tv13, mViewBinding.tv14, mViewBinding.tv15);
+                mViewBinding.tv13, mViewBinding.tv14, mViewBinding.tv15,
+                mViewBinding.tv16);
     }
 
     @Override
