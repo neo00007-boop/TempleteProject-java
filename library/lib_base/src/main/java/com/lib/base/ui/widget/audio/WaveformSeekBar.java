@@ -49,6 +49,8 @@ public class WaveformSeekBar extends View {
 
     private float minBarHeightPx;
     private float cornerRadiusPx;
+    /** 柱宽占槽宽比例，默认 0.62 */
+    private float barWidthRatio = 0.62f;
 
     private OnSeekListener seekListener;
 
@@ -85,8 +87,43 @@ public class WaveformSeekBar extends View {
     }
 
     public void setColors(int playedColor, int remainColor) {
+        setColors(playedColor, bufferPaint.getColor(), remainColor);
+    }
+
+    public void setColors(int playedColor, int bufferColor, int remainColor) {
         playedPaint.setColor(playedColor);
+        bufferPaint.setColor(bufferColor);
         remainPaint.setColor(remainColor);
+        invalidate();
+    }
+
+    public void setPlayedColor(int color) {
+        playedPaint.setColor(color);
+        invalidate();
+    }
+
+    public void setBufferColor(int color) {
+        bufferPaint.setColor(color);
+        invalidate();
+    }
+
+    public void setRemainColor(int color) {
+        remainPaint.setColor(color);
+        invalidate();
+    }
+
+    public void setMinBarHeightPx(float px) {
+        minBarHeightPx = Math.max(0f, px);
+        invalidate();
+    }
+
+    public void setBarCornerRadiusPx(float px) {
+        cornerRadiusPx = Math.max(0f, px);
+        invalidate();
+    }
+
+    public void setBarWidthRatio(float ratio) {
+        barWidthRatio = Math.max(0.05f, Math.min(1f, ratio));
         invalidate();
     }
 
@@ -178,7 +215,7 @@ public class WaveformSeekBar extends View {
         int count = amplitudes.length;
         // 铺满整宽：进度与柱一一对应，长音频也能看到细腻推进
         float slot = getWidth() * 1f / count;
-        float barW = Math.max(1f, slot * 0.62f);
+        float barW = Math.max(1f, slot * barWidthRatio);
         float centerY = getHeight() / 2f;
         float maxH = getHeight() * 0.92f;
         float playedX = getWidth() * progress;

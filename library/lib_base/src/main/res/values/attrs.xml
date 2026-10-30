@@ -104,4 +104,50 @@
         <!-- 是否默认展开，默认 false -->
         <attr name="ctv_expanded" format="boolean" />
     </declare-styleable>
+
+    <!-- 帖子音频条：整体 / 播放钮 / 时长 / 波形均可 XML 配置 -->
+    <declare-styleable name="PostAudioView">
+        <!-- 整体背景（drawable/color）；优先于 pav_bgColor -->
+        <attr name="pav_background" format="reference|color" />
+        <!-- 整体纯色背景；配合 pav_cornerRadius 生成圆角 -->
+        <attr name="pav_bgColor" format="color" />
+        <attr name="pav_cornerRadius" format="dimension" />
+        <attr name="pav_paddingStart" format="dimension" />
+        <attr name="pav_paddingTop" format="dimension" />
+        <attr name="pav_paddingEnd" format="dimension" />
+        <attr name="pav_paddingBottom" format="dimension" />
+
+        <!-- 播放按钮 -->
+        <attr name="pav_playBtnSize" format="dimension" />
+        <!-- 按钮背景（drawable/color）；优先于 pav_playBtnColor -->
+        <attr name="pav_playBtnBackground" format="reference|color" />
+        <!-- 圆形纯色按钮底色 -->
+        <attr name="pav_playBtnColor" format="color" />
+        <attr name="pav_playIcon" format="reference" />
+        <attr name="pav_pauseIcon" format="reference" />
+        <attr name="pav_playIconPadding" format="dimension" />
+        <attr name="pav_loadingTint" format="color" />
+
+        <!-- 波形区布局 -->
+        <attr name="pav_waveAreaMarginStart" format="dimension" />
+        <attr name="pav_waveHeight" format="dimension" />
+        <attr name="pav_waveMarginTop" format="dimension" />
+        <!-- 已播放 / 已缓冲 / 未播放 柱色 -->
+        <attr name="pav_wavePlayedColor" format="color" />
+        <attr name="pav_waveBufferColor" format="color" />
+        <attr name="pav_waveRemainColor" format="color" />
+        <attr name="pav_waveMinBarHeight" format="dimension" />
+        <attr name="pav_waveBarCornerRadius" format="dimension" />
+        <!-- 柱宽占槽宽比例 0~1，默认 0.62 -->
+        <attr name="pav_waveBarWidthRatio" format="float" />
+
+        <!-- 时长文字 -->
+        <attr name="pav_durationTextSize" format="dimension" />
+        <attr name="pav_durationTextColor" format="color" />
+        <attr name="pav_durationGravity">
+            <enum name="start" value="0" />
+            <enum name="end" value="1" />
+            <enum name="center" value="2" />
+        </attr>
+    </declare-styleable>
 </resources>

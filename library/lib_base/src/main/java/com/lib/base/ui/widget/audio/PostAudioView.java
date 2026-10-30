@@ -1,6 +1,11 @@
 package com.lib.base.ui.widget.audio;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.content.res.TypedArray;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Handler;
@@ -9,16 +14,23 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.ColorInt;
+import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
@@ -32,6 +44,7 @@ import java.util.HashMap;
 
 /**
  * 帖子音频：确定性波形 + ExoPlayer + {@link AudioPlayManager} 互斥。
+ * 支持 XML 自定义属性（{@code pav_*}）：整体背景/内边距、播放钮、时长、波形颜色与柱形。
  */
 public class PostAudioView extends FrameLayout {
 
@@ -41,13 +54,50 @@ public class PostAudioView extends FrameLayout {
     private static final long SEEK_COALESCE_MS = 80L;
     /** seek 后进度条按住目标，避免 ticker 短暂拉回旧位置 */
     private static final long SEEK_HOLD_MS = 900L;
+    private static final int UNSET_COLOR = Color.TRANSPARENT;
+    private static final int UNSET_DIMEN = Integer.MIN_VALUE;
 
+    private View llRoot;
     private View flPlayBtn;
     private ImageView ivPlay;
     private ImageView ivPause;
     private ProgressBar pbLoading;
+    private View llWaveArea;
     private WaveformSeekBar waveformSeekBar;
     private TextView tvDuration;
+
+    // —— 外观（XML / setter）——
+    @Nullable
+    private Drawable styleBackground;
+    private int styleBgColor = UNSET_COLOR;
+    private int styleCornerRadius = UNSET_DIMEN;
+    private int stylePadStart = UNSET_DIMEN;
+    private int stylePadTop = UNSET_DIMEN;
+    private int stylePadEnd = UNSET_DIMEN;
+    private int stylePadBottom = UNSET_DIMEN;
+    private int stylePlayBtnSize = UNSET_DIMEN;
+    @Nullable
+    private Drawable stylePlayBtnBackground;
+    private int stylePlayBtnColor = UNSET_COLOR;
+    @Nullable
+    private Drawable stylePlayIcon;
+    @Nullable
+    private Drawable stylePauseIcon;
+    private int stylePlayIconPadding = UNSET_DIMEN;
+    private int styleLoadingTint = UNSET_COLOR;
+    private int styleWaveAreaMarginStart = UNSET_DIMEN;
+    private int styleWaveHeight = UNSET_DIMEN;
+    private int styleWaveMarginTop = UNSET_DIMEN;
+    private int styleWavePlayedColor = UNSET_COLOR;
+    private int styleWaveBufferColor = UNSET_COLOR;
+    private int styleWaveRemainColor = UNSET_COLOR;
+    private int styleWaveMinBarHeight = UNSET_DIMEN;
+    private int styleWaveBarCornerRadius = UNSET_DIMEN;
+    private float styleWaveBarWidthRatio = -1f;
+    private int styleDurationTextSize = UNSET_DIMEN;
+    private int styleDurationTextColor = UNSET_COLOR;
+    /** 0 start / 1 end / 2 center */
+    private int styleDurationGravity = 1;
 
     private ExoPlayer player;
     private String audioUrl;
@@ -165,28 +215,31 @@ public class PostAudioView extends FrameLayout {
     };
 
     public PostAudioView(@NonNull Context context) {
-        super(context);
-        init(context);
+        this(context, null);
     }
 
     public PostAudioView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-        init(context);
+        this(context, attrs, 0);
     }
 
     public PostAudioView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context);
+        init(context, attrs);
     }
 
-    private void init(Context context) {
+    private void init(Context context, @Nullable AttributeSet attrs) {
         LayoutInflater.from(context).inflate(R.layout.view_post_audio, this, true);
+        llRoot = findViewById(R.id.llPostAudioRoot);
         flPlayBtn = findViewById(R.id.flPlayBtn);
         ivPlay = findViewById(R.id.ivPlay);
         ivPause = findViewById(R.id.ivPause);
         pbLoading = findViewById(R.id.pbLoading);
+        llWaveArea = findViewById(R.id.llWaveArea);
         waveformSeekBar = findViewById(R.id.waveformSeekBar);
         tvDuration = findViewById(R.id.tvDuration);
+
+        parseAttrs(context, attrs);
+        applyAppearance();
 
         ivPlay.setClickable(false);
         ivPause.setClickable(false);
@@ -223,6 +276,206 @@ public class PostAudioView extends FrameLayout {
             }
         });
         showIdle();
+    }
+
+    private void parseAttrs(Context context, @Nullable AttributeSet attrs) {
+        if (attrs == null) {
+            return;
+        }
+        TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.PostAudioView);
+        try {
+            if (ta.hasValue(R.styleable.PostAudioView_pav_background)) {
+                styleBackground = ta.getDrawable(R.styleable.PostAudioView_pav_background);
+            }
+            styleBgColor = ta.getColor(R.styleable.PostAudioView_pav_bgColor, styleBgColor);
+            styleCornerRadius = ta.getDimensionPixelSize(
+                    R.styleable.PostAudioView_pav_cornerRadius, styleCornerRadius);
+            stylePadStart = ta.getDimensionPixelSize(
+                    R.styleable.PostAudioView_pav_paddingStart, stylePadStart);
+            stylePadTop = ta.getDimensionPixelSize(
+                    R.styleable.PostAudioView_pav_paddingTop, stylePadTop);
+            stylePadEnd = ta.getDimensionPixelSize(
+                    R.styleable.PostAudioView_pav_paddingEnd, stylePadEnd);
+            stylePadBottom = ta.getDimensionPixelSize(
+                    R.styleable.PostAudioView_pav_paddingBottom, stylePadBottom);
+
+            stylePlayBtnSize = ta.getDimensionPixelSize(
+                    R.styleable.PostAudioView_pav_playBtnSize, stylePlayBtnSize);
+            if (ta.hasValue(R.styleable.PostAudioView_pav_playBtnBackground)) {
+                stylePlayBtnBackground = ta.getDrawable(
+                        R.styleable.PostAudioView_pav_playBtnBackground);
+            }
+            stylePlayBtnColor = ta.getColor(
+                    R.styleable.PostAudioView_pav_playBtnColor, stylePlayBtnColor);
+            if (ta.hasValue(R.styleable.PostAudioView_pav_playIcon)) {
+                stylePlayIcon = ta.getDrawable(R.styleable.PostAudioView_pav_playIcon);
+            }
+            if (ta.hasValue(R.styleable.PostAudioView_pav_pauseIcon)) {
+                stylePauseIcon = ta.getDrawable(R.styleable.PostAudioView_pav_pauseIcon);
+            }
+            stylePlayIconPadding = ta.getDimensionPixelSize(
+                    R.styleable.PostAudioView_pav_playIconPadding, stylePlayIconPadding);
+            styleLoadingTint = ta.getColor(
+                    R.styleable.PostAudioView_pav_loadingTint, styleLoadingTint);
+
+            styleWaveAreaMarginStart = ta.getDimensionPixelSize(
+                    R.styleable.PostAudioView_pav_waveAreaMarginStart, styleWaveAreaMarginStart);
+            styleWaveHeight = ta.getDimensionPixelSize(
+                    R.styleable.PostAudioView_pav_waveHeight, styleWaveHeight);
+            styleWaveMarginTop = ta.getDimensionPixelSize(
+                    R.styleable.PostAudioView_pav_waveMarginTop, styleWaveMarginTop);
+            styleWavePlayedColor = ta.getColor(
+                    R.styleable.PostAudioView_pav_wavePlayedColor, styleWavePlayedColor);
+            styleWaveBufferColor = ta.getColor(
+                    R.styleable.PostAudioView_pav_waveBufferColor, styleWaveBufferColor);
+            styleWaveRemainColor = ta.getColor(
+                    R.styleable.PostAudioView_pav_waveRemainColor, styleWaveRemainColor);
+            styleWaveMinBarHeight = ta.getDimensionPixelSize(
+                    R.styleable.PostAudioView_pav_waveMinBarHeight, styleWaveMinBarHeight);
+            styleWaveBarCornerRadius = ta.getDimensionPixelSize(
+                    R.styleable.PostAudioView_pav_waveBarCornerRadius, styleWaveBarCornerRadius);
+            styleWaveBarWidthRatio = ta.getFloat(
+                    R.styleable.PostAudioView_pav_waveBarWidthRatio, styleWaveBarWidthRatio);
+
+            styleDurationTextSize = ta.getDimensionPixelSize(
+                    R.styleable.PostAudioView_pav_durationTextSize, styleDurationTextSize);
+            styleDurationTextColor = ta.getColor(
+                    R.styleable.PostAudioView_pav_durationTextColor, styleDurationTextColor);
+            styleDurationGravity = ta.getInt(
+                    R.styleable.PostAudioView_pav_durationGravity, styleDurationGravity);
+        } finally {
+            ta.recycle();
+        }
+    }
+
+    private void applyAppearance() {
+        if (llRoot == null) {
+            return;
+        }
+        // 背景：drawable 优先，否则纯色+圆角
+        if (styleBackground != null) {
+            llRoot.setBackground(styleBackground);
+        } else if (styleBgColor != UNSET_COLOR || styleCornerRadius != UNSET_DIMEN) {
+            int color = styleBgColor != UNSET_COLOR
+                    ? styleBgColor
+                    : ContextCompat.getColor(getContext(), R.color.white);
+            float radius = styleCornerRadius != UNSET_DIMEN
+                    ? styleCornerRadius
+                    : getResources().getDimension(R.dimen.x24);
+            GradientDrawable bg = new GradientDrawable();
+            bg.setShape(GradientDrawable.RECTANGLE);
+            bg.setColor(color);
+            bg.setCornerRadius(radius);
+            llRoot.setBackground(bg);
+        }
+
+        int padL = stylePadStart != UNSET_DIMEN ? stylePadStart : llRoot.getPaddingStart();
+        int padT = stylePadTop != UNSET_DIMEN ? stylePadTop : llRoot.getPaddingTop();
+        int padR = stylePadEnd != UNSET_DIMEN ? stylePadEnd : llRoot.getPaddingEnd();
+        int padB = stylePadBottom != UNSET_DIMEN ? stylePadBottom : llRoot.getPaddingBottom();
+        if (stylePadStart != UNSET_DIMEN || stylePadTop != UNSET_DIMEN
+                || stylePadEnd != UNSET_DIMEN || stylePadBottom != UNSET_DIMEN) {
+            llRoot.setPaddingRelative(padL, padT, padR, padB);
+        }
+
+        if (stylePlayBtnSize != UNSET_DIMEN) {
+            ViewGroup.LayoutParams lp = flPlayBtn.getLayoutParams();
+            lp.width = stylePlayBtnSize;
+            lp.height = stylePlayBtnSize;
+            flPlayBtn.setLayoutParams(lp);
+        }
+        if (stylePlayBtnBackground != null) {
+            flPlayBtn.setBackground(stylePlayBtnBackground);
+        } else if (stylePlayBtnColor != UNSET_COLOR) {
+            GradientDrawable oval = new GradientDrawable();
+            oval.setShape(GradientDrawable.OVAL);
+            oval.setColor(stylePlayBtnColor);
+            flPlayBtn.setBackground(oval);
+        }
+        if (stylePlayIcon != null) {
+            ivPlay.setImageDrawable(stylePlayIcon);
+        }
+        if (stylePauseIcon != null) {
+            ivPause.setImageDrawable(stylePauseIcon);
+        }
+        if (stylePlayIconPadding != UNSET_DIMEN) {
+            ivPlay.setPadding(stylePlayIconPadding, stylePlayIconPadding,
+                    stylePlayIconPadding, stylePlayIconPadding);
+            ivPause.setPadding(stylePlayIconPadding, stylePlayIconPadding,
+                    stylePlayIconPadding, stylePlayIconPadding);
+            pbLoading.setPadding(stylePlayIconPadding, stylePlayIconPadding,
+                    stylePlayIconPadding, stylePlayIconPadding);
+        }
+        if (styleLoadingTint != UNSET_COLOR) {
+            pbLoading.setIndeterminateTintList(ColorStateList.valueOf(styleLoadingTint));
+        }
+
+        if (llWaveArea != null && styleWaveAreaMarginStart != UNSET_DIMEN) {
+            ViewGroup.MarginLayoutParams mlp =
+                    (ViewGroup.MarginLayoutParams) llWaveArea.getLayoutParams();
+            mlp.setMarginStart(styleWaveAreaMarginStart);
+            llWaveArea.setLayoutParams(mlp);
+        }
+
+        if (styleWaveHeight != UNSET_DIMEN || styleWaveMarginTop != UNSET_DIMEN) {
+            ViewGroup.MarginLayoutParams wlp =
+                    (ViewGroup.MarginLayoutParams) waveformSeekBar.getLayoutParams();
+            if (styleWaveHeight != UNSET_DIMEN) {
+                wlp.height = styleWaveHeight;
+            }
+            if (styleWaveMarginTop != UNSET_DIMEN) {
+                wlp.topMargin = styleWaveMarginTop;
+            }
+            waveformSeekBar.setLayoutParams(wlp);
+        }
+        int played = styleWavePlayedColor != UNSET_COLOR
+                ? styleWavePlayedColor
+                : ContextCompat.getColor(getContext(), R.color.common_accent_color);
+        int buffer = styleWaveBufferColor != UNSET_COLOR
+                ? styleWaveBufferColor
+                : 0x805A8DDF;
+        int remain = styleWaveRemainColor != UNSET_COLOR
+                ? styleWaveRemainColor
+                : ContextCompat.getColor(getContext(), R.color.cl_ccc);
+        if (styleWavePlayedColor != UNSET_COLOR
+                || styleWaveBufferColor != UNSET_COLOR
+                || styleWaveRemainColor != UNSET_COLOR) {
+            waveformSeekBar.setColors(played, buffer, remain);
+        }
+        if (styleWaveMinBarHeight != UNSET_DIMEN) {
+            waveformSeekBar.setMinBarHeightPx(styleWaveMinBarHeight);
+        }
+        if (styleWaveBarCornerRadius != UNSET_DIMEN) {
+            waveformSeekBar.setBarCornerRadiusPx(styleWaveBarCornerRadius);
+        }
+        if (styleWaveBarWidthRatio > 0f) {
+            waveformSeekBar.setBarWidthRatio(styleWaveBarWidthRatio);
+        }
+
+        if (styleDurationTextSize != UNSET_DIMEN) {
+            tvDuration.setTextSize(TypedValue.COMPLEX_UNIT_PX, styleDurationTextSize);
+        }
+        if (styleDurationTextColor != UNSET_COLOR) {
+            tvDuration.setTextColor(styleDurationTextColor);
+        }
+        int gravity;
+        switch (styleDurationGravity) {
+            case 0:
+                gravity = Gravity.START;
+                break;
+            case 2:
+                gravity = Gravity.CENTER_HORIZONTAL;
+                break;
+            case 1:
+            default:
+                gravity = Gravity.END;
+                break;
+        }
+        if (tvDuration.getLayoutParams() instanceof LinearLayout.LayoutParams) {
+            LinearLayout.LayoutParams tlp = (LinearLayout.LayoutParams) tvDuration.getLayoutParams();
+            tlp.gravity = gravity;
+            tvDuration.setLayoutParams(tlp);
+        }
     }
 
     public void setAudioUrl(String url) {
@@ -741,6 +994,144 @@ public class PostAudioView extends FrameLayout {
     private static String formatTime(int millis) {
         int totalSec = Math.max(0, millis / 1000);
         return String.format("%02d:%02d", totalSec / 60, totalSec % 60);
+    }
+
+    // —— 外观 setter（与 pav_* 对应）——
+
+    public void setAudioBackground(@Nullable Drawable background) {
+        styleBackground = background;
+        applyAppearance();
+    }
+
+    public void setAudioBackground(@DrawableRes int resId) {
+        styleBackground = ContextCompat.getDrawable(getContext(), resId);
+        applyAppearance();
+    }
+
+    public void setAudioBgColor(@ColorInt int color) {
+        styleBackground = null;
+        styleBgColor = color;
+        applyAppearance();
+    }
+
+    public void setAudioCornerRadius(int px) {
+        styleCornerRadius = Math.max(0, px);
+        applyAppearance();
+    }
+
+    public void setAudioPadding(int startPx, int topPx, int endPx, int bottomPx) {
+        stylePadStart = Math.max(0, startPx);
+        stylePadTop = Math.max(0, topPx);
+        stylePadEnd = Math.max(0, endPx);
+        stylePadBottom = Math.max(0, bottomPx);
+        applyAppearance();
+    }
+
+    public void setPlayBtnSize(int px) {
+        stylePlayBtnSize = Math.max(0, px);
+        applyAppearance();
+    }
+
+    public void setPlayBtnBackground(@Nullable Drawable background) {
+        stylePlayBtnBackground = background;
+        applyAppearance();
+    }
+
+    public void setPlayBtnColor(@ColorInt int color) {
+        stylePlayBtnBackground = null;
+        stylePlayBtnColor = color;
+        applyAppearance();
+    }
+
+    public void setPlayIcon(@Nullable Drawable drawable) {
+        stylePlayIcon = drawable;
+        applyAppearance();
+    }
+
+    public void setPlayIcon(@DrawableRes int resId) {
+        stylePlayIcon = ContextCompat.getDrawable(getContext(), resId);
+        applyAppearance();
+    }
+
+    public void setPauseIcon(@Nullable Drawable drawable) {
+        stylePauseIcon = drawable;
+        applyAppearance();
+    }
+
+    public void setPauseIcon(@DrawableRes int resId) {
+        stylePauseIcon = ContextCompat.getDrawable(getContext(), resId);
+        applyAppearance();
+    }
+
+    public void setPlayIconPadding(int px) {
+        stylePlayIconPadding = Math.max(0, px);
+        applyAppearance();
+    }
+
+    public void setLoadingTint(@ColorInt int color) {
+        styleLoadingTint = color;
+        applyAppearance();
+    }
+
+    public void setWaveAreaMarginStart(int px) {
+        styleWaveAreaMarginStart = Math.max(0, px);
+        applyAppearance();
+    }
+
+    public void setWaveHeight(int px) {
+        styleWaveHeight = Math.max(0, px);
+        applyAppearance();
+    }
+
+    public void setWaveMarginTop(int px) {
+        styleWaveMarginTop = Math.max(0, px);
+        applyAppearance();
+    }
+
+    public void setWaveColors(@ColorInt int played, @ColorInt int buffer, @ColorInt int remain) {
+        styleWavePlayedColor = played;
+        styleWaveBufferColor = buffer;
+        styleWaveRemainColor = remain;
+        applyAppearance();
+    }
+
+    public void setWaveMinBarHeight(int px) {
+        styleWaveMinBarHeight = Math.max(0, px);
+        applyAppearance();
+    }
+
+    public void setWaveBarCornerRadius(int px) {
+        styleWaveBarCornerRadius = Math.max(0, px);
+        applyAppearance();
+    }
+
+    public void setWaveBarWidthRatio(float ratio) {
+        styleWaveBarWidthRatio = ratio;
+        applyAppearance();
+    }
+
+    public void setDurationTextSizePx(int px) {
+        styleDurationTextSize = Math.max(0, px);
+        applyAppearance();
+    }
+
+    public void setDurationTextColor(@ColorInt int color) {
+        styleDurationTextColor = color;
+        applyAppearance();
+    }
+
+    /** @param gravity 0 start / 1 end / 2 center */
+    public void setDurationGravity(int gravity) {
+        styleDurationGravity = gravity;
+        applyAppearance();
+    }
+
+    public WaveformSeekBar getWaveformSeekBar() {
+        return waveformSeekBar;
+    }
+
+    public TextView getDurationView() {
+        return tvDuration;
     }
 
     @Override

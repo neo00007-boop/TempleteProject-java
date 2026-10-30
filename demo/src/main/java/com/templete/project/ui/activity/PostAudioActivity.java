@@ -36,6 +36,9 @@ public class PostAudioActivity extends BaseActivity<ActivityPostAudioBinding> {
     @Override
     public void initView() {
         mViewBinding.tvHint.setText("波形由 url+固定盐确定性生成（不下载音频）；同时只能播放一条");
+        // 顶部自定义属性样式示例
+        mViewBinding.postAudioCustom.setAudioUrl(
+                "https://loremfile.dev/mp3/sine-440hz-3s.mp3");
         mViewBinding.rvAudioList.setLayoutManager(new LinearLayoutManager(this));
         mViewBinding.rvAudioList.setAdapter(new AudioAdapter(buildDemoList()));
     }
@@ -56,6 +59,7 @@ public class PostAudioActivity extends BaseActivity<ActivityPostAudioBinding> {
 
     @Override
     public void onDestroy() {
+        mViewBinding.postAudioCustom.release();
         AudioPlayManager.get().releaseAll();
         super.onDestroy();
     }
