@@ -389,15 +389,16 @@ public class MediaPickerUtil {
                         return false;
                     }
                 });
-        enablePreviewZoom(context, model, thumbHost);
+        enablePreviewZoom(context, model, thumbHost, data.size());
         model.startActivityPreview(safePos, showDelete, data);
     }
 
     /**
      * 开启预览 zoom：RV/ListView 官方 API；普通 ViewGroup（九宫格）按子 View 坐标写入 ViewParams。
+     * 预览条数多于可见子 View 时，用最后一格有效坐标垫满，避免滑动返回无落脚点。
      */
     private static void enablePreviewZoom(Context context, PictureSelectionPreviewModel model,
-                                          @Nullable ViewGroup thumbHost) {
+                                          @Nullable ViewGroup thumbHost, int previewCount) {
         if (thumbHost == null) {
             return;
         }
@@ -409,7 +410,7 @@ public class MediaPickerUtil {
             return;
         }
         // 全屏预览 statusBar 偏移为 0，与 isPreviewFullScreenMode(true) 一致
-        if (!fillZoomParamsFromChildren(thumbHost, 0)) {
+        if (!fillZoomParamsFromChildren(thumbHost, 0, previewCount)) {
             return;
         }
         // openPreview() 入队的正是当前 config
@@ -432,12 +433,14 @@ public class MediaPickerUtil {
     }
 
     /**
-     * 把任意 ViewGroup 的子 View（按 index）写成 PictureSelector zoom 所需坐标。
+     * 把任意 ViewGroup 的子 View（按 index）写成 PictureSelector zoom 所需坐标；
+     * 不足 previewCount 时用最后一格有效坐标垫满，保证每张预览都有落脚点。
      *
      * @return 是否写入成功
      */
     @SuppressWarnings("unchecked")
-    private static boolean fillZoomParamsFromChildren(@NonNull ViewGroup host, int statusBarHeight) {
+    private static boolean fillZoomParamsFromChildren(@NonNull ViewGroup host, int statusBarHeight,
+                                                      int previewCount) {
         try {
             Field field = BuildRecycleItemViewParams.class.getDeclaredField("viewParams");
             field.setAccessible(true);
@@ -446,6 +449,7 @@ public class MediaPickerUtil {
                 return false;
             }
             BuildRecycleItemViewParams.clear();
+            ViewParams lastValid = null;
             int count = host.getChildCount();
             for (int i = 0; i < count; i++) {
                 View child = host.getChildAt(i);
@@ -463,8 +467,20 @@ public class MediaPickerUtil {
                     p.setTop(loc[1] - statusBarHeight);
                     p.setWidth(child.getWidth());
                     p.setHeight(child.getHeight());
+                    lastValid = p;
                 }
                 params.add(p);
+            }
+            // 可见格 < 预览条数（如九宫格 >9）：垫到与 data 等长，避免滑动返回无落脚点
+            if (lastValid != null && previewCount > params.size()) {
+                for (int i = params.size(); i < previewCount; i++) {
+                    ViewParams pad = new ViewParams();
+                    pad.setLeft(lastValid.getLeft());
+                    pad.setTop(lastValid.getTop());
+                    pad.setWidth(lastValid.getWidth());
+                    pad.setHeight(lastValid.getHeight());
+                    params.add(pad);
+                }
             }
             return params.size() > 0;
         } catch (Throwable ignored) {
