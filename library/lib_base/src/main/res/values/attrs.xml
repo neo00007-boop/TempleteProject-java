@@ -150,4 +150,52 @@
             <enum name="center" value="2" />
         </attr>
     </declare-styleable>
+
+    <!-- 分格验证码：单隐式输入，支持粘贴 / setCode 赋值 / 系统短信填充 -->
+    <declare-styleable name="VerificationCodeView">
+        <attr name="vcv_et_number" format="integer" />
+        <attr name="vcv_et_inputType">
+            <enum name="number" value="0" />
+            <enum name="numberPassword" value="1" />
+            <enum name="text" value="2" />
+            <enum name="textPassword" value="3" />
+        </attr>
+        <attr name="vcv_et_width" format="dimension" />
+        <attr name="vcv_et_height" format="dimension" />
+        <attr name="vcv_et_text_color" format="color" />
+        <attr name="vcv_et_text_size" format="dimension" />
+        <attr name="vcv_et_bg" format="reference" />
+        <attr name="vcv_et_bg_filled" format="reference" />
+        <attr name="vcv_et_spacing" format="dimension" />
+        <!-- true：等分间距填满宽度；false：固定 spacing + 固定格宽 -->
+        <attr name="vcv_et_bisect" format="boolean" />
+        <attr name="vcv_et_password_char" format="string" />
+    </declare-styleable>
+
+    <!-- 发帖选图九宫格（与 NineGridImageView 同包） -->
+    <declare-styleable name="NinePicChooseView">
+        <attr name="npc_maxCount" format="integer" />
+        <attr name="npc_spanCount" format="integer" />
+        <attr name="npc_itemGap" format="dimension" />
+        <!-- 已选图圆角；未单独设 addCorner 时加号格沿用 -->
+        <attr name="npc_cornerRadius" format="dimension" />
+        <attr name="npc_deleteIcon" format="reference" />
+        <attr name="npc_deleteIconSize" format="dimension" />
+        <attr name="npc_showDelete" format="boolean" />
+
+        <!-- 加号格 -->
+        <attr name="npc_addIcon" format="reference" />
+        <attr name="npc_addIconSize" format="dimension" />
+        <attr name="npc_addIconTint" format="color" />
+        <attr name="npc_addIconPadding" format="dimension" />
+        <attr name="npc_addBgColor" format="color" />
+        <attr name="npc_addCornerRadius" format="dimension" />
+        <!-- 虚线边框 -->
+        <attr name="npc_addBorderColor" format="color" />
+        <attr name="npc_addBorderWidth" format="dimension" />
+        <attr name="npc_addDashWidth" format="dimension" />
+        <attr name="npc_addDashGap" format="dimension" />
+        <!-- false 则实线边框（dashWidth/gap 忽略） -->
+        <attr name="npc_addBorderDashed" format="boolean" />
+    </declare-styleable>
 </resources>

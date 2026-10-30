@@ -25,6 +25,7 @@ import com.templete.project.ui.activity.ShapeActivity;
 import com.templete.project.ui.activity.SheetActivity;
 import com.templete.project.ui.activity.ShimmerActivity;
 import com.templete.project.ui.activity.TxtActivity;
+import com.templete.project.ui.activity.VerificationCodeActivity;
 import com.templete.project.ui.activity.ViewActivity;
 
 /**
@@ -88,6 +89,8 @@ public class FirstFragment extends BaseFragment<FirstFragmentBinding> {
                         clazz = NineGridActivity.class;
                     } else if (v.equals(mViewBinding.tv16)) {
                         clazz = FoldTextActivity.class;
+                    } else if (v.equals(mViewBinding.tv17)) {
+                        clazz = VerificationCodeActivity.class;
                     }
                     if (clazz != null) {
                         getBaseActivity().startAty(requireActivity(), clazz);
@@ -98,7 +101,7 @@ public class FirstFragment extends BaseFragment<FirstFragmentBinding> {
                 mViewBinding.tv7, mViewBinding.tv8, mViewBinding.tv9,
                 mViewBinding.tv10, mViewBinding.tv11, mViewBinding.tv12,
                 mViewBinding.tv13, mViewBinding.tv14, mViewBinding.tv15,
-                mViewBinding.tv16);
+                mViewBinding.tv16, mViewBinding.tv17);
     }
 
     @Override

@@ -41,7 +41,7 @@ ext {
             glide_version              : '4.16.0',
             lottie_version             : '6.7.1',
             // v3.11+ ImageEngine/Preview 接口有破坏性变更，暂留 v3.0.9
-            pictureselector_version    : 'v3.0.9',
+            pictureselector_version    : 'v3.11.2',
             qiniu_version              : '8.11.0',
             gpuimage_version           : '2.1.0',
 

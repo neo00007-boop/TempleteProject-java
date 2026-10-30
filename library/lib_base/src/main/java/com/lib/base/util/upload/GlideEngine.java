@@ -8,15 +8,11 @@ import android.graphics.drawable.Drawable;
 import android.widget.ImageView;
 
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
-import com.bumptech.glide.request.target.CustomTarget;
-import com.bumptech.glide.request.transition.Transition;
 import com.lib.base.R;
 import com.lib.base.glide.GlideApp;
 import com.luck.picture.lib.engine.ImageEngine;
-import com.luck.picture.lib.interfaces.OnCallbackListener;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 
@@ -45,43 +41,17 @@ public class GlideEngine implements ImageEngine {
     }
 
     /**
-     * 加载指定url并返回bitmap
-     *
-     * @param context 上下文
-     * @param url     资源url
-     * @param call    回调接口
+     * 加载图片并指定宽高（预览大图等）
      */
     @Override
-    public void loadImageBitmap(@NonNull Context context, @NonNull String url, int maxWidth, int maxHeight, OnCallbackListener<Bitmap> call) {
+    public void loadImage(Context context, ImageView imageView, String url, int maxWidth, int maxHeight) {
         if (!assertValidRequest(context)) {
             return;
         }
         GlideApp.with(context)
-                .asBitmap()
-                .override(maxWidth, maxHeight)
                 .load(url)
-                .into(new CustomTarget<Bitmap>() {
-
-                    @Override
-                    public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                        if (call != null) {
-                            call.onCall(resource);
-                        }
-                    }
-
-                    @Override
-                    public void onLoadFailed(@Nullable Drawable errorDrawable) {
-                        if (call != null) {
-                            call.onCall(null);
-                        }
-                    }
-
-                    @Override
-                    public void onLoadCleared(@Nullable Drawable placeholder) {
-
-                    }
-
-                });
+                .override(maxWidth, maxHeight)
+                .into(imageView);
     }
 
     /**

@@ -7,31 +7,108 @@
     android:background="@color/common_window_background_color"
     android:orientation="vertical">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:includeFontPadding="false"
-        android:paddingStart="@dimen/x40"
-        android:paddingTop="@dimen/x30"
-        android:paddingEnd="@dimen/x40"
-        android:paddingBottom="@dimen/x10"
-        android:text="点击格子预览（MediaPickerUtil）；&gt;9 张末格显示剩余「n+」"
-        android:textColor="@color/cl_666"
-        android:textSize="@dimen/x32"
-        tools:ignore="HardcodedText" />
-
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingStart="@dimen/x40"
+        android:paddingTop="@dimen/x20"
         android:paddingEnd="@dimen/x40"
         android:paddingBottom="@dimen/x60">
 
         <LinearLayout
-            android:id="@+id/llNineGridSamples"
+            android:id="@+id/llNineGridRoot"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvChooseTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:text="发帖选图 NinePicChooseView"
+                android:textColor="@color/cl_333333"
+                android:textSize="@dimen/x32"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/tvChooseHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x8"
+                android:includeFontPadding="false"
+                android:text="点「+」选图/拍摄；点图预览；点 × 删除"
+                android:textColor="@color/cl_666"
+                android:textSize="@dimen/x28"
+                tools:ignore="HardcodedText" />
+
+            <com.lib.base.ui.widget.ninegrid.NinePicChooseView
+                android:id="@+id/ninePicChoose"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x20"
+                app:npc_addBgColor="#FAFAFA"
+                app:npc_addBorderColor="#BDBDBD"
+                app:npc_addBorderDashed="true"
+                app:npc_addBorderWidth="@dimen/x2"
+                app:npc_addCornerRadius="@dimen/x12"
+                app:npc_addDashGap="@dimen/x8"
+                app:npc_addDashWidth="@dimen/x12"
+                app:npc_addIcon="@drawable/ic_nine_pic_add"
+                app:npc_addIconSize="@dimen/x56"
+                app:npc_addIconTint="#9E9E9E"
+                app:npc_cornerRadius="@dimen/x12"
+                app:npc_itemGap="@dimen/x16"
+                app:npc_maxCount="9"
+                app:npc_spanCount="3" />
+
+            <TextView
+                android:id="@+id/tvChooseState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x12"
+                android:includeFontPadding="false"
+                android:textColor="@color/cl_666"
+                android:textSize="@dimen/x28"
+                tools:ignore="HardcodedText"
+                tools:text="已选 0/9" />
+
+            <View
+                android:id="@+id/dividerNine"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="@dimen/x40"
+                android:layout_marginBottom="@dimen/x30"
+                android:background="#E0E0E0" />
+
+            <TextView
+                android:id="@+id/tvDisplayTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:text="展示九宫格 NineGridImageView"
+                android:textColor="@color/cl_333333"
+                android:textSize="@dimen/x32"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/tvDisplayHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x8"
+                android:layout_marginBottom="@dimen/x16"
+                android:includeFontPadding="false"
+                android:text="点击格子预览；&gt;9 张末格显示剩余「n+」"
+                android:textColor="@color/cl_666"
+                android:textSize="@dimen/x28"
+                tools:ignore="HardcodedText" />
+
+            <LinearLayout
+                android:id="@+id/llNineGridSamples"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

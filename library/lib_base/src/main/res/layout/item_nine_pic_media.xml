@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.lib.base.ui.widget.ninegrid.SquareFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/flNinePicItem"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <com.lib.base.ui.widget.ninegrid.NineGridRoundImageView
+        android:id="@+id/ivNinePic"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        tools:ignore="ContentDescription" />
+
+    <ImageView
+        android:id="@+id/ivNinePicDelete"
+        android:layout_width="@dimen/x42"
+        android:layout_height="@dimen/x42"
+        android:layout_gravity="end|top"
+        android:padding="@dimen/x6"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_nine_pic_delete"
+        tools:ignore="ContentDescription" />
+</com.lib.base.ui.widget.ninegrid.SquareFrameLayout>

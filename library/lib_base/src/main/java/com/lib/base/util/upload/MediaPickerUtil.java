@@ -1,16 +1,28 @@
 package com.lib.base.util.upload;
 
+import android.Manifest;
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Build;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ListView;
 
+import com.hjq.permissions.OnPermissionCallback;
 import com.lib.base.R;
+import com.lib.base.util.DebugUtil;
+import com.lib.base.util.PermissionUtil;
 import com.luck.picture.lib.animators.AnimationType;
+import com.luck.picture.lib.basic.PictureSelectionPreviewModel;
 import com.luck.picture.lib.basic.PictureSelector;
 import com.luck.picture.lib.config.SelectMimeType;
 import com.luck.picture.lib.config.SelectModeConfig;
 import com.luck.picture.lib.entity.LocalMedia;
 import com.luck.picture.lib.interfaces.OnExternalPreviewEventListener;
+import com.luck.picture.lib.config.SelectorProviders;
 import com.luck.picture.lib.language.LanguageConfig;
+import com.luck.picture.lib.magical.BuildRecycleItemViewParams;
+import com.luck.picture.lib.magical.ViewParams;
 import com.luck.picture.lib.manager.PictureCacheManager;
 import com.luck.picture.lib.style.BottomNavBarStyle;
 import com.luck.picture.lib.style.PictureSelectorStyle;
@@ -19,12 +31,14 @@ import com.luck.picture.lib.style.SelectMainStyle;
 import com.luck.picture.lib.style.TitleBarStyle;
 import com.luck.picture.lib.utils.DensityUtil;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * R.style.picture_default_style
@@ -241,18 +255,74 @@ public class MediaPickerUtil {
 
     // 单独拍照
     public static void takeMedia(Context context, int chooseMode, boolean customCamera, boolean crop, MeOnResultCallbackListener callbackListener) {
-        PictureSelector.create(context)
-                .openCamera(chooseMode)
-                .setCameraInterceptListener(customCamera ? new MeOnCameraInterceptListener() : null)//自定义相机
-                .setCropEngine(crop ? new ImageCropEngine() : null)//裁剪
-                .setCompressEngine(new ImageCompressEngine())//压缩
-                .setSandboxFileEngine(new MeSandboxFileEngine())//沙箱路径
-                .isOriginalControl(false)//原图
-                .setOutputAudioDir(Util.getSandboxAudioOutputPath())
-                //.setSelectedData(mAdapter.getData());// 相册已选数据
-                .setRecordVideoMaxSecond(10)
-                .setRecordVideoMinSecond(2)
-                .forResult(callbackListener);
+        requestMediaPermissions(context, chooseMode, true, () ->
+                PictureSelector.create(context)
+                        .openCamera(chooseMode)
+                        .setCameraInterceptListener(customCamera ? new MeOnCameraInterceptListener() : null)//自定义相机
+                        .setCropEngine(crop ? new ImageCropEngine() : null)//裁剪
+                        .setCompressEngine(new ImageCompressEngine())//压缩
+                        .setSandboxFileEngine(new MeSandboxFileEngine())//沙箱路径
+                        .isOriginalControl(false)//原图
+                        .setOutputAudioDir(Util.getSandboxAudioOutputPath())
+                        .setRecordVideoMaxSecond(10)
+                        .setRecordVideoMinSecond(2)
+                        .forResult(callbackListener));
+    }
+
+    /**
+     * 选图/拍摄前申请读媒体 +（可选）相机权限。
+     * Android 13+：READ_MEDIA_*；低版本：READ_EXTERNAL_STORAGE。
+     */
+    private static void requestMediaPermissions(Context context, int chooseMode, boolean needCamera,
+                                                @NonNull Runnable onGranted) {
+        String[] permissions = buildMediaPermissions(chooseMode, needCamera);
+        if (permissions.length == 0 || PermissionUtil.isGranted(context, permissions)) {
+            onGranted.run();
+            return;
+        }
+        PermissionUtil.requestPermission(context, new OnPermissionCallback() {
+            @Override
+            public void onGranted(@NonNull List<String> granted, boolean allGranted) {
+                if (allGranted) {
+                    onGranted.run();
+                } else {
+                    DebugUtil.toast("需要相册/相机权限才能继续");
+                }
+            }
+
+            @Override
+            public void onDenied(@NonNull List<String> denied, boolean doNotAskAgain) {
+                if (doNotAskAgain) {
+                    DebugUtil.toast("请在设置中开启相册/相机权限");
+                    PermissionUtil.startPermissionActivity(context, denied);
+                } else {
+                    DebugUtil.toast("需要相册/相机权限才能继续");
+                }
+            }
+        }, permissions);
+    }
+
+    @NonNull
+    private static String[] buildMediaPermissions(int chooseMode, boolean needCamera) {
+        ArrayList<String> list = new ArrayList<>();
+        if (needCamera) {
+            list.add(Manifest.permission.CAMERA);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (chooseMode == SelectMimeType.ofImage()) {
+                list.add(Manifest.permission.READ_MEDIA_IMAGES);
+            } else if (chooseMode == SelectMimeType.ofVideo()) {
+                list.add(Manifest.permission.READ_MEDIA_VIDEO);
+            } else if (chooseMode == SelectMimeType.ofAudio()) {
+                list.add(Manifest.permission.READ_MEDIA_AUDIO);
+            } else {
+                list.add(Manifest.permission.READ_MEDIA_IMAGES);
+                list.add(Manifest.permission.READ_MEDIA_VIDEO);
+            }
+        } else {
+            list.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
+        return list.toArray(new String[0]);
     }
 
     /** 外部预览删除回调（预览页点删除后）。 */
@@ -262,7 +332,7 @@ public class MediaPickerUtil {
 
     // 预览图片、视频、音频（显示下载、删除）
     public static void preview(Context context, int position, ArrayList<LocalMedia> data) {
-        preview(context, position, data, true, true, null);
+        preview(context, position, data, true, true, null, null);
     }
 
     /**
@@ -273,11 +343,29 @@ public class MediaPickerUtil {
     public static void preview(Context context, int position, ArrayList<LocalMedia> data,
                                boolean showDelete, boolean showDownload,
                                @Nullable OnPreviewDeleteListener deleteListener) {
+        preview(context, position, data, showDelete, showDownload, null, deleteListener);
+    }
+
+    /**
+     * @param thumbHost 缩略图容器：
+     *                  {@link RecyclerView}/{@link ListView} 走官方 zoom；
+     *                  其它 ViewGroup（如九宫格）按子 View 屏幕坐标手动绑定，滑动返回仍对齐 index
+     */
+    public static void preview(Context context, int position, ArrayList<LocalMedia> data,
+                               boolean showDelete, boolean showDownload,
+                               @Nullable ViewGroup thumbHost,
+                               @Nullable OnPreviewDeleteListener deleteListener) {
         if (data == null || data.isEmpty()) {
             return;
         }
+        // 外部预览 zoom：网络图宽高为 0 会直接 startNormal，无过渡动画
+        for (LocalMedia media : data) {
+            if (media != null) {
+                ensureMediaSizeForZoom(context, media);
+            }
+        }
         int safePos = Math.max(0, Math.min(position, data.size() - 1));
-        PictureSelector.create(context)
+        PictureSelectionPreviewModel model = PictureSelector.create(context)
                 .openPreview()
                 .setImageEngine(GlideEngine.createGlideEngine())
                 .setSelectorUIStyle(getStyle(context))
@@ -296,23 +384,111 @@ public class MediaPickerUtil {
                     }
 
                     @Override
-                    public boolean onLongPressDownload(LocalMedia media) {
+                    public boolean onLongPressDownload(Context context, LocalMedia media) {
                         // false：走 PictureSelector 默认下载逻辑
                         return false;
                     }
-                })
-                .startActivityPreview(safePos, showDelete, data);
+                });
+        enablePreviewZoom(context, model, thumbHost);
+        model.startActivityPreview(safePos, showDelete, data);
+    }
+
+    /**
+     * 开启预览 zoom：RV/ListView 官方 API；普通 ViewGroup（九宫格）按子 View 坐标写入 ViewParams。
+     */
+    private static void enablePreviewZoom(Context context, PictureSelectionPreviewModel model,
+                                          @Nullable ViewGroup thumbHost) {
+        if (thumbHost == null) {
+            return;
+        }
+        if (thumbHost instanceof RecyclerView || thumbHost instanceof ListView) {
+            model.isPreviewZoomEffect(true, true, thumbHost);
+            return;
+        }
+        if (thumbHost.getChildCount() <= 0) {
+            return;
+        }
+        // 全屏预览 statusBar 偏移为 0，与 isPreviewFullScreenMode(true) 一致
+        if (!fillZoomParamsFromChildren(thumbHost, 0)) {
+            return;
+        }
+        // openPreview() 入队的正是当前 config
+        SelectorProviders.getInstance().getSelectorConfig().isPreviewZoomEffect = true;
+        // 网络图常无宽高；打开同步宽高开关便于后续页切换时补尺寸
+        SelectorProviders.getInstance().getSelectorConfig().isSyncWidthAndHeight = true;
+    }
+
+    /** Magical zoom 要求 LocalMedia 宽高非 0，否则走 startNormal 无缩放。 */
+    private static void ensureMediaSizeForZoom(@NonNull Context context, @NonNull LocalMedia media) {
+        if (media.getWidth() > 0 && media.getHeight() > 0) {
+            return;
+        }
+        int w = context.getResources().getDisplayMetrics().widthPixels;
+        if (w <= 0) {
+            w = 1080;
+        }
+        media.setWidth(w);
+        media.setHeight(w);
+    }
+
+    /**
+     * 把任意 ViewGroup 的子 View（按 index）写成 PictureSelector zoom 所需坐标。
+     *
+     * @return 是否写入成功
+     */
+    @SuppressWarnings("unchecked")
+    private static boolean fillZoomParamsFromChildren(@NonNull ViewGroup host, int statusBarHeight) {
+        try {
+            Field field = BuildRecycleItemViewParams.class.getDeclaredField("viewParams");
+            field.setAccessible(true);
+            List<ViewParams> params = (List<ViewParams>) field.get(null);
+            if (params == null) {
+                return false;
+            }
+            BuildRecycleItemViewParams.clear();
+            int count = host.getChildCount();
+            for (int i = 0; i < count; i++) {
+                View child = host.getChildAt(i);
+                ViewParams p = new ViewParams();
+                if (child == null || child.getVisibility() != View.VISIBLE
+                        || child.getWidth() <= 0 || child.getHeight() <= 0) {
+                    p.setLeft(0);
+                    p.setTop(0);
+                    p.setWidth(0);
+                    p.setHeight(0);
+                } else {
+                    int[] loc = new int[2];
+                    child.getLocationOnScreen(loc);
+                    p.setLeft(loc[0]);
+                    p.setTop(loc[1] - statusBarHeight);
+                    p.setWidth(child.getWidth());
+                    p.setHeight(child.getHeight());
+                }
+                params.add(p);
+            }
+            return params.size() > 0;
+        } catch (Throwable ignored) {
+            BuildRecycleItemViewParams.clear();
+            return false;
+        }
     }
 
     /**
      * 网络/本地路径列表预览（九宫格等场景），默认显示下载与删除。
      */
     public static void preview(@NonNull Context context, int position, @Nullable List<String> urls) {
-        preview(context, position, urls, true, true, null);
+        preview(context, position, urls, true, true, null, null);
     }
 
     public static void preview(@NonNull Context context, int position, @Nullable List<String> urls,
                                boolean showDelete, boolean showDownload,
+                               @Nullable OnPreviewDeleteListener deleteListener) {
+        preview(context, position, urls, showDelete, showDownload, null, deleteListener);
+    }
+
+    public static void preview(@NonNull Context context, int position, @Nullable List<String> urls,
+                               boolean showDelete, boolean showDownload,
+                               @Nullable ViewGroup listView,
                                @Nullable OnPreviewDeleteListener deleteListener) {
         if (urls == null || urls.isEmpty()) {
             return;
@@ -322,12 +498,19 @@ public class MediaPickerUtil {
             if (url == null || url.length() == 0) {
                 continue;
             }
-            LocalMedia media = LocalMedia.generateLocalMedia(url, "image/jpeg");
+            LocalMedia media;
+            if (url.startsWith("http://") || url.startsWith("https://")) {
+                media = LocalMedia.generateHttpAsLocalMedia(url, "image/jpeg");
+            } else {
+                media = LocalMedia.generateLocalMedia(context, url);
+            }
             if (media == null) {
                 media = new LocalMedia();
                 media.setPath(url);
                 media.setMimeType("image/jpeg");
             }
+            // 网络图无宽高时库会跳过缩放动画
+            ensureMediaSizeForZoom(context, media);
             data.add(media);
         }
         if (data.isEmpty()) {
@@ -343,11 +526,32 @@ public class MediaPickerUtil {
             }
         };
         int safePos = Math.max(0, Math.min(position, data.size() - 1));
-        preview(context, safePos, data, showDelete, showDownload, wrap);
+        preview(context, safePos, data, showDelete, showDownload, listView, wrap);
     }
 
     // 进入相册
     public static void getMedia(Context context, int chooseMode, boolean customCamera, boolean crop, int maxNum, MeOnResultCallbackListener callbackListener) {
+        getMedia(context, chooseMode, customCamera, crop, maxNum, null, callbackListener);
+    }
+
+    /**
+     * @param selectedData 已选数据（相册内勾选回显，并避免重复选）；可为 null
+     */
+    public static void getMedia(Context context, int chooseMode, boolean customCamera, boolean crop,
+                                int maxNum, @Nullable List<LocalMedia> selectedData,
+                                MeOnResultCallbackListener callbackListener) {
+        // 相册入口带拍摄时一并申请 CAMERA
+        requestMediaPermissions(context, chooseMode, true, () ->
+                openGalleryInternal(context, chooseMode, customCamera, crop, maxNum, selectedData, callbackListener));
+    }
+
+    private static void openGalleryInternal(Context context, int chooseMode, boolean customCamera,
+                                            boolean crop, int maxNum,
+                                            @Nullable List<LocalMedia> selectedData,
+                                            MeOnResultCallbackListener callbackListener) {
+        ArrayList<LocalMedia> selected = selectedData == null
+                ? null
+                : new ArrayList<>(selectedData);
         PictureSelector.create(context)
                 .openGallery(chooseMode)
                 .setSelectorUIStyle(getStyle(context))//UI
@@ -358,8 +562,6 @@ public class MediaPickerUtil {
                 .setCameraInterceptListener(customCamera ? new MeOnCameraInterceptListener() : null)//自定义相机
                 .setSelectLimitTipsListener(new MeOnSelectLimitTipsListener())//多选提示
                 .setEditMediaInterceptListener(new MeOnMediaEditInterceptListener())//自定义编辑
-                //.setExtendLoaderEngine(getExtendLoaderEngine())
-                //.setInjectLayoutResourceListener(new MeOnInjectLayoutResourceListener())//注入view
                 .setSelectionMode(maxNum > 1 ? SelectModeConfig.MULTIPLE : SelectModeConfig.SINGLE)
                 .setLanguage(LanguageConfig.CHINESE)
                 .setOutputCameraDir(chooseMode == SelectMimeType.ofAudio() ? Util.getSandboxAudioOutputPath() : Util.getSandboxCameraOutputPath())
@@ -372,26 +574,21 @@ public class MediaPickerUtil {
                 .isDisplayCamera(true)//展示相机
                 .isOpenClickSound(true)//true
                 .isFastSlidingSelect(true)//滑动选择
-                //.setOutputCameraImageFileName("luck.jpeg")
-                //.setOutputCameraVideoFileName("luck.mp4")
                 .isWithSelectVideoImage(true)//图片视频同选
                 .isPreviewFullScreenMode(true)//全屏预览(点击)
                 .isPreviewZoomEffect(true)//预览缩放效果
                 .isPreviewImage(true)//是否预览图片
                 .isPreviewVideo(true)//是否预览视频
                 .isPreviewAudio(true)//是否预览音频
-                //.setQueryOnlyMimeType(PictureMimeType.ofGIF())
                 .isMaxSelectEnabledMask(true)//是否显示蒙层(达到最大可选数量)
                 .isDirectReturnSingle(true)//单选模式直接返回
                 .setMaxSelectNum(maxNum)
+                .setSelectedData(selected)
                 .setRecyclerAnimationMode(getAnimRecyclerView())
                 .isGif(false)//过滤gif
                 .isWebp(false)//过滤Webp
                 .isBmp(false)//过滤Bmp
                 .isEmptyResultReturn(true)//支持未选择返回
-                //.setSelectedData(mAdapter.getData());
-                //forSelectResult(selectionModel);
-                //.setVideoQuality(1)//0模糊,1清晰
                 .setFilterMaxFileSize(chooseMode == SelectMimeType.ofVideo() ? 100 * 1024 : 5 * 1024)//过滤最大文件(KB),视频100MB,图片5MB
                 .forResult(callbackListener);
     }

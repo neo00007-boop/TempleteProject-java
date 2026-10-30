@@ -6,10 +6,16 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+
 import com.lib.base.ui.activity.BaseActivity;
 import com.lib.base.ui.widget.ninegrid.NineGridImageView;
+import com.lib.base.ui.widget.ninegrid.NinePicChooseView;
 import com.lib.base.ui.widget.ninegrid.UrlNineGridAdapter;
+import com.lib.base.util.upload.MeOnResultCallbackListener;
 import com.lib.base.util.upload.MediaPickerUtil;
+import com.luck.picture.lib.config.SelectMimeType;
+import com.luck.picture.lib.entity.LocalMedia;
 import com.templete.project.R;
 import com.templete.project.databinding.ActivityNineGridBinding;
 
@@ -18,7 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * 九宫格 Demo：1～9 张及超过 9 张（末格 n+）、圆角/蒙层、MediaPickerUtil 预览。
+ * 九宫格 Demo：发帖选图 {@link NinePicChooseView} + 展示 {@link NineGridImageView}。
  */
 public class NineGridActivity extends BaseActivity<ActivityNineGridBinding> {
 
@@ -47,11 +53,12 @@ public class NineGridActivity extends BaseActivity<ActivityNineGridBinding> {
 
     @Override
     public void inits() {
-        setTitleStr("九宫格图片");
+        setTitleStr("九宫格（展示 / 选图）");
     }
 
     @Override
     public void initView() {
+        setupChooseView();
         LinearLayout container = mViewBinding.llNineGridSamples;
         LayoutInflater inflater = getLayoutInflater();
 
@@ -67,6 +74,47 @@ public class NineGridActivity extends BaseActivity<ActivityNineGridBinding> {
         addSample(container, inflater, "12 张（>9）", "只展 9 格，末格显示剩余「3+」", 12, false);
         addSample(container, inflater, "15 张 + 样式定制",
                 "末格「6+」；大圆角 + 全局蒙层 + 红底白字", 15, true);
+    }
+
+    private void setupChooseView() {
+        NinePicChooseView choose = mViewBinding.ninePicChoose;
+        refreshChooseState();
+        choose.setOnPicActionListener(new NinePicChooseView.OnPicActionListener() {
+            @Override
+            public void onAdd(int remain) {
+                if (remain <= 0) {
+                    toast("已达上限");
+                    return;
+                }
+                // max=总上限 + 已选回显；customCamera=true 相册内可拍摄
+                MediaPickerUtil.getMedia(NineGridActivity.this, SelectMimeType.ofImage(),
+                        true, false, choose.getMaxCount(), choose.getSelected(),
+                        new MeOnResultCallbackListener() {
+                            @Override
+                            public void onResult(ArrayList<LocalMedia> result) {
+                                // 带回含已选：用全量覆盖并去重截断更稳
+                                choose.setMediaList(result);
+                            }
+                        });
+            }
+
+            @Override
+            public void onPreview(int position, @NonNull ArrayList<LocalMedia> data) {
+                MediaPickerUtil.preview(NineGridActivity.this, position, data, true, true,
+                        choose.getRecyclerView(),
+                        deletePos -> choose.setMediaList(data));
+            }
+
+            @Override
+            public void onChanged(@NonNull List<LocalMedia> data) {
+                refreshChooseState();
+            }
+        });
+    }
+
+    private void refreshChooseState() {
+        NinePicChooseView choose = mViewBinding.ninePicChoose;
+        mViewBinding.tvChooseState.setText("已选 " + choose.getAll().size() + "/" + choose.getMaxCount());
     }
 
     private void addSample(LinearLayout container, LayoutInflater inflater,
@@ -91,6 +139,7 @@ public class NineGridActivity extends BaseActivity<ActivityNineGridBinding> {
         nineGrid.setAdapter(new UrlNineGridAdapter());
         nineGrid.setItemImageClickListener((context, imageView, index, list) ->
                 MediaPickerUtil.preview(context, index, list, true, true,
+                        nineGrid,
                         deletePos -> nineGrid.setImagesData(list)));
         nineGrid.setImagesData(urls);
         container.addView(item);

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/llVerifyPage"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/common_window_background_color"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/x40"
+    android:paddingTop="@dimen/x30"
+    android:paddingEnd="@dimen/x40"
+    android:paddingBottom="@dimen/x40">
+
+    <TextView
+        android:id="@+id/tvHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="false"
+        android:text="单隐式输入：支持软键盘、粘贴整段、setCode 赋值、短信 autofill"
+        android:textColor="@color/cl_666"
+        android:textSize="@dimen/x28"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/tvLabelNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x40"
+        android:includeFontPadding="false"
+        android:text="6 位数字"
+        android:textColor="@color/cl_333333"
+        android:textSize="@dimen/x32"
+        tools:ignore="HardcodedText" />
+
+    <com.lib.base.ui.widget.VerificationCodeView
+        android:id="@+id/vcvNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x20"
+        app:vcv_et_bisect="true"
+        app:vcv_et_height="@dimen/x100"
+        app:vcv_et_inputType="number"
+        app:vcv_et_number="6"
+        app:vcv_et_spacing="@dimen/x16"
+        app:vcv_et_text_color="@color/cl_333333"
+        app:vcv_et_text_size="@dimen/x40" />
+
+    <TextView
+        android:id="@+id/tvStateNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x16"
+        android:includeFontPadding="false"
+        android:textColor="@color/cl_666"
+        android:textSize="@dimen/x28"
+        tools:ignore="HardcodedText"
+        tools:text="当前：" />
+
+    <LinearLayout
+        android:id="@+id/llActions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x24"
+        android:orientation="horizontal">
+
+        <com.hjq.shape.view.ShapeTextView
+            android:id="@+id/btnPasteDemo"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/x80"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="模拟粘贴 123456"
+            android:textSize="@dimen/x28"
+            app:shape_radius="@dimen/x12"
+            app:shape_solidColor="@color/common_accent_color"
+            app:shape_textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <com.hjq.shape.view.ShapeTextView
+            android:id="@+id/btnClear"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/x80"
+            android:layout_marginStart="@dimen/x20"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="清空"
+            android:textSize="@dimen/x28"
+            app:shape_radius="@dimen/x12"
+            app:shape_solidColor="@color/cl_999"
+            app:shape_textColor="@color/white"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvLabelPwd"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x50"
+        android:includeFontPadding="false"
+        android:text="4 位数字密码（显示 •）"
+        android:textColor="@color/cl_333333"
+        android:textSize="@dimen/x32"
+        tools:ignore="HardcodedText" />
+
+    <com.lib.base.ui.widget.VerificationCodeView
+        android:id="@+id/vcvPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x20"
+        app:vcv_et_bisect="true"
+        app:vcv_et_height="@dimen/x100"
+        app:vcv_et_inputType="numberPassword"
+        app:vcv_et_number="4"
+        app:vcv_et_password_char="•"
+        app:vcv_et_spacing="@dimen/x24"
+        app:vcv_et_text_color="@color/cl_333333"
+        app:vcv_et_text_size="@dimen/x44" />
+
+    <TextView
+        android:id="@+id/tvStatePwd"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x16"
+        android:includeFontPadding="false"
+        android:textColor="@color/cl_666"
+        android:textSize="@dimen/x28"
+        tools:ignore="HardcodedText"
+        tools:text="当前：" />
+</LinearLayout>
