@@ -71,11 +71,24 @@ public class OverlayTextDrawableUtil {
     private static final String TAG = "OverlayTextDrawableUtil";
 
     private static boolean ENABLE = false;
+    /**
+     * 标签配色：false=黑底白字（0x99000000），true=绿底白字（#8C2E7D32），深色主题用绿底更清晰。
+     */
+    private static boolean sGreenStyle = false;
     /** 是否已成功替换 WindowManagerGlobal.mViews，防止重复 hook */
     private static boolean sGlobalHooked = false;
 
     public static void setENABLE(boolean ENABLE) {
         OverlayTextDrawableUtil.ENABLE = ENABLE;
+    }
+
+    /** 切换 TipsDrawable 配色：true=绿底白字，false=黑底白字 */
+    public static void setGreenStyle(boolean greenStyle) {
+        sGreenStyle = greenStyle;
+    }
+
+    public static boolean isGreenStyle() {
+        return sGreenStyle;
     }
 
     public static void debug(Application app) {
@@ -469,8 +482,13 @@ public class OverlayTextDrawableUtil {
         }
     }
 
-    /** 半透明黑底 + 白字的调试标签 Drawable */
+    /** 调试标签 Drawable：黑底白字 / 绿底白字，由 {@link #sGreenStyle} 切换 */
     private static class TipsDrawable extends ColorDrawable {
+
+        /** 黑底：半透明黑 */
+        private static final int BG_BLACK = 0x99000000;
+        /** 绿底：#8C2E7D32（半透明 Material Green 800），深色主题可读 */
+        private static final int BG_GREEN = 0x8C2E7D32;
 
         private final String name;
         private final Paint bgPaint;
@@ -488,7 +506,7 @@ public class OverlayTextDrawableUtil {
             padding = dp(context, 8);
 
             bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            bgPaint.setColor(0x99000000);
+            applyStyleColors();
 
             textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
             textPaint.setColor(Color.WHITE);
@@ -496,8 +514,13 @@ public class OverlayTextDrawableUtil {
             textPaint.setTypeface(Typeface.DEFAULT_BOLD);
         }
 
+        private void applyStyleColors() {
+            bgPaint.setColor(sGreenStyle ? BG_GREEN : BG_BLACK);
+        }
+
         @Override
         public void draw(Canvas canvas) {
+            applyStyleColors();
             float textWidth = textPaint.measureText(name);
 
             float left = padding;
