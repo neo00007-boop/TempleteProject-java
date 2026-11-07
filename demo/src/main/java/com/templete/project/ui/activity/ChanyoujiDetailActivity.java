@@ -153,8 +153,24 @@ public class ChanyoujiDetailActivity extends BaseActivity<ActivityChanyoujiDetai
             copy.offsetLocation(appLoc[0] - rvLoc[0], appLoc[1] - rvLoc[1]);
             mViewBinding.recyclerView.dispatchTouchEvent(copy);
             copy.recycle();
+            int action = event.getActionMasked();
+            if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                // NestedScroll stop 偶发丢了时，抬手兜底回弹
+                if (appBarBehavior != null) {
+                    appBarBehavior.bounceIfNeeded(mViewBinding.appBar, mViewBinding.coordinator);
+                }
+            }
             // 始终消费，保证后续 MOVE/UP 仍进到这里（与列表同一手势流）
             return true;
+        });
+        mViewBinding.recyclerView.setOnTouchListener((v, event) -> {
+            int action = event.getActionMasked();
+            if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                if (appBarBehavior != null) {
+                    appBarBehavior.bounceIfNeeded(mViewBinding.appBar, mViewBinding.coordinator);
+                }
+            }
+            return false;
         });
     }
 

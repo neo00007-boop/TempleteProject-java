@@ -1,5 +1,7 @@
 package com.templete.project.ui.widget;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
@@ -29,6 +31,7 @@ public class ChanyoujiAppBarBehavior extends AppBarLayout.Behavior {
     private int baseHeight;
     private float pullExtra;
     private ValueAnimator anim;
+    private boolean bouncing;
 
     public ChanyoujiAppBarBehavior() {
     }
@@ -66,6 +69,13 @@ public class ChanyoujiAppBarBehavior extends AppBarLayout.Behavior {
     public void onNestedPreScroll(@NonNull CoordinatorLayout coordinatorLayout,
                                   @NonNull AppBarLayout child, @NonNull View target,
                                   int dx, int dy, @NonNull int[] consumed, int type) {
+        // 回弹动画中忽略 fling，避免 cancel 后停在半路
+        if (bouncing && type != ViewCompat.TYPE_TOUCH) {
+            if (pullExtra > 0f && dy > 0) {
+                consumed[1] += dy;
+            }
+            return;
+        }
         if (pullExtra > 0f && dy > 0) {
             cancelAnim();
             float before = pullExtra;
@@ -91,7 +101,7 @@ public class ChanyoujiAppBarBehavior extends AppBarLayout.Behavior {
                                int type, @NonNull int[] consumed) {
         super.onNestedScroll(coordinatorLayout, child, target,
                 dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, type, consumed);
-        if (type != ViewCompat.TYPE_TOUCH) {
+        if (type != ViewCompat.TYPE_TOUCH || bouncing) {
             return;
         }
         if (getTopAndBottomOffset() >= 0 && dyUnconsumed < 0) {
@@ -107,8 +117,16 @@ public class ChanyoujiAppBarBehavior extends AppBarLayout.Behavior {
     public void onStopNestedScroll(@NonNull CoordinatorLayout coordinatorLayout,
                                    @NonNull AppBarLayout abl, @NonNull View target, int type) {
         super.onStopNestedScroll(coordinatorLayout, abl, target, type);
-        if (type == ViewCompat.TYPE_TOUCH && pullExtra > 0f) {
+        // TOUCH / NON_TOUCH 都要回弹：抬手后 fling 结束也可能留下 pullExtra
+        if (pullExtra > 0f) {
             bounce(abl, coordinatorLayout);
+        }
+    }
+
+    /** 触摸 UP/CANCEL 兜底，防止 NestedScroll stop 丢了导致卡在半拉 */
+    public void bounceIfNeeded(@NonNull AppBarLayout appBar, @NonNull ViewGroup parent) {
+        if (pullExtra > 0f) {
+            bounce(appBar, parent);
         }
     }
 
@@ -116,6 +134,7 @@ public class ChanyoujiAppBarBehavior extends AppBarLayout.Behavior {
     public void resetPull(@NonNull AppBarLayout appBar, @NonNull ViewGroup parent) {
         cancelAnim();
         pullExtra = 0f;
+        bouncing = false;
         applyVisual(appBar, parent);
     }
 
@@ -162,11 +181,14 @@ public class ChanyoujiAppBarBehavior extends AppBarLayout.Behavior {
     }
 
     private void bounce(AppBarLayout appBar, ViewGroup parent) {
-        cancelAnim();
-        if (pullExtra <= 0f) {
-            applyVisual(appBar, parent);
+        if (bouncing || pullExtra <= 0f) {
+            if (pullExtra <= 0f) {
+                applyVisual(appBar, parent);
+            }
             return;
         }
+        cancelAnim();
+        bouncing = true;
         final float start = pullExtra;
         anim = ValueAnimator.ofFloat(start, 0f);
         anim.setDuration(280);
@@ -174,6 +196,21 @@ public class ChanyoujiAppBarBehavior extends AppBarLayout.Behavior {
         anim.addUpdateListener(a -> {
             pullExtra = (float) a.getAnimatedValue();
             applyVisual(appBar, parent);
+        });
+        anim.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                bouncing = false;
+                pullExtra = 0f;
+                applyVisual(appBar, parent);
+                anim = null;
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                bouncing = false;
+                anim = null;
+            }
         });
         anim.start();
     }
@@ -183,5 +220,6 @@ public class ChanyoujiAppBarBehavior extends AppBarLayout.Behavior {
             anim.cancel();
             anim = null;
         }
+        bouncing = false;
     }
 }
