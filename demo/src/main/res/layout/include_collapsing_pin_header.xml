@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 与 TitleBar 同结构：StatusBar 占位 + title_bar_height，避免折叠标题顶进状态栏 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/pinHeader"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    app:layout_collapseMode="pin">
+
+    <com.hjq.shape.view.ratioLayout.StatusBar
+        android:id="@+id/statusBarPlace"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/title_bar_height"
+        android:paddingEnd="8dp"
+        app:contentInsetStart="0dp"
+        app:contentInsetStartWithNavigation="0dp"
+        app:titleTextColor="@android:color/white" />
+</LinearLayout>
