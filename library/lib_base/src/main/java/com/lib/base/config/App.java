@@ -100,7 +100,7 @@ public abstract class App extends Application implements /*ViewModelStoreOwner,*
         if (BuildConfig.DEBUG) {
             OverlayTextDrawableUtil.setENABLE(true);
             // 深色主题下黑底白字不清晰，改用绿底白字；要黑底则 setGreenStyle(false)
-            OverlayTextDrawableUtil.setGreenStyle(false);
+            OverlayTextDrawableUtil.setGreenStyle(true);
             OverlayTextDrawableUtil.debug(this);
         }
     }
