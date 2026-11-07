@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -12,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -221,16 +223,28 @@ public class CollapsingSceneActivity extends BaseActivity<ActivityCollapsingScen
         });
     }
 
+    /**
+     * 店铺搜索：AppBar 内搜索条高度固定；吸顶后显示浮层（含状态栏）。
+     * 滚动中不改 AppBar 子 View 的 LayoutParams；状态栏深浅色走 WindowInsetsController。
+     */
     private void bindShopSearch(View scene, int statusBar) {
         View searchBar = scene.findViewById(R.id.searchBar);
+        View sticky = scene.findViewById(R.id.searchBarSticky);
         AppBarLayout appBar = scene.findViewById(R.id.appBar);
-        if (searchBar == null || appBar == null) {
+        if (searchBar == null || sticky == null || appBar == null) {
             return;
         }
-        final int base = dp(52);
-        final int padL = searchBar.getPaddingLeft();
-        final int padR = searchBar.getPaddingRight();
-        final int padB = searchBar.getPaddingBottom();
+        final int inset = Math.max(0, statusBar);
+        final int row = dp(52);
+        ViewGroup.LayoutParams slp = sticky.getLayoutParams();
+        slp.height = row + inset;
+        sticky.setLayoutParams(slp);
+        sticky.setPadding(
+                sticky.getPaddingLeft(),
+                inset,
+                sticky.getPaddingRight(),
+                sticky.getPaddingBottom());
+
         if (shopBound) {
             return;
         }
@@ -238,36 +252,55 @@ public class CollapsingSceneActivity extends BaseActivity<ActivityCollapsingScen
         final boolean[] stuck = {false};
         appBar.addOnOffsetChangedListener((abl, offset) -> {
             int range = abl.getTotalScrollRange();
-            boolean now = range > 0 && Math.abs(offset) >= range - 1;
-            int padTop = now ? statusBarHeight : 0;
-            if (now == stuck[0] && searchBar.getPaddingTop() == padTop) {
+            if (range <= 0) {
+                return;
+            }
+            // 用字段 statusBarHeight，避免首次 inset=0 被闭包写死
+            int bar = Math.max(0, statusBarHeight);
+            int abs = Math.abs(offset);
+            boolean now;
+            if (stuck[0]) {
+                now = abs >= Math.max(0, range - bar - dp(8));
+            } else {
+                now = abs >= Math.max(0, range - bar);
+            }
+            if (now == stuck[0]) {
                 return;
             }
             stuck[0] = now;
-            ViewGroup.LayoutParams lp = searchBar.getLayoutParams();
-            lp.height = base + padTop;
-            searchBar.setLayoutParams(lp);
-            searchBar.setPadding(padL, padTop, padR, padB);
             if (now) {
-                ImmersionBar.with(this)
-                        .statusBarColor(android.R.color.white)
-                        .statusBarDarkFont(true)
-                        .fitsSystemWindows(false)
-                        .init();
+                searchBar.setVisibility(View.INVISIBLE);
+                sticky.setVisibility(View.VISIBLE);
+                sticky.bringToFront();
+                mViewBinding.btnBack.bringToFront();
+                applyShopStatusBar(true);
             } else {
-                ImmersionBar.with(this)
-                        .transparentStatusBar()
-                        .statusBarDarkFont(false)
-                        .fitsSystemWindows(false)
-                        .init();
+                sticky.setVisibility(View.GONE);
+                searchBar.setVisibility(View.VISIBLE);
+                mViewBinding.btnBack.bringToFront();
+                applyShopStatusBar(false);
             }
-            // 同步返回位置
-            int titleH = getResources().getDimensionPixelSize(R.dimen.title_bar_height);
-            ViewGroup.MarginLayoutParams blp =
-                    (ViewGroup.MarginLayoutParams) mViewBinding.btnBack.getLayoutParams();
-            blp.topMargin = statusBarHeight + Math.max(0, (titleH - dp(BACK_SIZE_DP)) / 2);
-            mViewBinding.btnBack.setLayoutParams(blp);
         });
+    }
+
+    /** 吸顶白底 → 深色状态栏图标；展开店招 → 透明状态栏 + 浅色图标 */
+    private void applyShopStatusBar(boolean stuck) {
+        if (stuck) {
+            // 走项目 ImmersionBar 入口，Genymotion 上仅 WindowInsetsController 不可靠
+            applyImmersionBar(android.R.color.white, false, true);
+        } else {
+            applyImmersionBar(android.R.color.transparent, false, false);
+        }
+        Window window = getWindow();
+        View decor = window.getDecorView();
+        WindowCompat.getInsetsController(window, decor).setAppearanceLightStatusBars(stuck);
+        int flags = decor.getSystemUiVisibility();
+        if (stuck) {
+            flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+        } else {
+            flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+        }
+        decor.setSystemUiVisibility(flags);
     }
 
     private void bindPagerOrList(View scene) {

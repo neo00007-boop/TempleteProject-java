@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ③ 电商店铺：店招先滚走，搜索条钉住；滚到顶后与返回箭头对齐（代码补状态栏 inset） -->
+<!-- ③ 电商店铺：店招滚走，AppBar 内搜索钉住；吸顶后用浮层补状态栏，滚动中不改 AppBar 子 View 高度 -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -12,7 +12,8 @@
         android:id="@+id/appBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white">
+        android:background="@android:color/white"
+        app:elevation="0dp">
 
         <FrameLayout
             android:id="@+id/shopBanner"
@@ -58,7 +59,7 @@
             </LinearLayout>
         </FrameLayout>
 
-        <!-- 无 scrollFlags：店招滚完后钉住 -->
+        <!-- 无 scrollFlags：店招滚完后钉住；高度固定 52，不在滚动回调里改 -->
         <LinearLayout
             android:id="@+id/searchBar"
             android:layout_width="match_parent"
@@ -80,12 +81,6 @@
                 android:text="搜本店商品"
                 android:textColor="#999999"
                 android:textSize="14sp" />
-
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:visibility="gone" />
         </LinearLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -95,4 +90,31 @@
         android:layout_height="match_parent"
         android:overScrollMode="never"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+    <!-- 吸顶浮层：含状态栏 padding，与返回箭头对齐；展开时 GONE -->
+    <LinearLayout
+        android:id="@+id/searchBarSticky"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:elevation="6dp"
+        android:gravity="bottom"
+        android:orientation="horizontal"
+        android:paddingStart="52dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="8dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_collapsing_search"
+            android:gravity="center_vertical"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="搜本店商品"
+            android:textColor="#999999"
+            android:textSize="14sp" />
+    </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
