@@ -17,7 +17,7 @@
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:id="@+id/collapsingToolbar"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
+            android:layout_height="@dimen/collapsing_header_height"
             app:contentScrim="#F48FB1"
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
             app:titleEnabled="false">

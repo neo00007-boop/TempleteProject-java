@@ -10,7 +10,7 @@
     <ImageView
         android:id="@+id/ivCover"
         android:layout_width="match_parent"
-        android:layout_height="280dp"
+        android:layout_height="@dimen/collapsing_header_height"
         android:contentDescription="@null"
         android:scaleType="centerCrop"
         tools:background="#78909C" />

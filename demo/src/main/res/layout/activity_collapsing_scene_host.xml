@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:ignore="HardcodedText">
 
     <FrameLayout
         android:id="@+id/sceneRoot"
@@ -21,4 +23,51 @@
         android:padding="6dp"
         android:scaleType="centerInside"
         android:src="@drawable/ic_back" />
+
+    <!-- 基类能力演示：展开锁头 / 折叠锁头 / 一键折叠展开 -->
+    <LinearLayout
+        android:id="@+id/collapsingControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="#CC212121"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/btnLockExpanded"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_collapsing_btn"
+            android:gravity="center"
+            android:text="展开锁头"
+            android:textColor="@android:color/white"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/btnLockCollapsed"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_collapsing_btn"
+            android:gravity="center"
+            android:text="折叠锁头"
+            android:textColor="@android:color/white"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/btnToggleExpand"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_collapsing_btn"
+            android:gravity="center"
+            android:text="一键折叠"
+            android:textColor="@android:color/white"
+            android:textSize="12sp" />
+    </LinearLayout>
 </FrameLayout>

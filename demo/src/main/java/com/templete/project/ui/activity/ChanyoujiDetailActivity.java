@@ -34,7 +34,6 @@ import java.util.List;
 public class ChanyoujiDetailActivity extends BaseActivity<ActivityChanyoujiDetailBinding> {
 
     private static final String COVER_URL = "https://picsum.photos/id/1015/1200/900";
-    private static final int COVER_DP = 280;
     private static final int BACK_SIZE_DP = 28;
 
     private int statusBarHeight;
@@ -77,7 +76,7 @@ public class ChanyoujiDetailActivity extends BaseActivity<ActivityChanyoujiDetai
     public void initView() {
         statusBarHeight = Math.max(0, ScreenUtil.getStatusBarSize());
         titleBarH = getResources().getDimensionPixelSize(R.dimen.title_bar_height);
-        coverBaseH = dp(COVER_DP);
+        coverBaseH = getResources().getDimensionPixelSize(R.dimen.collapsing_header_height);
 
         appBarBehavior = new ChanyoujiAppBarBehavior();
         appBarBehavior.setBaseHeight(coverBaseH);

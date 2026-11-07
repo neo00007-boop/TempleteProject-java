@@ -18,7 +18,7 @@
         <FrameLayout
             android:id="@+id/shopBanner"
             android:layout_width="match_parent"
-            android:layout_height="140dp"
+            android:layout_height="@dimen/collapsing_header_height"
             app:layout_scrollFlags="scroll">
 
             <ImageView

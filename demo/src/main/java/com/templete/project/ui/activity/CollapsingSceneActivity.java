@@ -29,7 +29,7 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.gyf.immersionbar.ImmersionBar;
 import com.lib.base.adapter.DemoAdapter;
-import com.lib.base.ui.activity.BaseActivity;
+import com.lib.base.ui.activity.BaseCollapsingActivity;
 import com.lib.base.ui.activity.TitleBarTheme;
 import com.lib.base.util.ScreenUtil;
 import com.templete.project.R;
@@ -45,8 +45,10 @@ import java.util.List;
  * 顶栏：CollapsingToolbar 直接子 View 单个 pin {@code Toolbar}，运行时高度 =
  * statusBar + title_bar_height、paddingTop = statusBar；{@code titleEnabled=false}。
  * 不要用 ViewGroup/include 包 pin（收起高度会变成 0）；不要多个 pin 叠顶。
+ * <p>
+ * 继承 {@link BaseCollapsingActivity}：锁定头部滚动、一键折叠/展开。
  */
-public class CollapsingSceneActivity extends BaseActivity<ActivityCollapsingSceneHostBinding> {
+public class CollapsingSceneActivity extends BaseCollapsingActivity<ActivityCollapsingSceneHostBinding> {
 
     public static final String EXTRA_TITLE = "extra_title";
     public static final String EXTRA_LAYOUT = "extra_layout";
@@ -103,6 +105,12 @@ public class CollapsingSceneActivity extends BaseActivity<ActivityCollapsingScen
         View scene = getLayoutInflater().inflate(layoutRes, mViewBinding.sceneRoot, true);
         mViewBinding.btnBack.setOnClickListener(v -> finish());
 
+        AppBarLayout appBar = scene.findViewById(R.id.appBar);
+        if (appBar != null) {
+            bindCollapsingAppBar(appBar);
+        }
+        bindCollapsingControls();
+
         statusBarHeight = Math.max(0, ScreenUtil.getStatusBarSize());
         setupChrome(scene, statusBarHeight);
         if (!contentBound) {
@@ -122,6 +130,57 @@ public class CollapsingSceneActivity extends BaseActivity<ActivityCollapsingScen
             return insets;
         });
         ViewCompat.requestApplyInsets(mViewBinding.getRoot());
+    }
+
+    /** Demo：展开锁头 / 折叠锁头 / 一键折叠展开 */
+    private void bindCollapsingControls() {
+        refreshCollapsingControlLabels();
+        mViewBinding.btnLockExpanded.setOnClickListener(v -> {
+            if (!isCollapsingScrollEnabled()) {
+                unlockCollapsingHeader();
+                refreshCollapsingControlLabels();
+                return;
+            }
+            lockCollapsingHeaderExpanded(true);
+            v.postDelayed(this::refreshCollapsingControlLabels, 320);
+        });
+        mViewBinding.btnLockCollapsed.setOnClickListener(v -> {
+            if (!isCollapsingScrollEnabled()) {
+                unlockCollapsingHeader();
+                refreshCollapsingControlLabels();
+                return;
+            }
+            lockCollapsingHeaderCollapsed(true);
+            v.postDelayed(this::refreshCollapsingControlLabels, 320);
+        });
+        mViewBinding.btnToggleExpand.setOnClickListener(v -> {
+            if (!isCollapsingScrollEnabled()) {
+                return;
+            }
+            boolean expand = !isCollapsingExpanded();
+            if (expand) {
+                expandCollapsingHeader(true);
+            } else {
+                collapseCollapsingHeader(true);
+            }
+            mViewBinding.btnToggleExpand.setText(expand ? "一键折叠" : "一键展开");
+        });
+    }
+
+    private void refreshCollapsingControlLabels() {
+        boolean scrollOn = isCollapsingScrollEnabled();
+        if (scrollOn) {
+            mViewBinding.btnLockExpanded.setText("展开锁头");
+            mViewBinding.btnLockCollapsed.setText("折叠锁头");
+            mViewBinding.btnToggleExpand.setEnabled(true);
+            mViewBinding.btnToggleExpand.setAlpha(1f);
+            mViewBinding.btnToggleExpand.setText(isCollapsingExpanded() ? "一键折叠" : "一键展开");
+        } else {
+            mViewBinding.btnLockExpanded.setText("解锁头部");
+            mViewBinding.btnLockCollapsed.setText("解锁头部");
+            mViewBinding.btnToggleExpand.setEnabled(false);
+            mViewBinding.btnToggleExpand.setAlpha(0.4f);
+        }
     }
 
     private void setupChrome(View scene, int statusBar) {

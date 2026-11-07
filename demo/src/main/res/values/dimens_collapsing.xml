@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 折叠场景头图统一高度，避免各页 140～300 参差、过高占屏 -->
+    <dimen name="collapsing_header_height">200dp</dimen>
+</resources>

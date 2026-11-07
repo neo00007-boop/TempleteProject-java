@@ -177,7 +177,7 @@ public class ChanyoujiAppBarBehavior extends AppBarLayout.Behavior {
         if (baseHeight > 0) {
             return;
         }
-        baseHeight = Math.round(280 * appBar.getResources().getDisplayMetrics().density);
+        baseHeight = appBar.getResources().getDimensionPixelSize(R.dimen.collapsing_header_height);
     }
 
     private void bounce(AppBarLayout appBar, ViewGroup parent) {
