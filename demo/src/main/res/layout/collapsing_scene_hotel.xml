@@ -64,6 +64,7 @@
 </com.google.android.material.appbar.CollapsingToolbarLayout>
 
         <LinearLayout
+            android:id="@+id/hotelPriceBar"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:background="#E0F2F1"
@@ -74,6 +75,7 @@
             app:layout_scrollFlags="scroll|enterAlways">
 
             <TextView
+                android:id="@+id/tvHotelPrice"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"

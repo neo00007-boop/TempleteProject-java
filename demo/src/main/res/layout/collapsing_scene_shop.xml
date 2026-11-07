@@ -35,6 +35,7 @@
                 android:background="#4D000000" />
 
             <LinearLayout
+                android:id="@+id/shopBannerMeta"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -59,7 +60,7 @@
             </LinearLayout>
         </FrameLayout>
 
-        <!-- 无 scrollFlags：店招滚完后钉住；高度固定 52，不在滚动回调里改 -->
+        <!-- 展开态假搜索：不可输入，点击后折叠并切到顶部真输入框 -->
         <LinearLayout
             android:id="@+id/searchBar"
             android:layout_width="match_parent"
@@ -67,10 +68,11 @@
             android:background="@android:color/white"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="52dp"
+            android:paddingStart="12dp"
             android:paddingEnd="12dp">
 
             <TextView
+                android:id="@+id/tvSearchFake"
                 android:layout_width="0dp"
                 android:layout_height="36dp"
                 android:layout_weight="1"
@@ -91,7 +93,7 @@
         android:overScrollMode="never"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-    <!-- 吸顶浮层：含状态栏 padding，与返回箭头对齐；展开时 GONE -->
+    <!-- 吸顶真搜索：可输入；展开时 alpha=0 -->
     <LinearLayout
         android:id="@+id/searchBarSticky"
         android:layout_width="match_parent"
@@ -103,18 +105,24 @@
         android:paddingStart="52dp"
         android:paddingEnd="12dp"
         android:paddingBottom="8dp"
-        android:visibility="gone">
+        android:visibility="invisible">
 
-        <TextView
+        <EditText
+            android:id="@+id/etSearchReal"
             android:layout_width="0dp"
             android:layout_height="36dp"
             android:layout_weight="1"
             android:background="@drawable/bg_collapsing_search"
-            android:gravity="center_vertical"
+            android:hint="搜本店商品"
+            android:imeOptions="actionSearch"
+            android:importantForAutofill="no"
+            android:inputType="text"
+            android:maxLines="1"
             android:paddingStart="14dp"
             android:paddingEnd="14dp"
-            android:text="搜本店商品"
-            android:textColor="#999999"
+            android:singleLine="true"
+            android:textColor="#333333"
+            android:textColorHint="#999999"
             android:textSize="14sp" />
     </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
