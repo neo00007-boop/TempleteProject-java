@@ -42,6 +42,8 @@ public class ChanyoujiDetailActivity extends BaseActivity<ActivityChanyoujiDetai
     private int coverBaseH;
     private float lastBlurAlpha = -1f;
     private ChanyoujiAppBarBehavior appBarBehavior;
+    private DemoAdapter demoAdapter;
+    private int loadMorePage;
 
     public static void start(Context context) {
         context.startActivity(new Intent(context, ChanyoujiDetailActivity.class));
@@ -87,6 +89,7 @@ public class ChanyoujiDetailActivity extends BaseActivity<ActivityChanyoujiDetai
         setupChrome();
         loadImages();
         setupList();
+        setupRefresh();
         setupBlur();
         setupImageTouchForward();
 
@@ -176,7 +179,7 @@ public class ChanyoujiDetailActivity extends BaseActivity<ActivityChanyoujiDetai
         mViewBinding.recyclerView.setHasFixedSize(true);
         mViewBinding.recyclerView.setItemAnimator(null);
 
-        DemoAdapter adapter = new DemoAdapter(this);
+        demoAdapter = new DemoAdapter(this);
         List<String> list = new ArrayList<>();
         list.add("行程概览：清水寺 → 二年坂 → 产宁坂 → 祇园");
         list.add("早上从京都站坐 100 路巴士到清水道，人还不算多。");
@@ -191,8 +194,25 @@ public class ChanyoujiDetailActivity extends BaseActivity<ActivityChanyoujiDetai
         for (int i = 1; i <= 20; i++) {
             list.add("游记段落 " + i + "：补充一些早期蝉游记风格的长文占位，方便验证列表滚动与顶图联动。");
         }
-        adapter.setList(list);
-        mViewBinding.recyclerView.setAdapter(adapter);
+        demoAdapter.setList(list);
+        mViewBinding.recyclerView.setAdapter(demoAdapter);
+    }
+
+    private void setupRefresh() {
+        mViewBinding.refreshLayout.setEnableRefresh(false);
+        mViewBinding.refreshLayout.setEnableLoadMore(true);
+        mViewBinding.refreshLayout.setEnableOverScrollDrag(false);
+        mViewBinding.refreshLayout.setEnableOverScrollBounce(false);
+        mViewBinding.refreshLayout.setOnLoadMoreListener(refreshLayout -> {
+            loadMorePage++;
+            List<String> more = new ArrayList<>();
+            int start = loadMorePage * 10;
+            for (int i = 1; i <= 10; i++) {
+                more.add("加载更多 " + (start + i) + "：继续补充游记段落。");
+            }
+            demoAdapter.addData(more);
+            refreshLayout.finishLoadMore(600);
+        });
     }
 
     private void setupBlur() {
