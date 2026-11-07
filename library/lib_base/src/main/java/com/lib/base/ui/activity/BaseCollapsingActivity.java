@@ -17,9 +17,20 @@ import com.lib.base.ui.behavior.LockableAppBarLayoutBehavior;
  * 也可 {@link #lockCollapsingHeaderExpanded(boolean)} / {@link #lockCollapsingHeaderCollapsed(boolean)}
  * 先展开或折叠再锁头。<br>
  * 方法2 {@link #expandCollapsingHeader(boolean)} / {@link #collapseCollapsingHeader(boolean)}：
- * 在允许滚动时一键展开 / 折叠（已锁头时调用无效）。
+ * 在允许滚动时一键展开 / 折叠（已锁头时调用无效）。<br>
+ * 方法3 {@link #getCollapsingHeaderState()}：判断当前是展开、收起还是过渡态。
  */
 public abstract class BaseCollapsingActivity<T extends ViewBinding> extends BaseActivity<T> {
+
+    /** 折叠头当前状态 */
+    public enum CollapsingHeaderState {
+        /** 完全展开 */
+        EXPANDED,
+        /** 完全收起 */
+        COLLAPSED,
+        /** 展开与收起之间的过渡 */
+        SETTLING
+    }
 
     @Nullable
     private AppBarLayout collapsingAppBar;
@@ -101,19 +112,50 @@ public abstract class BaseCollapsingActivity<T extends ViewBinding> extends Base
     }
 
     public boolean isCollapsingExpanded() {
-        if (collapsingAppBar == null) {
-            return true;
-        }
-        return collapsingAppBar.getTotalScrollRange() == 0
-                || collapsingAppBar.getTop() >= 0;
+        return getCollapsingHeaderState() == CollapsingHeaderState.EXPANDED;
     }
 
     public boolean isCollapsingCollapsed() {
+        return getCollapsingHeaderState() == CollapsingHeaderState.COLLAPSED;
+    }
+
+    /**
+     * 方法3：当前折叠头状态。
+     * <ul>
+     *   <li>{@link CollapsingHeaderState#EXPANDED}：完全展开</li>
+     *   <li>{@link CollapsingHeaderState#COLLAPSED}：完全收起</li>
+     *   <li>{@link CollapsingHeaderState#SETTLING}：中间过渡态</li>
+     * </ul>
+     */
+    @NonNull
+    public CollapsingHeaderState getCollapsingHeaderState() {
         if (collapsingAppBar == null) {
-            return false;
+            return CollapsingHeaderState.EXPANDED;
         }
         int range = collapsingAppBar.getTotalScrollRange();
-        return range > 0 && Math.abs(collapsingAppBar.getTop()) >= range - 1;
+        if (range <= 0) {
+            return CollapsingHeaderState.EXPANDED;
+        }
+        int abs = Math.abs(collapsingAppBar.getTop());
+        if (abs <= 1) {
+            return CollapsingHeaderState.EXPANDED;
+        }
+        if (abs >= range - 1) {
+            return CollapsingHeaderState.COLLAPSED;
+        }
+        return CollapsingHeaderState.SETTLING;
+    }
+
+    /** 折叠进度 0=展开 … 1=收起；无 AppBar 时返回 0。 */
+    public float getCollapsingHeaderProgress() {
+        if (collapsingAppBar == null) {
+            return 0f;
+        }
+        int range = collapsingAppBar.getTotalScrollRange();
+        if (range <= 0) {
+            return 0f;
+        }
+        return Math.max(0f, Math.min(1f, Math.abs(collapsingAppBar.getTop()) / (float) range));
     }
 
     /**

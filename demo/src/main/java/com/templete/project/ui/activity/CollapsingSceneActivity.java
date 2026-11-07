@@ -137,9 +137,13 @@ public class CollapsingSceneActivity extends BaseCollapsingActivity<ActivityColl
         ViewCompat.requestApplyInsets(mViewBinding.getRoot());
     }
 
-    /** Demo：展开锁头 / 折叠锁头 / 一键折叠展开 */
+    /** Demo：展开锁头 / 折叠锁头 / 一键折叠展开；中间钮展示当前状态 */
     private void bindCollapsingControls() {
         refreshCollapsingControlLabels();
+        AppBarLayout appBar = getCollapsingAppBar();
+        if (appBar != null) {
+            appBar.addOnOffsetChangedListener((abl, offset) -> refreshCollapsingControlLabels());
+        }
         mViewBinding.btnLockExpanded.setOnClickListener(v -> {
             if (!isCollapsingScrollEnabled()) {
                 unlockCollapsingHeader();
@@ -162,29 +166,42 @@ public class CollapsingSceneActivity extends BaseCollapsingActivity<ActivityColl
             if (!isCollapsingScrollEnabled()) {
                 return;
             }
-            boolean expand = !isCollapsingExpanded();
-            if (expand) {
-                expandCollapsingHeader(true);
-            } else {
+            if (isCollapsingExpanded()) {
                 collapseCollapsingHeader(true);
+            } else {
+                expandCollapsingHeader(true);
             }
-            mViewBinding.btnToggleExpand.setText(expand ? "一键折叠" : "一键展开");
+            v.postDelayed(this::refreshCollapsingControlLabels, 320);
         });
     }
 
     private void refreshCollapsingControlLabels() {
         boolean scrollOn = isCollapsingScrollEnabled();
+        CollapsingHeaderState state = getCollapsingHeaderState();
+        String stateLabel;
+        switch (state) {
+            case EXPANDED:
+                stateLabel = "展开";
+                break;
+            case COLLAPSED:
+                stateLabel = "收起";
+                break;
+            default:
+                stateLabel = "过渡";
+                break;
+        }
         if (scrollOn) {
             mViewBinding.btnLockExpanded.setText("展开锁头");
             mViewBinding.btnLockCollapsed.setText("折叠锁头");
             mViewBinding.btnToggleExpand.setEnabled(true);
             mViewBinding.btnToggleExpand.setAlpha(1f);
-            mViewBinding.btnToggleExpand.setText(isCollapsingExpanded() ? "一键折叠" : "一键展开");
+            mViewBinding.btnToggleExpand.setText(stateLabel);
         } else {
             mViewBinding.btnLockExpanded.setText("解锁头部");
             mViewBinding.btnLockCollapsed.setText("解锁头部");
             mViewBinding.btnToggleExpand.setEnabled(false);
             mViewBinding.btnToggleExpand.setAlpha(0.4f);
+            mViewBinding.btnToggleExpand.setText(stateLabel);
         }
     }
 
