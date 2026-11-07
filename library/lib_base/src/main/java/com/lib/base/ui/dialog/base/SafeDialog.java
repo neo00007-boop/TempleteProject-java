@@ -87,7 +87,9 @@ public final class SafeDialog {
 
                             @Override
                             public void onFail(Exception e) {
-                                Toaster.show(e.getMessage());
+                                if (e.getMessage() != null && e.getMessage().length() > 0) {
+                                    Toaster.show(e.getMessage());
+                                }
                             }
                         });*/
             } else if (viewId == R.id.tv_ui_confirm) {
@@ -123,7 +125,9 @@ public final class SafeDialog {
 
                             @Override
                             public void onFail(Exception e) {
-                                Toaster.show(e.getMessage());
+                                if (e.getMessage() != null && e.getMessage().length() > 0) {
+                                    Toaster.show(e.getMessage());
+                                }
                             }
                         });*/
             } else if (viewId == R.id.tv_ui_cancel) {

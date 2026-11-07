@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -142,7 +143,18 @@ public class CollapsingSceneActivity extends BaseCollapsingActivity<ActivityColl
         refreshCollapsingControlLabels();
         AppBarLayout appBar = getCollapsingAppBar();
         if (appBar != null) {
-            appBar.addOnOffsetChangedListener((abl, offset) -> refreshCollapsingControlLabels());
+            // 只在状态变化时刷新文案，避免每帧 setText
+            final CollapsingHeaderState[] last = {null};
+            final boolean[] lastScrollOn = {isCollapsingScrollEnabled()};
+            appBar.addOnOffsetChangedListener((abl, offset) -> {
+                CollapsingHeaderState state = getCollapsingHeaderState();
+                boolean scrollOn = isCollapsingScrollEnabled();
+                if (state != last[0] || scrollOn != lastScrollOn[0]) {
+                    last[0] = state;
+                    lastScrollOn[0] = scrollOn;
+                    refreshCollapsingControlLabels();
+                }
+            });
         }
         mViewBinding.btnLockExpanded.setOnClickListener(v -> {
             if (!isCollapsingScrollEnabled()) {
@@ -166,11 +178,7 @@ public class CollapsingSceneActivity extends BaseCollapsingActivity<ActivityColl
             if (!isCollapsingScrollEnabled()) {
                 return;
             }
-            if (isCollapsingExpanded()) {
-                collapseCollapsingHeader(true);
-            } else {
-                expandCollapsingHeader(true);
-            }
+            toggleCollapsingHeader(true);
             v.postDelayed(this::refreshCollapsingControlLabels, 320);
         });
     }
@@ -342,17 +350,17 @@ public class CollapsingSceneActivity extends BaseCollapsingActivity<ActivityColl
     }
 
     /**
-     * 店铺搜索：展开为假输入框；点击后折叠，顶部真 EditText 可输入。
-     * 吸顶浮层跟滚动进度连续淡入。
+     * 店铺搜索：与其它页相同 — pin 条高度 = statusBar + 52，列表由 AppBar Behavior 顶开。
+     * 假 TextView / 真 EditText 都在 pin 条内切换，不再用会盖住列表的吸顶浮层。
      */
     private void bindShopSearch(View scene, int statusBar) {
         View searchBar = scene.findViewById(R.id.searchBar);
-        View sticky = scene.findViewById(R.id.searchBarSticky);
         View bannerMeta = scene.findViewById(R.id.shopBannerMeta);
         TextView fakeSearch = scene.findViewById(R.id.tvSearchFake);
         EditText realSearch = scene.findViewById(R.id.etSearchReal);
         AppBarLayout appBar = scene.findViewById(R.id.appBar);
-        if (searchBar == null || sticky == null || appBar == null
+        CollapsingToolbarLayout collapsing = scene.findViewById(R.id.collapsingToolbar);
+        if (searchBar == null || appBar == null
                 || fakeSearch == null || realSearch == null) {
             return;
         }
@@ -360,16 +368,21 @@ public class CollapsingSceneActivity extends BaseCollapsingActivity<ActivityColl
         final int row = dp(52);
         final int side = dp(12);
         final int backClearance = dp(BACK_CLEARANCE_DP);
-        ViewGroup.LayoutParams slp = sticky.getLayoutParams();
-        slp.height = row + inset;
-        sticky.setLayoutParams(slp);
-        sticky.setPadding(backClearance, inset, side, sticky.getPaddingBottom());
-        searchBar.setPadding(side, 0, side, 0);
+        final View searchInner = scene.findViewById(R.id.searchBarInner);
 
-        sticky.animate().cancel();
-        sticky.setAlpha(0f);
-        sticky.setVisibility(View.INVISIBLE);
-        sticky.bringToFront();
+        // pin 总高 = statusBar+52，收起后列表能被 Behavior 顶开；
+        // 展开时外层透明，只有底部 52 白底搜索，避免店招底部大白块。
+        ViewGroup.LayoutParams slp = searchBar.getLayoutParams();
+        slp.height = row + inset;
+        searchBar.setLayoutParams(slp);
+        searchBar.setBackgroundColor(0x00000000);
+        // 展开：左右各 12；收起：左侧给返回留空
+        applyShopSearchSidePadding(searchInner, false, side, backClearance);
+        if (collapsing != null) {
+            collapsing.setMinimumHeight(row + inset);
+            collapsing.setContentScrimColor(0x00000000);
+        }
+        searchBar.setElevation(dp(8));
         mViewBinding.btnBack.bringToFront();
 
         if (shopBound) {
@@ -377,11 +390,13 @@ public class CollapsingSceneActivity extends BaseCollapsingActivity<ActivityColl
         }
         shopBound = true;
         final boolean[] lightBar = {false};
+        /** 点假搜索：折叠到位后再弹键盘 */
         final boolean[] pendingFocus = {false};
+        /** 弹键盘任务世代号，展开收键盘时作废，避免 postDelayed 又弹回来 */
+        final int[] focusGen = {0};
         final float[] lastStick = {-1f};
         final float[] lastMeta = {-1f};
 
-        // 真假输入框文案同步
         syncShopSearchText(fakeSearch, realSearch);
         realSearch.addTextChangedListener(new TextWatcher() {
             @Override
@@ -398,26 +413,29 @@ public class CollapsingSceneActivity extends BaseCollapsingActivity<ActivityColl
             }
         });
 
-        // 假搜索：点击 → 折叠 → 真输入框获焦
         View.OnClickListener openRealSearch = v -> {
             if (!isCollapsingScrollEnabled()) {
                 setCollapsingScrollEnabled(true);
             }
+            // 折叠动画中的过渡态保留 pending；到位后再弹键盘
             pendingFocus[0] = true;
-            appBar.setExpanded(false, true);
-            // 已吸顶时直接获焦
-            if (lastStick[0] >= 0.92f) {
+            if (lastStick[0] >= 0.95f
+                    && getCollapsingHeaderState() == CollapsingHeaderState.COLLAPSED) {
                 pendingFocus[0] = false;
-                focusShopSearch(realSearch);
+                focusShopSearch(realSearch, focusGen);
+                return;
             }
+            appBar.setExpanded(false, true);
         };
         fakeSearch.setOnClickListener(openRealSearch);
         searchBar.setOnClickListener(openRealSearch);
+        if (searchInner != null) {
+            searchInner.setOnClickListener(openRealSearch);
+        }
 
         realSearch.setOnEditorActionListener((tv, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                hideKeyboard(realSearch);
-                realSearch.clearFocus();
+                dismissShopKeyboard(realSearch, focusGen);
                 return true;
             }
             return false;
@@ -446,28 +464,43 @@ public class CollapsingSceneActivity extends BaseCollapsingActivity<ActivityColl
             float raw = range <= bar ? progress
                     : Math.max(0f, Math.min(1f, (abs - (range - bar)) / (float) bar));
             float stick = raw * raw * (3f - 2f * raw);
+
             if (Math.abs(stick - lastStick[0]) >= 0.01f) {
                 lastStick[0] = stick;
-                sticky.setAlpha(stick);
-                searchBar.setAlpha(1f - stick);
-                if (stick < 0.02f) {
-                    if (sticky.getVisibility() != View.INVISIBLE) {
-                        sticky.setVisibility(View.INVISIBLE);
+                boolean stuck = stick >= 0.5f;
+                applyShopSearchSidePadding(searchInner, stuck, side, backClearance);
+                if (stuck) {
+                    if (fakeSearch.getVisibility() != View.GONE) {
+                        fakeSearch.setVisibility(View.GONE);
                     }
-                    // 展开回来：收起键盘，真输入失焦
-                    if (realSearch.hasFocus()) {
-                        hideKeyboard(realSearch);
-                        realSearch.clearFocus();
+                    if (realSearch.getVisibility() != View.VISIBLE) {
+                        realSearch.setVisibility(View.VISIBLE);
                     }
-                    pendingFocus[0] = false;
-                } else if (sticky.getVisibility() != View.VISIBLE) {
-                    sticky.setVisibility(View.VISIBLE);
-                    sticky.bringToFront();
-                    mViewBinding.btnBack.bringToFront();
+                    fakeSearch.setAlpha(0f);
+                    realSearch.setAlpha(1f);
+                    searchBar.setBackgroundColor(0xFFFFFFFF);
+                } else {
+                    if (realSearch.getVisibility() != View.GONE) {
+                        realSearch.setVisibility(View.GONE);
+                    }
+                    if (fakeSearch.getVisibility() != View.VISIBLE) {
+                        fakeSearch.setVisibility(View.VISIBLE);
+                    }
+                    fakeSearch.setAlpha(1f);
+                    realSearch.setAlpha(0f);
+                    searchBar.setBackgroundColor(0x00000000);
                 }
-                if (pendingFocus[0] && stick >= 0.92f) {
-                    pendingFocus[0] = false;
-                    focusShopSearch(realSearch);
+
+                // 键盘滞回：
+                // - pending + stick≥0.95 → 折叠到位弹键盘
+                // - stick<0.85 → 非收起强制收键盘（并作废延迟弹键盘）
+                if (pendingFocus[0]) {
+                    if (stick >= 0.95f) {
+                        pendingFocus[0] = false;
+                        focusShopSearch(realSearch, focusGen);
+                    }
+                } else if (stick < 0.85f) {
+                    dismissShopKeyboard(realSearch, focusGen);
                 }
             }
 
@@ -479,18 +512,61 @@ public class CollapsingSceneActivity extends BaseCollapsingActivity<ActivityColl
         });
     }
 
-    private void focusShopSearch(EditText realSearch) {
-        realSearch.post(() -> {
+    /** 展开左右 12；收起左侧给返回留位，右侧仍 12 */
+    private void applyShopSearchSidePadding(View searchInner, boolean stuck, int side, int backClearance) {
+        if (searchInner == null) {
+            return;
+        }
+        int start = stuck ? backClearance : side;
+        if (searchInner.getPaddingStart() == start
+                && searchInner.getPaddingEnd() == side
+                && searchInner.getPaddingTop() == 0
+                && searchInner.getPaddingBottom() == 0) {
+            return;
+        }
+        searchInner.setPaddingRelative(start, 0, side, 0);
+    }
+
+    private void focusShopSearch(EditText realSearch, int[] focusGen) {
+        if (realSearch.getVisibility() != View.VISIBLE) {
+            realSearch.setVisibility(View.VISIBLE);
+            realSearch.setAlpha(1f);
+        }
+        final int gen = ++focusGen[0];
+        Runnable show = () -> {
+            if (gen != focusGen[0]) {
+                return;
+            }
+            // 已离开收起态则不再弹
+            if (getCollapsingHeaderProgress() < 0.9f) {
+                return;
+            }
             realSearch.setFocusable(true);
             realSearch.setFocusableInTouchMode(true);
             realSearch.requestFocus();
-            // 光标放到末尾，保留已同步内容
             CharSequence text = realSearch.getText();
             if (text != null) {
                 realSearch.setSelection(text.length());
             }
-            showKeyboard(realSearch);
-        });
+            // 不用 SHOW_FORCED，否则部分机型 hide 不掉
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.showSoftInput(realSearch, InputMethodManager.SHOW_IMPLICIT);
+            }
+        };
+        realSearch.post(show);
+        realSearch.postDelayed(show, 160);
+    }
+
+    private void dismissShopKeyboard(EditText realSearch, int[] focusGen) {
+        focusGen[0]++; // 作废未执行的弹键盘任务
+        realSearch.clearFocus();
+        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            View token = realSearch.getWindowToken() != null ? realSearch : getWindow().getDecorView();
+            imm.hideSoftInputFromWindow(token.getWindowToken(), 0);
+        }
+        hideKeyboard(realSearch);
     }
 
     /** 真输入有字 → 假框显示同文；空则恢复占位「搜本店商品」 */
@@ -510,19 +586,20 @@ public class CollapsingSceneActivity extends BaseCollapsingActivity<ActivityColl
      * ImmersionBar + 系统 flag 双保险（仅 Genymotion 上 Controller 不够稳）。
      */
     private void applyShopStatusBar(boolean stuck) {
+        // 保持 keyboardEnable(true)：吸顶真搜索需要软键盘，勿每次切状态栏关掉
         if (stuck) {
             ImmersionBar.with(this)
                     .statusBarColor(android.R.color.white)
                     .statusBarDarkFont(true, 0.2f)
                     .fitsSystemWindows(false)
-                    .keyboardEnable(false)
+                    .keyboardEnable(true)
                     .init();
         } else {
             ImmersionBar.with(this)
                     .transparentStatusBar()
                     .statusBarDarkFont(false)
                     .fitsSystemWindows(false)
-                    .keyboardEnable(false)
+                    .keyboardEnable(true)
                     .init();
         }
         Window window = getWindow();

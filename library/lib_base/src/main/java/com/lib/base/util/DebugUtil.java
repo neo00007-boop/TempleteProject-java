@@ -30,10 +30,16 @@ public class DebugUtil {
     }
 
     public static void toast(String str) {
+        if (str == null || str.length() == 0) {
+            return;
+        }
         Toaster.show(str);
     }
 
     public static void debugToast(String str) {
+        if (str == null || str.length() == 0) {
+            return;
+        }
         Toaster.debugShow(str);
     }
 

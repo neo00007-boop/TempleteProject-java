@@ -38,6 +38,8 @@ public abstract class BaseCollapsingActivity<T extends ViewBinding> extends Base
     private LockableAppBarLayoutBehavior collapsingBehavior;
     @Nullable
     private AppBarLayout.OnOffsetChangedListener pendingLockListener;
+    /** 锁头动画世代号，防止多次 lock / 超时 Runnable 互相踩 */
+    private int pendingLockGeneration;
 
     /**
      * 绑定页面里的 {@link AppBarLayout}，并挂上可锁定 Behavior。
@@ -106,9 +108,21 @@ public abstract class BaseCollapsingActivity<T extends ViewBinding> extends Base
         setCollapsingExpanded(false, animate);
     }
 
-    /** 展开 / 折叠切换。仅在允许滚动时生效。 */
+    /**
+     * 展开 / 折叠切换。仅在允许滚动时生效。
+     * 过渡态按进度：≥0.5 视为更靠近收起 → 展开；否则 → 收起。
+     */
     public void toggleCollapsingHeader(boolean animate) {
-        setCollapsingExpanded(!isCollapsingExpanded(), animate);
+        CollapsingHeaderState state = getCollapsingHeaderState();
+        boolean expand;
+        if (state == CollapsingHeaderState.EXPANDED) {
+            expand = false;
+        } else if (state == CollapsingHeaderState.COLLAPSED) {
+            expand = true;
+        } else {
+            expand = getCollapsingHeaderProgress() >= 0.5f;
+        }
+        setCollapsingExpanded(expand, animate);
     }
 
     public boolean isCollapsingExpanded() {
@@ -136,11 +150,12 @@ public abstract class BaseCollapsingActivity<T extends ViewBinding> extends Base
         if (range <= 0) {
             return CollapsingHeaderState.EXPANDED;
         }
-        int abs = Math.abs(collapsingAppBar.getTop());
-        if (abs <= 1) {
+        // 优先用 Behavior offset，比 View.getTop() 更稳
+        int offset = Math.abs(readAppBarOffset(collapsingAppBar));
+        if (offset <= 1) {
             return CollapsingHeaderState.EXPANDED;
         }
-        if (abs >= range - 1) {
+        if (offset >= range - 1) {
             return CollapsingHeaderState.COLLAPSED;
         }
         return CollapsingHeaderState.SETTLING;
@@ -155,12 +170,13 @@ public abstract class BaseCollapsingActivity<T extends ViewBinding> extends Base
         if (range <= 0) {
             return 0f;
         }
-        return Math.max(0f, Math.min(1f, Math.abs(collapsingAppBar.getTop()) / (float) range));
+        return Math.max(0f, Math.min(1f,
+                Math.abs(readAppBarOffset(collapsingAppBar)) / (float) range));
     }
 
     /**
      * 先落到展开或折叠态，再禁用头部滚动。
-     * 动画过程中临时允许偏移，到位后锁死。
+     * 动画过程中临时允许偏移，到位后锁死；超时兜底，避免监听器挂死。
      */
     private void lockCollapsingHeader(boolean expanded, boolean animate) {
         if (collapsingAppBar == null || collapsingBehavior == null) {
@@ -180,7 +196,11 @@ public abstract class BaseCollapsingActivity<T extends ViewBinding> extends Base
         collapsingBehavior.setScrollEnabled(true);
         final AppBarLayout appBar = collapsingAppBar;
         final LockableAppBarLayoutBehavior behavior = collapsingBehavior;
+        final int generation = ++pendingLockGeneration;
         pendingLockListener = (abl, offset) -> {
+            if (generation != pendingLockGeneration) {
+                return;
+            }
             int range = abl.getTotalScrollRange();
             boolean settled = expanded
                     ? offset >= 0
@@ -188,12 +208,31 @@ public abstract class BaseCollapsingActivity<T extends ViewBinding> extends Base
             if (!settled) {
                 return;
             }
-            abl.removeOnOffsetChangedListener(pendingLockListener);
-            pendingLockListener = null;
-            behavior.setScrollEnabled(false);
+            finishPendingLock(behavior, generation);
         };
         appBar.addOnOffsetChangedListener(pendingLockListener);
         appBar.setExpanded(expanded, true);
+        // 动画被打断或达不到精确 offset 时，450ms 后强制锁头
+        appBar.postDelayed(() -> finishPendingLock(behavior, generation), 450);
+    }
+
+    private void finishPendingLock(@NonNull LockableAppBarLayoutBehavior behavior, int generation) {
+        if (generation != pendingLockGeneration) {
+            return;
+        }
+        clearPendingLockListener();
+        behavior.setScrollEnabled(false);
+    }
+
+    private static int readAppBarOffset(@NonNull AppBarLayout appBar) {
+        ViewGroup.LayoutParams lp = appBar.getLayoutParams();
+        if (lp instanceof CoordinatorLayout.LayoutParams) {
+            CoordinatorLayout.Behavior<?> b = ((CoordinatorLayout.LayoutParams) lp).getBehavior();
+            if (b instanceof AppBarLayout.Behavior) {
+                return ((AppBarLayout.Behavior) b).getTopAndBottomOffset();
+            }
+        }
+        return appBar.getTop();
     }
 
     private void setCollapsingExpanded(boolean expanded, boolean animate) {
@@ -208,6 +247,7 @@ public abstract class BaseCollapsingActivity<T extends ViewBinding> extends Base
     }
 
     private void clearPendingLockListener() {
+        pendingLockGeneration++;
         if (collapsingAppBar != null && pendingLockListener != null) {
             collapsingAppBar.removeOnOffsetChangedListener(pendingLockListener);
         }

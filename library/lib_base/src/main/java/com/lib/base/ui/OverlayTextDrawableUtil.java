@@ -232,7 +232,8 @@ public class OverlayTextDrawableUtil {
             return;
         }
         String name = resolveDialogOverlayName(view);
-        if (name == null) {
+        // 空名会画出一块「没字的绿/黑条」，像空通知
+        if (name == null || name.isEmpty()) {
             return;
         }
         view.post(() -> attachDialogOverlay(view, name));
@@ -269,6 +270,13 @@ public class OverlayTextDrawableUtil {
             return null;
         }
         int type = ((WindowManager.LayoutParams) lp).type;
+        // 键盘 / Toast / 系统浮层不要打标，否则常出现空条或无意义标签
+        if (type == WindowManager.LayoutParams.TYPE_INPUT_METHOD
+                || type == WindowManager.LayoutParams.TYPE_INPUT_METHOD_DIALOG
+                || type == WindowManager.LayoutParams.TYPE_TOAST
+                || type >= 2038 /* TYPE_APPLICATION_OVERLAY，API26+ */) {
+            return null;
+        }
         // Activity = TYPE_BASE_APPLICATION(1)；Dialog 多为 TYPE_APPLICATION(2)；
         // Popup / 部分浮层落在 FIRST_SUB_WINDOW ~ LAST_SUB_WINDOW
         boolean dialogType = type == WindowManager.LayoutParams.TYPE_APPLICATION
@@ -278,10 +286,11 @@ public class OverlayTextDrawableUtil {
             return null;
         }
         if (host != null) {
-            return host.getClass().getSimpleName();
+            String hostName = host.getClass().getSimpleName();
+            return hostName.isEmpty() ? null : hostName;
         }
         String simple = decor.getClass().getSimpleName();
-        return simple.isEmpty() ? "Window" : simple;
+        return simple.isEmpty() ? null : simple;
     }
 
     /**

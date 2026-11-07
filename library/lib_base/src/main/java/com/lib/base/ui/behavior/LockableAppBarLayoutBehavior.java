@@ -52,4 +52,32 @@ public class LockableAppBarLayoutBehavior extends AppBarLayout.Behavior {
         return scrollEnabled
                 && super.onStartNestedScroll(parent, child, directTargetChild, target, nestedScrollAxes, type);
     }
+
+    /**
+     * 锁头后若仍有进行中的嵌套滚动，吞掉后续位移，避免半锁半滚。
+     */
+    @Override
+    public void onNestedPreScroll(@NonNull CoordinatorLayout coordinatorLayout,
+                                  @NonNull AppBarLayout child,
+                                  @NonNull View target,
+                                  int dx, int dy, @NonNull int[] consumed, int type) {
+        if (!scrollEnabled) {
+            return;
+        }
+        super.onNestedPreScroll(coordinatorLayout, child, target, dx, dy, consumed, type);
+    }
+
+    @Override
+    public void onNestedScroll(@NonNull CoordinatorLayout coordinatorLayout,
+                               @NonNull AppBarLayout child,
+                               @NonNull View target,
+                               int dxConsumed, int dyConsumed,
+                               int dxUnconsumed, int dyUnconsumed,
+                               int type, @NonNull int[] consumed) {
+        if (!scrollEnabled) {
+            return;
+        }
+        super.onNestedScroll(coordinatorLayout, child, target,
+                dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, type, consumed);
+    }
 }
