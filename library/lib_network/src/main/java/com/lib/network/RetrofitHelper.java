@@ -34,14 +34,18 @@ public class RetrofitHelper {
      */
     private RetrofitHelper(HttpConfig config) {
         //OkHttpClient
-        mOkHttpClient = new OkHttpClient
+        OkHttpClient.Builder clientBuilder = new OkHttpClient
                 .Builder()
                 // .cookieJar(new OkCookieJar(config.cookiePath))//---------------//处理cookie
                 //.retryOnConnectionFailure(true)//默认重试一次,使用RetryInterceptor可以自定义重试次数
                 // .followRedirects(true)//允许重定向
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .writeTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS);
+        for (Interceptor interceptor : config.interceptors) {
+            clientBuilder.addInterceptor(interceptor);
+        }
+        mOkHttpClient = clientBuilder
                 .addInterceptor(new UrlManagerInterceptor(config))//---------------多域名切换拦截器
                 .addInterceptor(new NetworkInterceptor(config))//------------------网络拦截器,处理header,登录态换检等
                 .addInterceptor(getLogInterceptor(config.debug))//-----------------日志拦截器
@@ -56,6 +60,8 @@ public class RetrofitHelper {
         mRetrofit = new Retrofit.Builder()
                 .client(mOkHttpClient)
                 .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
+                // ApiResult 先于 Gson：code/msg/data，data 可以是对象或 List
+                .addConverterFactory(new ApiResultConverterFactory(config.gson))
                 .addConverterFactory(GsonConverterFactory.create(config.gson))
                 .baseUrl(config.baseUrl)
                 .build();

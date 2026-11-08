@@ -47,9 +47,38 @@ public interface XxxApi {
 XxxApi api = RetrofitHelper.getInstance().getRetrofit().create(XxxApi.class);
 ```
 
+3. 返回体统一用 `ApiResult<T>`。`data` 是对象就写对象，是数组就写 `List`：
+
+```java
+@POST("/user/detail")
+Single<ApiResult<UserBean>> detail(@Query("id") String id);
+
+@POST("/user/list")
+Single<ApiResult<List<UserBean>>> list(@Query("page") int page);
+```
+
+`code` 可以是数字或数字字符串，文案认 `msg`、`message`、`errorMsg`、`errMsg`。成功码默认 `0` 和 `200`，后台不是这两个就在启动时 `ApiResult.setSuccessCodes(...)`。
+
+取出 data：
+
+```java
+api.detail(id)
+        .compose(RxUtils.toSimpleSingle(this))
+        .compose(ApiResults.unwrap())
+        .subscribe(user -> { }, throwable -> {
+            if (throwable instanceof ApiException) {
+                int code = ((ApiException) throwable).getCode();
+            }
+        });
+```
+
+没有 data 的接口不要 unwrap，自己判断 `result.isCodeSuccess()`（`isSuccess()` 也只看 code）。`hasData()` 是 code 成功且 data 非空，空字符串、空 List 都算空。`hasListData()` 还要求 data 是非空 List。字符串响应可以用 `ApiResults.parse(gson, json, new TypeToken<ApiResult<UserBean>>(){}.getType())`。
+
+Demo 样例：接口 `ApiResultSampleApi`，页面 `ApiResultActivity`。几段 JSON 由 `ApiResultSampleInterceptor` 本地返回，用来看对象、列表、无 data、空 data 和业务失败。
+
 ## 注意
 
 - 使用前必须先 `RetrofitHelper.init`，否则 `getInstance()` 直接抛 `IllegalStateException`
 - token 只加在自己的接口上（`baseUrl` 和 `host()` 登记的域名），第三方地址不会带
 - 接口按业务放到各自模块，不要都堆在这里
-- 接口返回的实体要在所在模块的 `consumer-rules.pro` 里保留字段，否则发布包里 Gson 解析不出数据
+- `ApiResult` 的字段规则只在本库 `consumer-rules.pro`。业务实体放进该模块已经 keep 的 `bean` 包，不要再为单个类加规则

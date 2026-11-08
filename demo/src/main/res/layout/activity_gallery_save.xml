@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/common_window_background_color"
+    android:orientation="vertical"
+    android:padding="@dimen/x40">
+
+    <ImageView
+        android:id="@+id/ivPreview"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/x420"
+        android:background="@color/white"
+        android:contentDescription="待保存图片"
+        android:scaleType="fitCenter"
+        tools:ignore="HardcodedText" />
+
+    <com.hjq.shape.view.ShapeTextView
+        android:id="@+id/tvSaveBitmap"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/x140"
+        android:layout_marginTop="@dimen/x40"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:text="保存生成的图片"
+        android:textColor="@color/white"
+        android:textSize="@dimen/x40"
+        app:shape_radius="@dimen/x70"
+        app:shape_solidColor="@color/common_accent_color"
+        app:shape_textColor="@color/white"
+        tools:ignore="HardcodedText" />
+
+    <com.hjq.shape.view.ShapeTextView
+        android:id="@+id/tvSaveFile"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/x140"
+        android:layout_marginTop="@dimen/x30"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:text="保存缓存文件"
+        android:textColor="@color/white"
+        android:textSize="@dimen/x40"
+        app:shape_radius="@dimen/x70"
+        app:shape_solidColor="@color/common_accent_color"
+        app:shape_textColor="@color/white"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/tvResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x40"
+        android:includeFontPadding="false"
+        android:text="Android 10 及以上直接保存。更低版本先申请写存储权限。"
+        android:textColor="@color/cl_666"
+        android:textSize="@dimen/x32"
+        tools:ignore="HardcodedText" />
+</LinearLayout>

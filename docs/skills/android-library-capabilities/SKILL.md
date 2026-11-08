@@ -32,7 +32,8 @@ description: TempleteProject 工程 library 目录下各基础库（lib_base、l
 | 页面跳转 | `Router.open(context, RoutePath.XXX)`，带参数 `Router.build(path).withString(...).navigation(context)`，接收参数 `@Autowired` + `Router.inject(this)`；路径常量只加在 `RoutePath` | 跨模块 new Intent 引用别的模块的类、直接调 ARouter |
 | 跨模块调用 | 在 `module_xxx_api` 定义继承 `IProvider` 的接口，用 `Router.service(Xxx.class)` 获取 | 业务模块互相依赖 |
 | 需要登录的页面 | `@Route(path = ..., extras = RouteExtras.NEED_LOGIN)`，登录拦截自动处理；手动判断用 `LoginUtil.isLogin()`、`LoginUtil.toLogin()` | 每个页面自己判断登录 |
-| 网络请求 | 在业务模块写 Retrofit 接口（返回 `Single`/`Observable`），`RetrofitHelper.getInstance().getRetrofit().create(XxxApi.class)`；多域名用 `@Headers({Hosts.HOST2})`；参考 `module_login` 的 `LoginApi`、`LoginHttp` | 新建 OkHttpClient / Retrofit 实例 |
+| 网络请求 | 在业务模块写 Retrofit 接口（返回 `Single<ApiResult<Bean>>` 或 `Single<ApiResult<List<Bean>>>`），`RetrofitHelper.getInstance().getRetrofit().create(XxxApi.class)`；多域名用 `@Headers({Hosts.HOST2})`；取出 data 用 `.compose(ApiResults.unwrap())`，失败是 `ApiException`。成功码默认 0 和 200，不同就 `ApiResult.setSuccessCodes(...)`。只看 code 用 `isCodeSuccess()`；code 成功且 data 非空用 `hasData()`，列表再用 `hasListData()`，空 List 算空。样例见 demo 的 `ApiResultSampleApi`、`ApiResultActivity` | 新建 OkHttpClient / Retrofit 实例，每个接口自己定义 code/msg/data |
+| 保存到相册 | `GallerySaveUtil.saveBitmap()`、`saveBytes()`、`saveFile()`、`saveUri()`。异步用同名 `Async`，返回 `Single<Result>`（io 写入、主线程结果），页面里 `.compose(RxUtils.toSimpleSingle(this))`。Android 9 及以下先用 `PermissionUtil.requestPermission()` 申请写存储，允许后再保存。Android 10 及以上走 MediaStore，不用存储权限 | 自己按版本写 MediaStore，或把权限回调再包进 Rx |
 | 线程切换 + 绑定生命周期 + 加载框 | `.compose(RxUtils.toSimpleSingle(this))`，带加载框 `RxUtils.toSimpleSingle(this, "加载中", true)`；Observable/Flowable 有同名方法 | 手写 subscribeOn/observeOn、忘记解绑 |
 | 防重复点击 | `RxUtils.throwFirstClick()` / `throwEndClick()`（基于 RxBinding） | 自己记时间戳 |
 | 普通子线程 / 回主线程 | `GlobalThreadPoolUtil.postOnSubThread()`、`postOnUiThread()`、`postOnUiThreadDelay()`；页面里 `post()`、`postDelayed()` | new Thread、new Handler |
@@ -83,7 +84,7 @@ description: TempleteProject 工程 library 目录下各基础库（lib_base、l
   - 页面与上下文：`ContextUtil`（Context 转 Activity/LifecycleOwner、页面是否存活）、`IntentUtil`（带动画跳转、回桌面）、`KeyBoardUtil`、`ViewUtil`
   - 刷新：`FreshUtil`（结束刷新/加载、没有更多数据）
   - 日志调试：`DebugUtil`、`BaseLog`
-  - 其他：`DateUtil`、`JsonDataUtil`（读 assets json）、`OUtil`（判空）
+  - 其他：`DateUtil`、`JsonDataUtil`（读 assets json）、`OUtil`（判空）、`GallerySaveUtil`（图片/视频保存到相册，Android 10+ 走 MediaStore，Android 9 及以下写公共目录并扫描）
   - `txt`：`PatternUtil`、`StringCompareUtil`、`TxtUtil`、`Spanny`、`FakeBoldSpan`、`SuperSpanUtil`、`TextDrawable`、`VerticalImageSpan`
   - `encrypt`：`MD5Util`、`SHAUtil`、`AESUtil`、`DESUtil`、`RSAUtil`、`Base64Util`
   - `upload`：`MediaPickerUtil`（选图、拍照、预览、清缓存）、`GlideEngine`、`ImageCompressEngine`、`ImageCropEngine`、七牛上传回调 `MyResultCallback`
@@ -95,7 +96,7 @@ description: TempleteProject 工程 library 目录下各基础库（lib_base、l
 
 ### lib_network（网络）
 
-包名 `com.lib.network`：`RetrofitHelper`（`init(HttpConfig)`、`getInstance().getRetrofit()`）、`HttpConfig`（baseUrl、多域名、公共请求头、token 提供者、登录失效回调、Gson、debug）、`Hosts`（多域名 key 和请求头）、`NetworkInterceptor`（公共头、token、登录失效识别）、`UrlManagerInterceptor`（切换域名）、`RetryInterceptor`、`OkCookieJar`、`HttpLog`。初始化已在 `App.initNetwork()` 完成。接口返回的实体要在所在模块 `consumer-rules.pro` 里保留字段。
+包名 `com.lib.network`：`RetrofitHelper`（`init(HttpConfig)`、`getInstance().getRetrofit()`）、`HttpConfig`（baseUrl、多域名、公共请求头、token 提供者、登录失效回调、Gson、debug）、`Hosts`（多域名 key 和请求头）、`NetworkInterceptor`（公共头、token、登录失效识别）、`UrlManagerInterceptor`（切换域名）、`RetryInterceptor`、`OkCookieJar`、`HttpLog`、`ApiResult<T>`（统一 `code` / `msg` / `data`，data 是对象或 `List`）、`ApiResults`（`unwrap()`、`parse()`）、`ApiException`。初始化已在 `App.initNetwork()` 完成。`ApiResult` 的字段规则只在 `library/lib_network/consumer-rules.pro`。业务实体放进该模块已经 keep 的 `bean` 包，不要再为单个类加规则。
 
 ### lib_greendao（GreenDao 数据库，老功能）
 
@@ -112,7 +113,7 @@ description: TempleteProject 工程 library 目录下各基础库（lib_base、l
 - **圆角**：`RoundImageView`、`RoundedImageView`、`RoundLayout`、`RoundCardView`
 - **输入**：`RegexEditText`（正则限制输入）、`PasswordEditText`、`PasswordView`（支付密码格）
 - **常用控件**：`SettingBar`（设置项行）、`SwitchButton`、`CountdownView`（验证码倒计时）、`SimpleRatingBar`、`DrawableTextView`、`SmartTextView`、`PressAlphaTextView`、`MsgView`（红点角标）、`TriangleView`、`StatuesBar`、`ScaleImageView`、`FastIndexBar`（字母索引）、`FlowLayout`（流式标签）、`SwipeMenuLayout`（侧滑菜单）
-- **列表与滚动**：`WrapRecyclerView`（头尾布局）、`TransRecyclerView`、`StopScrollManager`、`CenterLayoutManager`、`PinnedSectionListView`、`NestedScrollWebView`、`NestedViewPager`、`NestedLinearLayout`、`NoScrollViewPager`、`CstViewPager`
+- **列表与滚动**：`TransRecyclerView`、`StopScrollManager`、`CenterLayoutManager`、`PinnedSectionListView`、`NestedScrollWebView`、`NestedViewPager`、`NestedLinearLayout`、`NoScrollViewPager`、`CstViewPager`
 - **刷新头尾**：SmartRefreshLayout 经典/Material 头尾，及自定义 `SunHeader`、`GrassHeader`、`ClassicsFooter`，横向刷新 `SmartRefreshHorizontal`
 - **Tab**（`com.flyco.tablayout`）：`SlidingTabLayout`、`CommonTabLayout`、`SegmentTabLayout`、`CenterBlockSlidingTabLayout`、`GradientSlidingTabLayout`、`DrawableIndicatorSlidingTabLayout`
 - **androidx**：material、recyclerview、constraintlayout、viewpager、viewpager2、cardview

@@ -106,7 +106,7 @@ public abstract class App extends Application implements /*ViewModelStoreOwner,*
     }
 
     private void initNetwork() {
-        RetrofitHelper.init(new HttpConfig.Builder(AppConfig.getUrl())
+        HttpConfig.Builder builder = new HttpConfig.Builder(AppConfig.getUrl())
                 // .host(Hosts.host1, AppConfig.API_BASE_URL_FINAL1)
                 .host(Hosts.host2, AppConfig.API_BASE_URL2)
                 .header("client_type", "android")
@@ -116,8 +116,15 @@ public abstract class App extends Application implements /*ViewModelStoreOwner,*
                 .onTokenExpired(LoginUtil::toLogin)
                 .gson(GsonUtil.getInstance())
                 // .cookiePath(AppConfig.COOKIE_URL_PATH)
-                .debug(DebugUtil.isDebug)
-                .build());
+                .debug(DebugUtil.isDebug);
+        onConfigNetwork(builder);
+        RetrofitHelper.init(builder.build());
+    }
+
+    /**
+     * 网络客户端创建前的扩展点。Demo 用来挂本地样例响应。
+     */
+    protected void onConfigNetwork(@NonNull HttpConfig.Builder builder) {
     }
 
     /**

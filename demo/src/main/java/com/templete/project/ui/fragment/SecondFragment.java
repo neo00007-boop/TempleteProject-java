@@ -16,6 +16,7 @@ import com.lib.base.util.intent.IntentData;
 import com.templete.project.bean.JBean;
 import com.templete.project.bean.PBean;
 import com.templete.project.databinding.SecondFragmentBinding;
+import com.templete.project.ui.activity.ApiResultActivity;
 import com.templete.project.ui.activity.DataBusActivity;
 import com.templete.project.ui.activity.DatabindingActivity;
 import com.templete.project.ui.activity.DoubleCacheActivity;
@@ -73,6 +74,8 @@ public class SecondFragment extends BaseFragment<SecondFragmentBinding> {
                         clazz = LoadingActivity.class;
                     } else if (v.equals(mViewBinding.tv11)) {
                         clazz = SelectorActivity.class;
+                    } else if (v.equals(mViewBinding.tv12)) {
+                        clazz = ApiResultActivity.class;
                     }
                     if (clazz != null) {
                         getBaseActivity().startAty(requireActivity(), clazz);
@@ -81,7 +84,7 @@ public class SecondFragment extends BaseFragment<SecondFragmentBinding> {
                 mViewBinding.tv1, mViewBinding.tv2, mViewBinding.tv3,
                 mViewBinding.tv4, mViewBinding.tv5, mViewBinding.tv6,
                 mViewBinding.tv7, mViewBinding.tv8, mViewBinding.tv9,
-                mViewBinding.tv10, mViewBinding.tv11);
+                mViewBinding.tv10, mViewBinding.tv11, mViewBinding.tv12);
     }
 
     private void openIntentDemo() {

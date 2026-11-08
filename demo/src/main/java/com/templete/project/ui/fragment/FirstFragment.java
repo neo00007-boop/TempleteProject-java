@@ -12,6 +12,7 @@ import com.lib.base.ui.fragment.BaseFragment;
 import com.lib.base.util.LoginUtil;
 import com.templete.project.databinding.FirstFragmentBinding;
 import com.templete.project.ui.activity.CanvasActivity;
+import com.templete.project.ui.activity.DemoCatalogActivity;
 import com.templete.project.ui.activity.DialogActivity;
 import com.templete.project.ui.activity.FlexActivity;
 import com.templete.project.ui.activity.FlexBoxActivity;
@@ -91,6 +92,8 @@ public class FirstFragment extends BaseFragment<FirstFragmentBinding> {
                         clazz = FoldTextActivity.class;
                     } else if (v.equals(mViewBinding.tv17)) {
                         clazz = VerificationCodeActivity.class;
+                    } else if (v.equals(mViewBinding.tv18)) {
+                        clazz = DemoCatalogActivity.class;
                     }
                     if (clazz != null) {
                         getBaseActivity().startAty(requireActivity(), clazz);
@@ -101,7 +104,7 @@ public class FirstFragment extends BaseFragment<FirstFragmentBinding> {
                 mViewBinding.tv7, mViewBinding.tv8, mViewBinding.tv9,
                 mViewBinding.tv10, mViewBinding.tv11, mViewBinding.tv12,
                 mViewBinding.tv13, mViewBinding.tv14, mViewBinding.tv15,
-                mViewBinding.tv16, mViewBinding.tv17);
+                mViewBinding.tv16, mViewBinding.tv17, mViewBinding.tv18);
     }
 
     @Override

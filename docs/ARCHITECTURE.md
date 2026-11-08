@@ -293,10 +293,18 @@ app / demo       launcher 图标、主题
 
 ## 9. 混淆
 
-- `lib_startup`：保留 `ModuleInitializer` 实现类的无参构造（ServiceLoader 反射创建）
-- `lib_router`：ARouter 生成类和 IProvider 实现的 keep 规则
-- `module_login`：保留 `bean` 包，Gson 按字段名解析接口数据
-- 各库通过 `consumer-rules.pro` 随依赖带到壳工程，壳工程不用重复写
+规则只写在拥有这些类的模块的 `consumer-rules.pro`，随依赖带进壳工程和 demo。壳工程、demo 不要再抄一份，也不要为单个类再加一条。
+
+| 规则 | 文件 |
+| --- | --- |
+| `ApiResult` 字段 | `library/lib_network/consumer-rules.pro` |
+| `com.lib.base.bean`、`CacheBean`、`@ViewInject` | `library/lib_base/consumer-rules.pro` |
+| GreenDao 的 bean、Dao | `library/lib_greendao/consumer-rules.pro` |
+| ARouter 生成类和 `IProvider` | `library/lib_router/consumer-rules.pro` |
+| `ModuleInitializer` 无参构造 | `library/lib_startup/consumer-rules.pro` |
+| `com.module.login.bean` | `module_login/consumer-rules.pro` |
+
+新增接口实体放进本模块已经 keep 的 `bean` 包。demo 的示例实体走 `demo/proguard-rules.pro` 里已有的 `com.templete.project.bean.**`。
 
 ## 10. 新增业务模块步骤
 

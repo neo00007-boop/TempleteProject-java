@@ -27,7 +27,7 @@ com.lib.base
 │   └── widget/       Banner、视频播放等控件
 ├── mvvm/、mvp/   BaseViewModel、GlobalViewModel、RxPresenter
 ├── rxjava/       RxUtils：线程切换、绑定生命周期、加载框
-├── util/         LoginUtil、SPUtil、AppUtil、DateUtil、LiveDataBus、PermissionUtil 等
+├── util/         LoginUtil、SPUtil、AppUtil、DateUtil、LiveDataBus、PermissionUtil、GallerySaveUtil 等
 ├── glide/        Glide 配置和图片变换
 └── adapter/、bean/、listener/
 ```

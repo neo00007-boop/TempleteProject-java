@@ -258,6 +258,18 @@
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />
         <activity
+            android:name=".ui.activity.DemoCatalogActivity"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name=".ui.activity.GallerySaveActivity"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name=".ui.activity.ApiResultActivity"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
             android:name=".ui.activity.VerificationCodeActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateVisible|adjustResize"
@@ -292,10 +304,10 @@
             android:process=":dbProcess"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />
-        <activity
+        <!--<activity
             android:name=".ui.activity.WrapActivity"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity" />
+            tools:ignore="LockedOrientationActivity" />-->
         <!--android:theme="@style/Theme.Process"-->
         <activity
             android:name=".ui.activity.DialogActivity"

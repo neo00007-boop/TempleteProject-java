@@ -4,7 +4,10 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 
 import com.lib.base.config.App;
+import com.lib.network.HttpConfig;
+import com.templete.project.http.ApiResultSampleInterceptor;
 
+import androidx.annotation.NonNull;
 import androidx.multidex.MultiDex;
 
 /**
@@ -23,6 +26,11 @@ public class DemoMainApp extends App {
         // 如果不用百分比布局这一套，可以使用修改density的方案（二选一不要同时使用）
         // 参考375设计稿，直接使用测量值的dp，sp
         // ScreenAdapter.init(this, 375f);
+    }
+
+    @Override
+    protected void onConfigNetwork(@NonNull HttpConfig.Builder builder) {
+        builder.interceptor(new ApiResultSampleInterceptor());
     }
 
     @Override

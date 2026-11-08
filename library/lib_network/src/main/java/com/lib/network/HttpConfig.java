@@ -2,12 +2,15 @@ package com.lib.network;
 
 import com.google.gson.Gson;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import okhttp3.Interceptor;
 
 /**
  * 网络层需要的外部信息。在 Application 里构建一次，交给 {@link RetrofitHelper#init}。
@@ -27,6 +30,7 @@ public final class HttpConfig {
     final Gson gson;
     final String cookiePath;
     final boolean debug;
+    final List<Interceptor> interceptors;
 
     private HttpConfig(Builder builder) {
         baseUrl = builder.baseUrl;
@@ -37,6 +41,7 @@ public final class HttpConfig {
         gson = builder.gson != null ? builder.gson : new Gson();
         cookiePath = builder.cookiePath;
         debug = builder.debug;
+        interceptors = Collections.unmodifiableList(new ArrayList<>(builder.interceptors));
     }
 
     public static final class Builder {
@@ -48,6 +53,7 @@ public final class HttpConfig {
         private Gson gson;
         private String cookiePath = "";
         private boolean debug;
+        private final List<Interceptor> interceptors = new ArrayList<>();
 
         public Builder(@NonNull String baseUrl) {
             this.baseUrl = baseUrl;
@@ -100,6 +106,15 @@ public final class HttpConfig {
 
         public Builder debug(boolean debug) {
             this.debug = debug;
+            return this;
+        }
+
+        /**
+         * 追加应用拦截器，按添加顺序排在公共头、日志、重试之前。
+         * 只给 Demo 这类本地样例用，业务接口不要在这里改响应。
+         */
+        public Builder interceptor(@NonNull Interceptor interceptor) {
+            interceptors.add(interceptor);
             return this;
         }
 
