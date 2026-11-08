@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.InputStream;
 
 import androidx.annotation.NonNull;
-import okhttp3.Call;
 
 /**
  * @author: Android 轮子哥
@@ -74,8 +73,8 @@ public final class GlideConfig extends AppGlideModule {
 
     @Override
     public void registerComponents(@NonNull Context context, @NonNull Glide glide, @NonNull Registry registry) {
-        // Glide 默认使用的是 HttpURLConnection 来做网络请求，这里切换成更高效的 OkHttp
-        registry.replace(GlideUrl.class, InputStream.class, new OkHttpLoader.Factory((Call.Factory) RetrofitHelper.getInstance().getOkHttpClient()));
+        // 图片单独走 OkHttp，不和接口共用拦截器与请求队列
+        registry.replace(GlideUrl.class, InputStream.class, new OkHttpLoader.Factory(RetrofitHelper.getInstance().getImageOkHttpClient()));
     }
 
     @Override

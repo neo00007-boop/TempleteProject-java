@@ -1,8 +1,11 @@
 package com.lib.network;
 
+import androidx.annotation.NonNull;
+
 import java.util.concurrent.TimeUnit;
 
-import androidx.annotation.NonNull;
+import okhttp3.Dispatcher;
+import okhttp3.EventListener;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -22,6 +25,7 @@ public class RetrofitHelper {
     private volatile static RetrofitHelper sInstance;
     private final Retrofit mRetrofit;
     private final OkHttpClient mOkHttpClient;
+    private volatile OkHttpClient mImageOkHttpClient;
 
     public static void init(@NonNull HttpConfig config) {
         sConfig = config;
@@ -102,9 +106,34 @@ public class RetrofitHelper {
         return mOkHttpClient;
     }
 
+    /**
+     * 图片下载用。和接口共用连接池，不带接口拦截器，请求队列分开，读取超时 30 秒。
+     */
+    @NonNull
+    public OkHttpClient getImageOkHttpClient() {
+        if (mImageOkHttpClient == null) {
+            synchronized (this) {
+                if (mImageOkHttpClient == null) {
+                    OkHttpClient.Builder builder = mOkHttpClient.newBuilder()
+                            .dispatcher(new Dispatcher())
+                            .eventListener(EventListener.NONE)
+                            .readTimeout(30, TimeUnit.SECONDS)
+                            .writeTimeout(30, TimeUnit.SECONDS);
+                    builder.interceptors().clear();
+                    builder.networkInterceptors().clear();
+                    mImageOkHttpClient = builder.build();
+                }
+            }
+        }
+        return mImageOkHttpClient;
+    }
+
     public void cancelAll() {
         if (mOkHttpClient != null) {
             mOkHttpClient.dispatcher().cancelAll();
+        }
+        if (mImageOkHttpClient != null) {
+            mImageOkHttpClient.dispatcher().cancelAll();
         }
     }
 }

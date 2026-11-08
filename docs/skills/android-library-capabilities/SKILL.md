@@ -73,7 +73,7 @@ description: TempleteProject 工程 library 目录下各基础库（lib_base、l
 - **ui/widget**：`TitleBar`、`HolderView`（占位视图）、`ShimmerView`、`GlideImageView`、`GlideRoundImageView`、`PlayerView`、`PlayButton`、`BlackToastStyle`
 - **mvvm / mvp**：`BaseViewModel`（`setBaseData()` 通知页面状态）、`GlobalViewModel`、`BaseContract`、`RxPresenter`
 - **rxjava**：`RxUtils`（`toSimpleSingle/Observable/Flowable` 线程切换 + 生命周期 + 加载框，`bindToLifecycle`、`bindUntilEvent`，防重复点击）、`RxHelper`
-- **glide**：`GlideUtil`、`GlideConfig`、`OkHttpLoader`；`transformations`：`BlurTransformation`、`GrayscaleTransformation`、`RoundedCornersTransformation`、`CropCircleTransformation`、`CropCircleWithBorderTransformation`、`CropSquareTransformation`、`CropTransformation`、`ColorFilterTransformation`、`MaskTransformation`，GPU 滤镜（亮度、对比度、反色、像素化、素描、漩涡、卡通、暗角、怀旧等）
+- **glide**：`GlideUtil`、`GlideConfig`、`OkHttpLoader`（图片用 `RetrofitHelper.getImageOkHttpClient()`，只和接口共用连接池）；`transformations`：`BlurTransformation`、`GrayscaleTransformation`、`RoundedCornersTransformation`、`CropCircleTransformation`、`CropCircleWithBorderTransformation`、`CropSquareTransformation`、`CropTransformation`、`ColorFilterTransformation`、`MaskTransformation`，GPU 滤镜（亮度、对比度、反色、像素化、素描、漩涡、卡通、暗角、怀旧等）
 - **util**：
   - 存储缓存：`SPUtil`、`DoubleCacheUtil`
   - 登录：`LoginUtil`（`isLogin`、`toLogin`、`clear`、`getUserNum`）
