@@ -11,8 +11,8 @@
     <!--
       RoundCardView：
       - android:padding 无效，用 rcvContentPadding*
-      - API 28 以下默认软阴影（Bitmap 缓存，View 仍硬件加速，可进列表）
-      - rcvShadowColor：各版本均支持（28+ outline；更低走软阴影色）
+      - 阴影四周均匀（软阴影 Bitmap），不走系统 elevation 偏下投影
+      - rcvShadowColor：软阴影颜色
     -->
     <declare-styleable name="RoundCardView">
         <attr name="rcvBackgroundColor" format="color"/>

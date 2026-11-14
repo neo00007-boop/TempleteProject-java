@@ -24,7 +24,7 @@ import com.hjq.shape.R;
  * CardView 风格容器（平行实现，非 {@link androidx.cardview.widget.CardView} 子类）。
  * <p>
  * <b>扩展</b>：四角圆角、{@code rcvShadowColor}。<br>
- * <b>阴影</b>：API 28+ 系统 elevation；API 28 以下默认软阴影（Bitmap 缓存，View 保持硬件加速，可进列表）。<br>
+ * <b>阴影</b>：四周均匀的软阴影（Bitmap 缓存，View 保持硬件加速，可进列表），不走系统 elevation 的偏下投影。<br>
  * <b>注意</b>：{@code android:padding} 无效，请用 {@code rcvContentPadding*}。
  */
 public class RoundCardView extends FrameLayout {
@@ -137,16 +137,12 @@ public class RoundCardView extends FrameLayout {
             super.dispatchDraw(canvas);
             return;
         }
+        // 软阴影不能用 clipToOutline（会裁掉四周光晕），子 View 在这里按圆角裁切
         RoundRectDrawable rd = (RoundRectDrawable) background;
-        // 四角不等时 clip，避免子 View 画出圆角
-        if (!rd.isUniformRadius()) {
-            int save = canvas.save();
-            canvas.clipPath(rd.getClipPath());
-            super.dispatchDraw(canvas);
-            canvas.restoreToCount(save);
-        } else {
-            super.dispatchDraw(canvas);
-        }
+        int save = canvas.save();
+        canvas.clipPath(rd.getClipPath());
+        super.dispatchDraw(canvas);
+        canvas.restoreToCount(save);
     }
 
     public boolean getUseCompatPadding() {

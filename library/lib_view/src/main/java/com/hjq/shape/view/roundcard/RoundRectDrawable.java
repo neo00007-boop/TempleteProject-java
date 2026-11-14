@@ -24,9 +24,8 @@ import androidx.annotation.RequiresApi;
 /**
  * API 21+ 卡片背景。
  * <p>
- * API 28+：阴影由 View elevation 负责。<br>
- * API 21–27：软阴影先画进 Bitmap 缓存，再 blit 到硬件 Canvas ——
- * <b>不需要</b>给整个 View 开 {@code LAYER_TYPE_SOFTWARE}，列表可流畅滚动。
+ * 软阴影先画进 Bitmap 缓存（{@link BlurMaskFilter.Blur#OUTER}，无纵向偏移），再 blit 到硬件 Canvas，
+ * 四周均匀扩散。<b>不需要</b>给整个 View 开 {@code LAYER_TYPE_SOFTWARE}，列表可流畅滚动。
  */
 @RequiresApi(21)
 class RoundRectDrawable extends Drawable {

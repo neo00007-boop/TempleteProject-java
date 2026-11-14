@@ -3,18 +3,14 @@ package com.hjq.shape.view.roundcard;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.os.Build;
 import android.view.View;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 /**
- * API 21+：
- * <ul>
- *   <li>API 28+：系统 elevation + 可选 outline 色</li>
- *   <li>API 21–27：默认淡色软阴影（Bitmap 缓存，View 保持硬件加速，适合列表）</li>
- * </ul>
+ * API 21+：四周均匀的软阴影（Bitmap + BlurMaskFilter.OUTER）。
+ * 不用系统 elevation，避免 Material 阴影偏下。View 保持硬件加速，可进列表。
  */
 @RequiresApi(21)
 class RoundCardViewApi21Impl implements RoundCardViewImpl {
@@ -102,19 +98,9 @@ class RoundCardViewApi21Impl implements RoundCardViewImpl {
             return;
         }
         RoundRectDrawable background = getCardBackground(cardView);
-        if (useCompatSoftShadow()) {
-            float size = Math.max(getMaxElevation(cardView), background.getShadowSize());
-            int pad = (int) Math.ceil(size * 1.5f);
-            cardView.setShadowPadding(pad, pad, pad, pad);
-            return;
-        }
-        float elevation = getMaxElevation(cardView);
-        final float radius = background.getMaxRadius();
-        int hPadding = (int) Math.ceil(RoundRectDrawableWithShadow.calculateHorizontalPadding(
-                elevation, radius, cardView.getPreventCornerOverlap()));
-        int vPadding = (int) Math.ceil(RoundRectDrawableWithShadow.calculateVerticalPadding(
-                elevation, radius, cardView.getPreventCornerOverlap()));
-        cardView.setShadowPadding(hPadding, vPadding, hPadding, vPadding);
+        float size = Math.max(getMaxElevation(cardView), background.getShadowSize());
+        int pad = (int) Math.ceil(size * 1.5f);
+        cardView.setShadowPadding(pad, pad, pad, pad);
     }
 
     @Override
@@ -151,32 +137,19 @@ class RoundCardViewApi21Impl implements RoundCardViewImpl {
         // 始终保持硬件加速：软阴影在 Drawable 内用 Bitmap 缓存，不 setLayerType(SOFTWARE)
         view.setLayerType(View.LAYER_TYPE_NONE, null);
 
-        if (useCompatSoftShadow()) {
-            ColorStateList soft = shadowColor != null ? shadowColor : DEFAULT_SOFT_SHADOW;
-            background.setCompatShadowColor(soft);
-            view.setElevation(0f);
-            view.setClipToOutline(false);
-        } else {
-            background.setCompatShadowColor(null);
-            view.setClipToOutline(true);
-            view.setElevation(logicalElevation);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && shadowColor != null) {
-                final int outlineColor = shadowColor.getColorForState(view.getDrawableState(),
-                        shadowColor.getDefaultColor());
-                view.setOutlineAmbientShadowColor(outlineColor);
-                view.setOutlineSpotShadowColor(outlineColor);
-            }
-        }
+        ColorStateList soft = shadowColor != null ? shadowColor : DEFAULT_SOFT_SHADOW;
+        background.setCompatShadowColor(soft);
+        // 阴影自己画，关掉系统 elevation，避免偏下的 spot shadow
+        view.setElevation(0f);
+        // 不能 clipToOutline：outline 是内容区，会把四周软阴影裁掉；子 View 圆角由 RoundCardView.dispatchDraw clip
+        view.setClipToOutline(false);
         setMaxElevation(cardView, Math.max(getMaxElevation(cardView), logicalElevation));
         invalidateOutline(cardView);
     }
 
-    private static boolean useCompatSoftShadow() {
-        return Build.VERSION.SDK_INT < Build.VERSION_CODES.P;
-    }
-
     private boolean needsShadowPadding(RoundCardViewDelegate cardView) {
-        return cardView.getUseCompatPadding() || useCompatSoftShadow();
+        // 四周软阴影需要预留等宽边距，否则会被裁掉
+        return true;
     }
 
     private void invalidateOutline(RoundCardViewDelegate cardView) {
