@@ -11,6 +11,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import androidx.annotation.ColorInt;
@@ -47,6 +48,8 @@ public class RoundCardView extends FrameLayout {
     private boolean mPreventCornerOverlap;
     @Nullable
     private ColorStateList mShadowColor;
+    /** 固定宽高 + 软阴影时，已把写死尺寸当作内容区并改为 wrap。 */
+    private boolean mFixedSizeResolvedForSoftShadow;
     int mUserSetMinWidth, mUserSetMinHeight;
     final Rect mContentPadding = new Rect();
     final Rect mShadowBounds = new Rect();
@@ -121,6 +124,57 @@ public class RoundCardView extends FrameLayout {
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        // onFinishInflate 时尚未 addView，LayoutParams 不可用
+        resolveFixedSizeAsContentForSoftShadow();
+    }
+
+    /**
+     * 软阴影需要等宽 padding。若 xml 写死宽高，该尺寸视为内容区：
+     * match_parent 子 View 落到该尺寸，自身改为 wrap，阴影加在外侧。
+     */
+    private void resolveFixedSizeAsContentForSoftShadow() {
+        if (mFixedSizeResolvedForSoftShadow) {
+            return;
+        }
+        ViewGroup.LayoutParams lp = getLayoutParams();
+        if (lp == null || lp.width <= 0 || lp.height <= 0) {
+            return;
+        }
+        Drawable background = getBackground();
+        if (!(background instanceof RoundRectDrawable)
+                || !((RoundRectDrawable) background).usesCompatShadow()) {
+            return;
+        }
+        mFixedSizeResolvedForSoftShadow = true;
+        final int contentW = lp.width;
+        final int contentH = lp.height;
+        for (int i = 0; i < getChildCount(); i++) {
+            View child = getChildAt(i);
+            ViewGroup.LayoutParams clp = child.getLayoutParams();
+            if (clp == null) {
+                continue;
+            }
+            boolean changed = false;
+            if (clp.width == LayoutParams.MATCH_PARENT) {
+                clp.width = contentW;
+                changed = true;
+            }
+            if (clp.height == LayoutParams.MATCH_PARENT) {
+                clp.height = contentH;
+                changed = true;
+            }
+            if (changed) {
+                child.setLayoutParams(clp);
+            }
+        }
+        lp.width = LayoutParams.WRAP_CONTENT;
+        lp.height = LayoutParams.WRAP_CONTENT;
+        setLayoutParams(lp);
+    }
+
+    @Override
     public void setPadding(int left, int top, int right, int bottom) {
         // 与 CardView 相同：禁止外部 padding，避免破坏阴影预留边距；请用 setContentPadding / rcvContentPadding*
     }
@@ -137,7 +191,7 @@ public class RoundCardView extends FrameLayout {
             super.dispatchDraw(canvas);
             return;
         }
-        // 软阴影不能用 clipToOutline（会裁掉四周光晕），子 View 在这里按圆角裁切
+        // 按圆角裁子 View，避免选中态背景画出胶囊；阴影在 background 已画完不受影响
         RoundRectDrawable rd = (RoundRectDrawable) background;
         int save = canvas.save();
         canvas.clipPath(rd.getClipPath());
