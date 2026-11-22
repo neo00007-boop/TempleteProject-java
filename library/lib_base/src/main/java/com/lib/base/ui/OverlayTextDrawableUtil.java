@@ -665,7 +665,7 @@ public class OverlayTextDrawableUtil {
                     if (w != lastParentW || h != lastParentH) {
                         lastParentW = w;
                         lastParentH = h;
-                        // 尺寸变了（横竖屏等）：按相对位置重新贴边，避免飞出可视区
+                        // 尺寸变了（横竖屏等）：立刻贴边，不用弹簧（旋转中 layout 会打断动画）
                         post(this::relayoutForParentSize);
                     }
                 };
@@ -721,6 +721,15 @@ public class OverlayTextDrawableUtil {
                 parent.addOnLayoutChangeListener(parentSizeListener);
             }
             post(this::restoreOrPlaceDefault);
+        }
+
+        @Override
+        protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+            super.onLayout(changed, left, top, right, bottom);
+            // layout 会改 left/top，setX 依赖 translation；空闲时纠回吸附边，避免停在中间
+            if (!dragging && !springRunning && (right - left) > 0) {
+                post(this::ensureStuckToSavedEdge);
+            }
         }
 
         @Override
@@ -798,7 +807,7 @@ public class OverlayTextDrawableUtil {
             sFloatPosInitialized = true;
         }
 
-        /** 恢复相对位置，或默认右侧约 35% 高度。 */
+        /** 恢复相对位置并立刻贴边（首次进入 / Activity 切换）。 */
         private void restoreOrPlaceDefault() {
             ViewGroup parent = (ViewGroup) getParent();
             if (parent == null) {
@@ -811,54 +820,87 @@ public class OverlayTextDrawableUtil {
             }
             lastParentW = parent.getWidth();
             lastParentH = parent.getHeight();
-            applyRelativePosition(parent);
-            startEdgeSpring(parent);
+            snapToSavedEdge(parent, false);
         }
 
-        /** 父布局尺寸变化（含横竖屏）时：先落回相对位置再贴边。 */
+        /** 父布局尺寸变化（含横竖屏）：取消弹簧，按记住的边立刻贴死。 */
         private void relayoutForParentSize() {
             ViewGroup parent = (ViewGroup) getParent();
             if (parent == null || getWidth() == 0 || getHeight() == 0
                     || parent.getWidth() == 0 || parent.getHeight() == 0) {
                 return;
             }
-            // 拖动中不抢位置，松手后会自己贴边并 persist
             if (dragging) {
                 setX(clampX(getX(), parent));
                 setY(clampY(getY(), parent));
                 return;
             }
-            applyRelativePosition(parent);
-            startEdgeSpring(parent);
+            snapToSavedEdge(parent, false);
         }
 
-        /** 按记住的左右边与竖直比例落到当前父布局坐标系。 */
-        private void applyRelativePosition(@NonNull ViewGroup parent) {
+        /**
+         * layout 之后纠偏：若水平偏离吸附边，拉回记住的左右边。
+         */
+        private void ensureStuckToSavedEdge() {
+            if (dragging || springRunning) {
+                return;
+            }
+            ViewGroup parent = (ViewGroup) getParent();
+            if (parent == null || getWidth() == 0 || parent.getWidth() == 0) {
+                return;
+            }
+            float margin = dp(getContext(), 8);
+            boolean stickRight = sFloatPosInitialized ? sFloatStickRight : true;
+            float edgeX = stickRight
+                    ? parent.getWidth() - getWidth() - margin
+                    : margin;
+            if (Math.abs(getX() - edgeX) > 1f) {
+                setX(edgeX);
+                setY(clampY(getY(), parent));
+            }
+        }
+
+        /**
+         * 落到记住的左右边 + 竖直比例。
+         *
+         * @param animate true=拖拽松手弹簧；false=旋转/恢复立刻贴边
+         */
+        private void snapToSavedEdge(@NonNull ViewGroup parent, boolean animate) {
+            springRunning = false;
+            removeCallbacks(springTick);
             float margin = dp(getContext(), 8);
             boolean stickRight = sFloatPosInitialized ? sFloatStickRight : true;
             float yRatio = sFloatPosInitialized ? sFloatYRatio : 0.35f;
-            setX(stickRight
-                    ? parent.getWidth() - getWidth() - margin
-                    : margin);
-            float[] yRange = verticalDragRange(parent);
-            float span = yRange[1] - yRange[0];
-            setY(clampY(yRange[0] + span * yRatio, parent));
-        }
-
-        /** 水平吸附到最近的左右边，竖直位置保持，弹簧阻尼逼近。 */
-        private void startEdgeSpring(@NonNull ViewGroup parent) {
-            float margin = dp(getContext(), 8);
-            float centerX = getX() + getWidth() / 2f;
-            boolean stickRight = centerX >= parent.getWidth() / 2f;
-            springTargetX = stickRight
+            float edgeX = stickRight
                     ? parent.getWidth() - getWidth() - margin
                     : margin;
+            float[] yRange = verticalDragRange(parent);
+            float span = yRange[1] - yRange[0];
+            float edgeY = clampY(yRange[0] + span * yRatio, parent);
             sFloatStickRight = stickRight;
-            setY(clampY(getY(), parent));
-            springVelocity = 0f;
-            springRunning = true;
-            removeCallbacks(springTick);
-            post(springTick);
+            setY(edgeY);
+            if (animate) {
+                springTargetX = edgeX;
+                springVelocity = 0f;
+                springRunning = true;
+                post(springTick);
+            } else {
+                setX(edgeX);
+                persistRelativePosition();
+            }
+        }
+
+        /** 水平吸附到最近的左右边，竖直位置保持，弹簧阻尼逼近（仅拖拽松手）。 */
+        private void startEdgeSpring(@NonNull ViewGroup parent) {
+            float centerX = getX() + getWidth() / 2f;
+            sFloatStickRight = centerX >= parent.getWidth() / 2f;
+            float[] yRange = verticalDragRange(parent);
+            float span = yRange[1] - yRange[0];
+            if (span > 0f) {
+                sFloatYRatio = Math.min(1f, Math.max(0f, (getY() - yRange[0]) / span));
+            }
+            sFloatPosInitialized = true;
+            snapToSavedEdge(parent, true);
         }
 
         private float clampX(float value, @NonNull ViewGroup parent) {
