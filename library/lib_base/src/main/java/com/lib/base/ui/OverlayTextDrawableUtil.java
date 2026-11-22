@@ -1,5 +1,6 @@
 package com.lib.base.ui;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
 import android.app.Dialog;
@@ -9,18 +10,27 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.TextPaint;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewOverlay;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -31,6 +41,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 /**
  * 调试悬浮层：在界面上显示当前 Activity / Fragment / Dialog 类名，方便排查页面层级。
@@ -62,6 +75,8 @@ import java.util.ArrayList;
  * </ol>
  * Activity 主窗口（host 为 Activity）一律不打 Dialog 标。
  * <p>
+ * ENABLE 为 true 时展示可拖动「显隐」悬浮按钮；单击切换全部已打开页面的类名标签显隐。
+ * <p>
  * Date         2026/4/22.
  *
  * @author xxx
@@ -69,14 +84,23 @@ import java.util.ArrayList;
 public class OverlayTextDrawableUtil {
 
     private static final String TAG = "OverlayTextDrawableUtil";
+    private static final String FLOAT_TAG = "overlay_text_drawable_float";
 
     private static boolean ENABLE = false;
     /**
      * 标签配色：false=黑底白字（0x99000000），true=绿底白字（#8C2E7D32），深色主题用绿底更清晰。
      */
     private static boolean sGreenStyle = false;
+    /** 全局类名标签是否绘制；由悬浮按钮单击切换。 */
+    private static boolean sLabelsVisible = true;
     /** 是否已成功替换 WindowManagerGlobal.mViews，防止重复 hook */
     private static boolean sGlobalHooked = false;
+    /** 弱引用登记所有类名标签，便于全局显隐时统一刷新。 */
+    private static final Set<TipsDrawable> sTipDrawables =
+            Collections.newSetFromMap(new WeakHashMap<>());
+    /** 悬浮按钮在屏幕上的位置（跨 Activity 复用）。 */
+    private static float sFloatPosX = Float.NaN;
+    private static float sFloatPosY = Float.NaN;
 
     public static void setENABLE(boolean ENABLE) {
         OverlayTextDrawableUtil.ENABLE = ENABLE;
@@ -89,6 +113,19 @@ public class OverlayTextDrawableUtil {
 
     public static boolean isGreenStyle() {
         return sGreenStyle;
+    }
+
+    /** 切换全部页面类名标签显隐并刷新。 */
+    public static void toggleLabelsVisible() {
+        sLabelsVisible = !sLabelsVisible;
+        for (TipsDrawable tip : sTipDrawables) {
+            tip.invalidateSelf();
+            Drawable.Callback callback = tip.getCallback();
+            // View.overlay 在 bounds 为空时 invalidateSelf 可能不触发重绘，强制刷新宿主
+            if (callback instanceof View) {
+                ((View) callback).invalidate();
+            }
+        }
     }
 
     public static void debug(Application app) {
@@ -109,6 +146,7 @@ public class OverlayTextDrawableUtil {
                                 int depth = getFragmentDepth(f);
                                 int offset = (depth + 1) * dp(v.getContext(), 22); // 跟activity错开，不重叠到一起
                                 TipsDrawable drawable = new TipsDrawable(f.getContext(), f.getClass().getSimpleName(), topInset + offset);
+                                sTipDrawables.add(drawable);
                                 overlay.add(drawable);
                                 // 优化展示
                                 v.addOnLayoutChangeListener((v1, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
@@ -119,11 +157,14 @@ public class OverlayTextDrawableUtil {
                             }
                         }, true);
                 // activity 添加name
+                View contentRoot = activity.findViewById(android.R.id.content).getRootView();
                 TipsDrawable drawable = new TipsDrawable(activity, activity.getClass().getSimpleName(), ScreenUtil.getStatusBarSize());
-                activity.findViewById(android.R.id.content)
-                        .getRootView()
-                        .getOverlay()
-                        .add(drawable);
+                sTipDrawables.add(drawable);
+                contentRoot.getOverlay().add(drawable);
+                contentRoot.addOnLayoutChangeListener((v1, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+                    drawable.setBounds(left, top, right, bottom);
+                    drawable.invalidateSelf();
+                });
             }
 
             @Override
@@ -136,10 +177,14 @@ public class OverlayTextDrawableUtil {
 
             @Override
             public void onActivityResumed(@NonNull Activity activity) {
+                if (ENABLE) {
+                    attachFloatButton(activity);
+                }
             }
 
             @Override
             public void onActivityPaused(@NonNull Activity activity) {
+                detachFloatButton(activity);
             }
 
             @Override
@@ -303,6 +348,7 @@ public class OverlayTextDrawableUtil {
             return;
         }
         TipsDrawable drawable = new TipsDrawable(decor.getContext(), name, dp(decor.getContext(), 8));
+        sTipDrawables.add(drawable);
         decor.getOverlay().add(drawable);
         decor.setTag(R.id.overlay_dialog_tips_tag, Boolean.TRUE);
         // ViewOverlay 不会随 layout 自动更新 Drawable bounds，需手动 setBounds
@@ -471,6 +517,34 @@ public class OverlayTextDrawableUtil {
         return (int) (dp * c.getResources().getDisplayMetrics().density);
     }
 
+    /** 将悬浮按钮挂到当前 Activity 的 content 上。 */
+    private static void attachFloatButton(@NonNull Activity activity) {
+        ViewGroup content = activity.findViewById(android.R.id.content);
+        if (content == null || content.findViewWithTag(FLOAT_TAG) != null) {
+            return;
+        }
+        MagnetFloatButton button = new MagnetFloatButton(activity);
+        button.setTag(FLOAT_TAG);
+        content.addView(button, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+    }
+
+    /** 从当前 Activity 移除悬浮按钮，并记住位置。 */
+    private static void detachFloatButton(@NonNull Activity activity) {
+        ViewGroup content = activity.findViewById(android.R.id.content);
+        if (content == null) {
+            return;
+        }
+        View button = content.findViewWithTag(FLOAT_TAG);
+        if (button == null) {
+            return;
+        }
+        sFloatPosX = button.getX();
+        sFloatPosY = button.getY();
+        content.removeView(button);
+    }
+
     /**
      * 替换进 WindowManagerGlobal.mViews 的列表。
      * 框架侧只调用 {@link #add(Object)} / {@link #add(int, Object)} 添加窗口，
@@ -529,6 +603,9 @@ public class OverlayTextDrawableUtil {
 
         @Override
         public void draw(Canvas canvas) {
+            if (!sLabelsVisible) {
+                return;
+            }
             applyStyleColors();
             float textWidth = textPaint.measureText(name);
 
@@ -543,6 +620,175 @@ public class OverlayTextDrawableUtil {
             float baseline = top + height / 2f - (fm.top + fm.bottom) / 2;
 
             canvas.drawText(name, left + padding, baseline, textPaint);
+        }
+    }
+
+    /**
+     * 应用内可拖动悬浮按钮：松手吸附最近左右边缘，带弹簧阻尼；
+     * 单击切换全局类名标签显隐（自身消费触控，不穿透）。
+     */
+    @SuppressLint("ClickableViewAccessibility")
+    private static final class MagnetFloatButton extends TextView {
+        private final int touchSlop;
+        private float downRawX;
+        private float downRawY;
+        private float downViewX;
+        private float downViewY;
+        private boolean dragging;
+        private boolean springRunning;
+        private float springVelocity;
+        private float springTargetX;
+
+        private final Runnable springTick = new Runnable() {
+            @Override
+            public void run() {
+                if (!springRunning) {
+                    return;
+                }
+                ViewGroup parent = (ViewGroup) getParent();
+                if (parent == null) {
+                    springRunning = false;
+                    return;
+                }
+                // 弹簧：F = -k·x - c·v，弹球阻尼感
+                float stiffness = 0.18f;
+                float damping = 0.72f;
+                float delta = springTargetX - getX();
+                springVelocity = (springVelocity + delta * stiffness) * damping;
+                setX(getX() + springVelocity);
+                if (Math.abs(delta) < 0.5f && Math.abs(springVelocity) < 0.5f) {
+                    setX(springTargetX);
+                    springRunning = false;
+                    sFloatPosX = getX();
+                    sFloatPosY = getY();
+                    return;
+                }
+                postOnAnimation(this);
+            }
+        };
+
+        MagnetFloatButton(Context context) {
+            super(context);
+            touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
+            setText("显隐");
+            setTextColor(Color.WHITE);
+            setTextSize(12f);
+            setTypeface(Typeface.DEFAULT_BOLD);
+            setGravity(Gravity.CENTER);
+            int hPad = dp(context, 12);
+            int vPad = dp(context, 8);
+            setPadding(hPad, vPad, hPad, vPad);
+            setBackgroundColor(sGreenStyle ? 0xCC2E7D32 : 0x99000000);
+            setElevation(dp(context, 4));
+        }
+
+        @Override
+        protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            post(this::restoreOrPlaceDefault);
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            springRunning = false;
+            removeCallbacks(springTick);
+            super.onDetachedFromWindow();
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            ViewGroup parent = (ViewGroup) getParent();
+            if (parent == null) {
+                return true;
+            }
+            switch (event.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    springRunning = false;
+                    removeCallbacks(springTick);
+                    downRawX = event.getRawX();
+                    downRawY = event.getRawY();
+                    downViewX = getX();
+                    downViewY = getY();
+                    dragging = false;
+                    parent.requestDisallowInterceptTouchEvent(true);
+                    break;
+                case MotionEvent.ACTION_MOVE: {
+                    float dx = event.getRawX() - downRawX;
+                    float dy = event.getRawY() - downRawY;
+                    if (!dragging && dx * dx + dy * dy > touchSlop * touchSlop) {
+                        dragging = true;
+                    }
+                    if (dragging) {
+                        setX(clampX(downViewX + dx, parent));
+                        setY(clampY(downViewY + dy, parent));
+                    }
+                    break;
+                }
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    parent.requestDisallowInterceptTouchEvent(false);
+                    if (dragging) {
+                        startEdgeSpring(parent);
+                    } else if (event.getActionMasked() == MotionEvent.ACTION_UP) {
+                        toggleLabelsVisible();
+                    }
+                    break;
+                default:
+                    break;
+            }
+            return true;
+        }
+
+        /** 恢复跨页位置，或放到右侧垂直居中偏上。 */
+        private void restoreOrPlaceDefault() {
+            ViewGroup parent = (ViewGroup) getParent();
+            if (parent == null) {
+                return;
+            }
+            if (getWidth() == 0 || getHeight() == 0) {
+                post(this::restoreOrPlaceDefault);
+                return;
+            }
+            if (Float.isNaN(sFloatPosX) || Float.isNaN(sFloatPosY)) {
+                setX(parent.getWidth() - getWidth() - dp(getContext(), 8));
+                setY(parent.getHeight() * 0.35f);
+            } else {
+                setX(clampX(sFloatPosX, parent));
+                setY(clampY(sFloatPosY, parent));
+            }
+            startEdgeSpring(parent);
+        }
+
+        /** 水平吸附到最近的左右边，竖直位置保持，弹簧阻尼逼近。 */
+        private void startEdgeSpring(@NonNull ViewGroup parent) {
+            float margin = dp(getContext(), 8);
+            float centerX = getX() + getWidth() / 2f;
+            springTargetX = centerX < parent.getWidth() / 2f
+                    ? margin
+                    : parent.getWidth() - getWidth() - margin;
+            setY(clampY(getY(), parent));
+            springVelocity = 0f;
+            springRunning = true;
+            removeCallbacks(springTick);
+            post(springTick);
+        }
+
+        private float clampX(float value, @NonNull ViewGroup parent) {
+            float margin = dp(getContext(), 8);
+            float max = Math.max(margin, parent.getWidth() - getWidth() - margin);
+            return Math.min(Math.max(value, margin), max);
+        }
+
+        private float clampY(float value, @NonNull ViewGroup parent) {
+            WindowInsetsCompat rootInsets = ViewCompat.getRootWindowInsets(parent);
+            Insets insets = rootInsets == null ? Insets.NONE : rootInsets.getInsets(
+                    WindowInsetsCompat.Type.statusBars()
+                            | WindowInsetsCompat.Type.navigationBars()
+                            | WindowInsetsCompat.Type.displayCutout());
+            float top = insets.top + dp(getContext(), 8);
+            float bottomMargin = insets.bottom + dp(getContext(), 8);
+            float max = Math.max(top, parent.getHeight() - getHeight() - bottomMargin);
+            return Math.min(Math.max(value, top), max);
         }
     }
 }
