@@ -98,9 +98,14 @@ public class OverlayTextDrawableUtil {
     /** 弱引用登记所有类名标签，便于全局显隐时统一刷新。 */
     private static final Set<TipsDrawable> sTipDrawables =
             Collections.newSetFromMap(new WeakHashMap<>());
-    /** 悬浮按钮在屏幕上的位置（跨 Activity 复用）。 */
-    private static float sFloatPosX = Float.NaN;
-    private static float sFloatPosY = Float.NaN;
+    /**
+     * 悬浮按钮位置（跨 Activity / 横竖屏复用）。
+     * 不用绝对像素：旋转后宽高对调，绝对坐标会落在屏外看起来像「消失」。
+     * 改为记住吸附左右边 + 竖直可拖区域比例。
+     */
+    private static boolean sFloatStickRight = true;
+    private static float sFloatYRatio = 0.35f;
+    private static boolean sFloatPosInitialized = false;
 
     public static void setENABLE(boolean ENABLE) {
         OverlayTextDrawableUtil.ENABLE = ENABLE;
@@ -530,7 +535,7 @@ public class OverlayTextDrawableUtil {
                 ViewGroup.LayoutParams.WRAP_CONTENT));
     }
 
-    /** 从当前 Activity 移除悬浮按钮，并记住位置。 */
+    /** 从当前 Activity 移除悬浮按钮，并记住相对位置（边 + 竖直比例）。 */
     private static void detachFloatButton(@NonNull Activity activity) {
         ViewGroup content = activity.findViewById(android.R.id.content);
         if (content == null) {
@@ -540,8 +545,9 @@ public class OverlayTextDrawableUtil {
         if (button == null) {
             return;
         }
-        sFloatPosX = button.getX();
-        sFloatPosY = button.getY();
+        if (button instanceof MagnetFloatButton) {
+            ((MagnetFloatButton) button).persistRelativePosition();
+        }
         content.removeView(button);
     }
 
@@ -626,6 +632,7 @@ public class OverlayTextDrawableUtil {
     /**
      * 应用内可拖动悬浮按钮：松手吸附最近左右边缘，带弹簧阻尼；
      * 单击切换全局类名标签显隐（自身消费触控，不穿透）。
+     * 横竖屏切换时按「左右边 + 竖直比例」重放位置，避免绝对坐标跑出屏外。
      */
     @SuppressLint("ClickableViewAccessibility")
     private static final class MagnetFloatButton extends TextView {
@@ -638,6 +645,30 @@ public class OverlayTextDrawableUtil {
         private boolean springRunning;
         private float springVelocity;
         private float springTargetX;
+        /** 父布局上次宽高，用于识别旋转等尺寸变化。 */
+        private int lastParentW;
+        private int lastParentH;
+        /**
+         * 挂载过 layout 监听的 parent。
+         * detach 时 {@link #getParent()} 可能已清空，需单独记住才能卸监听。
+         */
+        @Nullable
+        private ViewGroup sizeListenParent;
+
+        private final OnLayoutChangeListener parentSizeListener =
+                (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+                    int w = right - left;
+                    int h = bottom - top;
+                    if (w <= 0 || h <= 0) {
+                        return;
+                    }
+                    if (w != lastParentW || h != lastParentH) {
+                        lastParentW = w;
+                        lastParentH = h;
+                        // 尺寸变了（横竖屏等）：按相对位置重新贴边，避免飞出可视区
+                        post(this::relayoutForParentSize);
+                    }
+                };
 
         private final Runnable springTick = new Runnable() {
             @Override
@@ -659,8 +690,7 @@ public class OverlayTextDrawableUtil {
                 if (Math.abs(delta) < 0.5f && Math.abs(springVelocity) < 0.5f) {
                     setX(springTargetX);
                     springRunning = false;
-                    sFloatPosX = getX();
-                    sFloatPosY = getY();
+                    persistRelativePosition();
                     return;
                 }
                 postOnAnimation(this);
@@ -685,6 +715,11 @@ public class OverlayTextDrawableUtil {
         @Override
         protected void onAttachedToWindow() {
             super.onAttachedToWindow();
+            ViewGroup parent = (ViewGroup) getParent();
+            if (parent != null) {
+                sizeListenParent = parent;
+                parent.addOnLayoutChangeListener(parentSizeListener);
+            }
             post(this::restoreOrPlaceDefault);
         }
 
@@ -692,6 +727,10 @@ public class OverlayTextDrawableUtil {
         protected void onDetachedFromWindow() {
             springRunning = false;
             removeCallbacks(springTick);
+            if (sizeListenParent != null) {
+                sizeListenParent.removeOnLayoutChangeListener(parentSizeListener);
+                sizeListenParent = null;
+            }
             super.onDetachedFromWindow();
         }
 
@@ -739,33 +778,82 @@ public class OverlayTextDrawableUtil {
             return true;
         }
 
-        /** 恢复跨页位置，或放到右侧垂直居中偏上。 */
+        /**
+         * 把当前像素位置写成左右边 + 竖直比例，供跨页 / 横竖屏恢复。
+         */
+        void persistRelativePosition() {
+            ViewGroup parent = (ViewGroup) getParent();
+            if (parent == null || parent.getWidth() <= 0 || parent.getHeight() <= 0) {
+                return;
+            }
+            if (getWidth() <= 0 || getHeight() <= 0) {
+                return;
+            }
+            sFloatStickRight = getX() + getWidth() / 2f >= parent.getWidth() / 2f;
+            float[] yRange = verticalDragRange(parent);
+            float span = yRange[1] - yRange[0];
+            if (span > 0f) {
+                sFloatYRatio = Math.min(1f, Math.max(0f, (getY() - yRange[0]) / span));
+            }
+            sFloatPosInitialized = true;
+        }
+
+        /** 恢复相对位置，或默认右侧约 35% 高度。 */
         private void restoreOrPlaceDefault() {
             ViewGroup parent = (ViewGroup) getParent();
             if (parent == null) {
                 return;
             }
-            if (getWidth() == 0 || getHeight() == 0) {
+            if (getWidth() == 0 || getHeight() == 0
+                    || parent.getWidth() == 0 || parent.getHeight() == 0) {
                 post(this::restoreOrPlaceDefault);
                 return;
             }
-            if (Float.isNaN(sFloatPosX) || Float.isNaN(sFloatPosY)) {
-                setX(parent.getWidth() - getWidth() - dp(getContext(), 8));
-                setY(parent.getHeight() * 0.35f);
-            } else {
-                setX(clampX(sFloatPosX, parent));
-                setY(clampY(sFloatPosY, parent));
-            }
+            lastParentW = parent.getWidth();
+            lastParentH = parent.getHeight();
+            applyRelativePosition(parent);
             startEdgeSpring(parent);
+        }
+
+        /** 父布局尺寸变化（含横竖屏）时：先落回相对位置再贴边。 */
+        private void relayoutForParentSize() {
+            ViewGroup parent = (ViewGroup) getParent();
+            if (parent == null || getWidth() == 0 || getHeight() == 0
+                    || parent.getWidth() == 0 || parent.getHeight() == 0) {
+                return;
+            }
+            // 拖动中不抢位置，松手后会自己贴边并 persist
+            if (dragging) {
+                setX(clampX(getX(), parent));
+                setY(clampY(getY(), parent));
+                return;
+            }
+            applyRelativePosition(parent);
+            startEdgeSpring(parent);
+        }
+
+        /** 按记住的左右边与竖直比例落到当前父布局坐标系。 */
+        private void applyRelativePosition(@NonNull ViewGroup parent) {
+            float margin = dp(getContext(), 8);
+            boolean stickRight = sFloatPosInitialized ? sFloatStickRight : true;
+            float yRatio = sFloatPosInitialized ? sFloatYRatio : 0.35f;
+            setX(stickRight
+                    ? parent.getWidth() - getWidth() - margin
+                    : margin);
+            float[] yRange = verticalDragRange(parent);
+            float span = yRange[1] - yRange[0];
+            setY(clampY(yRange[0] + span * yRatio, parent));
         }
 
         /** 水平吸附到最近的左右边，竖直位置保持，弹簧阻尼逼近。 */
         private void startEdgeSpring(@NonNull ViewGroup parent) {
             float margin = dp(getContext(), 8);
             float centerX = getX() + getWidth() / 2f;
-            springTargetX = centerX < parent.getWidth() / 2f
-                    ? margin
-                    : parent.getWidth() - getWidth() - margin;
+            boolean stickRight = centerX >= parent.getWidth() / 2f;
+            springTargetX = stickRight
+                    ? parent.getWidth() - getWidth() - margin
+                    : margin;
+            sFloatStickRight = stickRight;
             setY(clampY(getY(), parent));
             springVelocity = 0f;
             springRunning = true;
@@ -780,6 +868,15 @@ public class OverlayTextDrawableUtil {
         }
 
         private float clampY(float value, @NonNull ViewGroup parent) {
+            float[] range = verticalDragRange(parent);
+            return Math.min(Math.max(value, range[0]), range[1]);
+        }
+
+        /**
+         * 竖直可拖范围 [minY, maxY]，已扣状态栏 / 导航栏 / 刘海与边距。
+         */
+        @NonNull
+        private float[] verticalDragRange(@NonNull ViewGroup parent) {
             WindowInsetsCompat rootInsets = ViewCompat.getRootWindowInsets(parent);
             Insets insets = rootInsets == null ? Insets.NONE : rootInsets.getInsets(
                     WindowInsetsCompat.Type.statusBars()
@@ -788,7 +885,7 @@ public class OverlayTextDrawableUtil {
             float top = insets.top + dp(getContext(), 8);
             float bottomMargin = insets.bottom + dp(getContext(), 8);
             float max = Math.max(top, parent.getHeight() - getHeight() - bottomMargin);
-            return Math.min(Math.max(value, top), max);
+            return new float[]{top, max};
         }
     }
 }
