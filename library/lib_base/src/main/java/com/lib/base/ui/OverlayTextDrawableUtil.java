@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewOverlay;
+import android.view.WindowInsets;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
@@ -530,9 +531,12 @@ public class OverlayTextDrawableUtil {
         }
         MagnetFloatButton button = new MagnetFloatButton(activity);
         button.setTag(FLOAT_TAG);
-        content.addView(button, new FrameLayout.LayoutParams(
+        // 固定 TOP|START，位置全靠 setX/setY 夹紧，避免 topMargin 超出父高把按钮挤没
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT));
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.gravity = Gravity.TOP | Gravity.START;
+        content.addView(button, lp);
     }
 
     /** 从当前 Activity 移除悬浮按钮，并记住相对位置（边 + 竖直比例）。 */
@@ -630,28 +634,24 @@ public class OverlayTextDrawableUtil {
     }
 
     /**
-     * 应用内可拖动悬浮按钮：松手吸附最近左右边缘，带弹簧阻尼；
-     * 单击切换全局类名标签显隐（自身消费触控，不穿透）。
-     * 横竖屏切换时按「左右边 + 竖直比例」重放位置，避免绝对坐标跑出屏外。
+     * 应用内可拖动悬浮按钮：松手立刻吸左右边；
+     * 单击切换全局类名标签显隐。
+     * 布局锚点固定 TOP|START，位置只用 setX/setY 并硬夹紧，避免 topMargin 超出父高把按钮挤没。
      */
     @SuppressLint("ClickableViewAccessibility")
     private static final class MagnetFloatButton extends TextView {
+        private static final int EDGE_SLACK_PX = 4;
+        private static final int MAX_MEASURE_RETRY = 8;
+
         private final int touchSlop;
         private float downRawX;
         private float downRawY;
         private float downViewX;
         private float downViewY;
         private boolean dragging;
-        private boolean springRunning;
-        private float springVelocity;
-        private float springTargetX;
-        /** 父布局上次宽高，用于识别旋转等尺寸变化。 */
-        private int lastParentW;
-        private int lastParentH;
-        /**
-         * 挂载过 layout 监听的 parent。
-         * detach 时 {@link #getParent()} 可能已清空，需单独记住才能卸监听。
-         */
+        private int snappedParentW;
+        private int snappedParentH;
+        private int measureRetry;
         @Nullable
         private ViewGroup sizeListenParent;
 
@@ -662,40 +662,10 @@ public class OverlayTextDrawableUtil {
                     if (w <= 0 || h <= 0) {
                         return;
                     }
-                    if (w != lastParentW || h != lastParentH) {
-                        lastParentW = w;
-                        lastParentH = h;
-                        // 尺寸变了（横竖屏等）：立刻贴边，不用弹簧（旋转中 layout 会打断动画）
-                        post(this::relayoutForParentSize);
+                    if (w != snappedParentW || h != snappedParentH) {
+                        post(this::snapToEdgeNow);
                     }
                 };
-
-        private final Runnable springTick = new Runnable() {
-            @Override
-            public void run() {
-                if (!springRunning) {
-                    return;
-                }
-                ViewGroup parent = (ViewGroup) getParent();
-                if (parent == null) {
-                    springRunning = false;
-                    return;
-                }
-                // 弹簧：F = -k·x - c·v，弹球阻尼感
-                float stiffness = 0.18f;
-                float damping = 0.72f;
-                float delta = springTargetX - getX();
-                springVelocity = (springVelocity + delta * stiffness) * damping;
-                setX(getX() + springVelocity);
-                if (Math.abs(delta) < 0.5f && Math.abs(springVelocity) < 0.5f) {
-                    setX(springTargetX);
-                    springRunning = false;
-                    persistRelativePosition();
-                    return;
-                }
-                postOnAnimation(this);
-            }
-        };
 
         MagnetFloatButton(Context context) {
             super(context);
@@ -720,22 +690,17 @@ public class OverlayTextDrawableUtil {
                 sizeListenParent = parent;
                 parent.addOnLayoutChangeListener(parentSizeListener);
             }
-            post(this::restoreOrPlaceDefault);
-        }
-
-        @Override
-        protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-            super.onLayout(changed, left, top, right, bottom);
-            // layout 会改 left/top，setX 依赖 translation；空闲时纠回吸附边，避免停在中间
-            if (!dragging && !springRunning && (right - left) > 0) {
-                post(this::ensureStuckToSavedEdge);
-            }
+            setOnApplyWindowInsetsListener((v, insets) -> {
+                post(this::snapToEdgeNow);
+                return insets;
+            });
+            measureRetry = 0;
+            post(this::snapToEdgeNow);
         }
 
         @Override
         protected void onDetachedFromWindow() {
-            springRunning = false;
-            removeCallbacks(springTick);
+            setOnApplyWindowInsetsListener(null);
             if (sizeListenParent != null) {
                 sizeListenParent.removeOnLayoutChangeListener(parentSizeListener);
                 sizeListenParent = null;
@@ -751,8 +716,6 @@ public class OverlayTextDrawableUtil {
             }
             switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
-                    springRunning = false;
-                    removeCallbacks(springTick);
                     downRawX = event.getRawX();
                     downRawY = event.getRawY();
                     downViewX = getX();
@@ -776,7 +739,16 @@ public class OverlayTextDrawableUtil {
                 case MotionEvent.ACTION_CANCEL:
                     parent.requestDisallowInterceptTouchEvent(false);
                     if (dragging) {
-                        startEdgeSpring(parent);
+                        dragging = false;
+                        sFloatStickRight = getX() + buttonWidth() / 2f >= parent.getWidth() / 2f;
+                        float[] yRange = verticalDragRange(parent);
+                        float span = yRange[1] - yRange[0];
+                        if (span > 0f) {
+                            sFloatYRatio = Math.min(1f, Math.max(0f,
+                                    (getY() - yRange[0]) / span));
+                        }
+                        sFloatPosInitialized = true;
+                        snapToEdgeNow();
                     } else if (event.getActionMasked() == MotionEvent.ACTION_UP) {
                         toggleLabelsVisible();
                     }
@@ -787,18 +759,17 @@ public class OverlayTextDrawableUtil {
             return true;
         }
 
-        /**
-         * 把当前像素位置写成左右边 + 竖直比例，供跨页 / 横竖屏恢复。
-         */
         void persistRelativePosition() {
             ViewGroup parent = (ViewGroup) getParent();
             if (parent == null || parent.getWidth() <= 0 || parent.getHeight() <= 0) {
                 return;
             }
-            if (getWidth() <= 0 || getHeight() <= 0) {
+            int bw = buttonWidth();
+            int bh = buttonHeight();
+            if (bw <= 0 || bh <= 0) {
                 return;
             }
-            sFloatStickRight = getX() + getWidth() / 2f >= parent.getWidth() / 2f;
+            sFloatStickRight = getX() + bw / 2f >= parent.getWidth() / 2f;
             float[] yRange = verticalDragRange(parent);
             float span = yRange[1] - yRange[0];
             if (span > 0f) {
@@ -807,106 +778,101 @@ public class OverlayTextDrawableUtil {
             sFloatPosInitialized = true;
         }
 
-        /** 恢复相对位置并立刻贴边（首次进入 / Activity 切换）。 */
-        private void restoreOrPlaceDefault() {
-            ViewGroup parent = (ViewGroup) getParent();
-            if (parent == null) {
-                return;
-            }
-            if (getWidth() == 0 || getHeight() == 0
-                    || parent.getWidth() == 0 || parent.getHeight() == 0) {
-                post(this::restoreOrPlaceDefault);
-                return;
-            }
-            lastParentW = parent.getWidth();
-            lastParentH = parent.getHeight();
-            snapToSavedEdge(parent, false);
-        }
-
-        /** 父布局尺寸变化（含横竖屏）：取消弹簧，按记住的边立刻贴死。 */
-        private void relayoutForParentSize() {
-            ViewGroup parent = (ViewGroup) getParent();
-            if (parent == null || getWidth() == 0 || getHeight() == 0
-                    || parent.getWidth() == 0 || parent.getHeight() == 0) {
-                return;
-            }
+        /** 立刻吸到记住的左右边，Y 按比例并硬夹在父布局内。 */
+        private void snapToEdgeNow() {
             if (dragging) {
-                setX(clampX(getX(), parent));
-                setY(clampY(getY(), parent));
-                return;
-            }
-            snapToSavedEdge(parent, false);
-        }
-
-        /**
-         * layout 之后纠偏：若水平偏离吸附边，拉回记住的左右边。
-         */
-        private void ensureStuckToSavedEdge() {
-            if (dragging || springRunning) {
                 return;
             }
             ViewGroup parent = (ViewGroup) getParent();
-            if (parent == null || getWidth() == 0 || parent.getWidth() == 0) {
+            if (parent == null || parent.getWidth() <= 0 || parent.getHeight() <= 0) {
                 return;
             }
-            float margin = dp(getContext(), 8);
-            boolean stickRight = sFloatPosInitialized ? sFloatStickRight : true;
-            float edgeX = stickRight
-                    ? parent.getWidth() - getWidth() - margin
-                    : margin;
-            if (Math.abs(getX() - edgeX) > 1f) {
-                setX(edgeX);
-                setY(clampY(getY(), parent));
+            ensureMeasured();
+            int bw = buttonWidth();
+            int bh = buttonHeight();
+            if (bw <= 0 || bh <= 0) {
+                if (measureRetry < MAX_MEASURE_RETRY) {
+                    measureRetry++;
+                    post(this::snapToEdgeNow);
+                }
+                return;
             }
-        }
+            measureRetry = 0;
 
-        /**
-         * 落到记住的左右边 + 竖直比例。
-         *
-         * @param animate true=拖拽松手弹簧；false=旋转/恢复立刻贴边
-         */
-        private void snapToSavedEdge(@NonNull ViewGroup parent, boolean animate) {
-            springRunning = false;
-            removeCallbacks(springTick);
-            float margin = dp(getContext(), 8);
+            // 确保锚在左上，位置只由 setX/setY 决定
+            ViewGroup.LayoutParams raw = getLayoutParams();
+            if (raw instanceof FrameLayout.LayoutParams) {
+                FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) raw;
+                if (lp.gravity != (Gravity.TOP | Gravity.START)
+                        || lp.topMargin != 0
+                        || lp.getMarginStart() != 0
+                        || lp.getMarginEnd() != 0) {
+                    lp.gravity = Gravity.TOP | Gravity.START;
+                    lp.topMargin = 0;
+                    lp.bottomMargin = 0;
+                    lp.setMarginStart(0);
+                    lp.setMarginEnd(0);
+                    setLayoutParams(lp);
+                }
+            }
+
             boolean stickRight = sFloatPosInitialized ? sFloatStickRight : true;
             float yRatio = sFloatPosInitialized ? sFloatYRatio : 0.35f;
+            yRatio = Math.min(1f, Math.max(0f, yRatio));
             float edgeX = stickRight
-                    ? parent.getWidth() - getWidth() - margin
-                    : margin;
+                    ? parent.getWidth() - bw - endMargin(parent)
+                    : startMargin(parent);
             float[] yRange = verticalDragRange(parent);
             float span = yRange[1] - yRange[0];
             float edgeY = clampY(yRange[0] + span * yRatio, parent);
-            sFloatStickRight = stickRight;
+            edgeX = clampX(edgeX, parent);
+            edgeY = clampY(edgeY, parent);
+
+            setX(edgeX);
             setY(edgeY);
-            if (animate) {
-                springTargetX = edgeX;
-                springVelocity = 0f;
-                springRunning = true;
-                post(springTick);
-            } else {
-                setX(edgeX);
-                persistRelativePosition();
-            }
+
+            sFloatStickRight = stickRight;
+            sFloatYRatio = span > 0f
+                    ? Math.min(1f, Math.max(0f, (edgeY - yRange[0]) / span))
+                    : yRatio;
+            sFloatPosInitialized = true;
+            snappedParentW = parent.getWidth();
+            snappedParentH = parent.getHeight();
         }
 
-        /** 水平吸附到最近的左右边，竖直位置保持，弹簧阻尼逼近（仅拖拽松手）。 */
-        private void startEdgeSpring(@NonNull ViewGroup parent) {
-            float centerX = getX() + getWidth() / 2f;
-            sFloatStickRight = centerX >= parent.getWidth() / 2f;
-            float[] yRange = verticalDragRange(parent);
-            float span = yRange[1] - yRange[0];
-            if (span > 0f) {
-                sFloatYRatio = Math.min(1f, Math.max(0f, (getY() - yRange[0]) / span));
+        private void ensureMeasured() {
+            if (getWidth() > 0 && getHeight() > 0) {
+                return;
             }
-            sFloatPosInitialized = true;
-            snapToSavedEdge(parent, true);
+            measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        }
+
+        private int buttonWidth() {
+            if (getWidth() > 0) {
+                return getWidth();
+            }
+            if (getMeasuredWidth() > 0) {
+                return getMeasuredWidth();
+            }
+            return 0;
+        }
+
+        private int buttonHeight() {
+            if (getHeight() > 0) {
+                return getHeight();
+            }
+            if (getMeasuredHeight() > 0) {
+                return getMeasuredHeight();
+            }
+            return 0;
         }
 
         private float clampX(float value, @NonNull ViewGroup parent) {
-            float margin = dp(getContext(), 8);
-            float max = Math.max(margin, parent.getWidth() - getWidth() - margin);
-            return Math.min(Math.max(value, margin), max);
+            int bw = Math.max(buttonWidth(), 1);
+            float min = startMargin(parent);
+            float max = Math.max(min, parent.getWidth() - bw - endMargin(parent));
+            return Math.min(Math.max(value, min), max);
         }
 
         private float clampY(float value, @NonNull ViewGroup parent) {
@@ -914,19 +880,47 @@ public class OverlayTextDrawableUtil {
             return Math.min(Math.max(value, range[0]), range[1]);
         }
 
+        private int startMargin(@NonNull ViewGroup parent) {
+            return Math.max(dp(getContext(), 8), systemInsets(parent)[0]);
+        }
+
+        private int endMargin(@NonNull ViewGroup parent) {
+            return Math.max(dp(getContext(), 8), systemInsets(parent)[2]);
+        }
+
+        @NonNull
+        private int[] systemInsets(@NonNull ViewGroup parent) {
+            WindowInsets insets = parent.getRootWindowInsets();
+            if (insets == null) {
+                int status = Math.max(0, getStatusBarSize(getContext()));
+                return new int[]{0, status, 0, 0};
+            }
+            return new int[]{
+                    Math.max(0, insets.getSystemWindowInsetLeft()),
+                    Math.max(0, insets.getSystemWindowInsetTop()),
+                    Math.max(0, insets.getSystemWindowInsetRight()),
+                    Math.max(0, insets.getSystemWindowInsetBottom())
+            };
+        }
+
         /**
-         * 竖直可拖范围 [minY, maxY]，已扣状态栏 / 导航栏 / 刘海与边距。
+         * 竖直可放范围，整颗按钮必须在 parent 内（含状态栏/导航栏边距）。
          */
         @NonNull
         private float[] verticalDragRange(@NonNull ViewGroup parent) {
-            WindowInsetsCompat rootInsets = ViewCompat.getRootWindowInsets(parent);
-            Insets insets = rootInsets == null ? Insets.NONE : rootInsets.getInsets(
-                    WindowInsetsCompat.Type.statusBars()
-                            | WindowInsetsCompat.Type.navigationBars()
-                            | WindowInsetsCompat.Type.displayCutout());
-            float top = insets.top + dp(getContext(), 8);
-            float bottomMargin = insets.bottom + dp(getContext(), 8);
-            float max = Math.max(top, parent.getHeight() - getHeight() - bottomMargin);
+            int[] inset = systemInsets(parent);
+            int bh = Math.max(buttonHeight(), 1);
+            int pad = dp(getContext(), 8);
+            // 顶边：不小于状态栏+边距，也不小于 pad（防止 insets 异常）
+            float top = Math.max(pad, inset[1] + pad);
+            float bottomMargin = Math.max(pad, inset[3] + pad);
+            // 硬上限：父高 - 按钮高 - 底边距，绝不超过父布局
+            float max = parent.getHeight() - bh - bottomMargin;
+            if (max < top) {
+                // 父高极矮时挤在可见区内
+                top = Math.max(0, Math.min(top, parent.getHeight() - bh));
+                max = top;
+            }
             return new float[]{top, max};
         }
     }
