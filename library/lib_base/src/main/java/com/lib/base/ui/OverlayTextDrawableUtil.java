@@ -634,13 +634,13 @@ public class OverlayTextDrawableUtil {
     }
 
     /**
-     * 应用内可拖动悬浮按钮：松手立刻吸左右边；
+     * 应用内可拖动悬浮按钮：松手弹簧阻尼吸左右边；
      * 单击切换全局类名标签显隐。
-     * 布局锚点固定 TOP|START，位置只用 setX/setY 并硬夹紧，避免 topMargin 超出父高把按钮挤没。
+     * 布局锚点固定 TOP|START，位置用 setX/setY 硬夹紧；
+     * 横竖屏/尺寸变化立刻贴边，拖拽松手走原来的弹簧阻尼。
      */
     @SuppressLint("ClickableViewAccessibility")
     private static final class MagnetFloatButton extends TextView {
-        private static final int EDGE_SLACK_PX = 4;
         private static final int MAX_MEASURE_RETRY = 8;
 
         private final int touchSlop;
@@ -649,6 +649,16 @@ public class OverlayTextDrawableUtil {
         private float downViewX;
         private float downViewY;
         private boolean dragging;
+        private boolean springRunning;
+        private float springTargetX;
+        private float springVelocity;
+        /** 吸边方向：+1 向右，-1 向左。 */
+        private float edgeDir;
+        /**
+         * 0=匀速驶向目标边（远近同速）；
+         * 1=到边后欠阻尼振荡，多次回弹衰减。
+         */
+        private int edgeAnimPhase;
         private int snappedParentW;
         private int snappedParentH;
         private int measureRetry;
@@ -663,9 +673,70 @@ public class OverlayTextDrawableUtil {
                         return;
                     }
                     if (w != snappedParentW || h != snappedParentH) {
-                        post(this::snapToEdgeNow);
+                        // 旋转等尺寸变化：强制立刻夹紧（可打断弹簧）
+                        post(() -> snapToEdgeNow(true));
                     }
                 };
+
+        private final Runnable springTick = new Runnable() {
+            @Override
+            public void run() {
+                if (!springRunning) {
+                    return;
+                }
+                ViewGroup parent = (ViewGroup) getParent();
+                if (parent == null) {
+                    springRunning = false;
+                    return;
+                }
+                float x = getX();
+                float nextX;
+                if (edgeAnimPhase == 0) {
+                    // 匀速吸边，远近同速
+                    float step = dp(getContext(), 14);
+                    nextX = x + edgeDir * step;
+                    if ((edgeDir > 0f && nextX >= springTargetX)
+                            || (edgeDir < 0f && nextX <= springTargetX)) {
+                        nextX = springTargetX;
+                        // 带着匀速冲量进入振荡，连弹数下再衰减
+                        springVelocity = edgeDir * step * 1.25f;
+                        edgeAnimPhase = 1;
+                    }
+                } else {
+                    // 欠阻尼：绕目标边多次过冲再衰减（约四五下，不是只弹一下）
+                    float stiffness = 0.10f;
+                    float damping = 0.88f;
+                    float delta = springTargetX - x;
+                    springVelocity = (springVelocity + delta * stiffness) * damping;
+                    nextX = x + springVelocity;
+                    int bw = Math.max(buttonWidth(), 1);
+                    float overshoot = Math.min(bw * 0.75f, dp(getContext(), 48));
+                    float min = startMargin(parent) - overshoot;
+                    float max = parent.getWidth() - bw - endMargin(parent) + overshoot;
+                    if (max < min) {
+                        max = min;
+                    }
+                    if (nextX > max) {
+                        nextX = max;
+                        if (springVelocity > 0f) {
+                            springVelocity = -springVelocity * 0.55f;
+                        }
+                    } else if (nextX < min) {
+                        nextX = min;
+                        if (springVelocity < 0f) {
+                            springVelocity = -springVelocity * 0.55f;
+                        }
+                    }
+                    if (Math.abs(delta) < 0.7f && Math.abs(springVelocity) < 0.7f) {
+                        finishEdgeAnim(parent);
+                        return;
+                    }
+                }
+                setX(nextX);
+                setY(clampY(getY(), parent));
+                postOnAnimation(this);
+            }
+        };
 
         MagnetFloatButton(Context context) {
             super(context);
@@ -691,15 +762,19 @@ public class OverlayTextDrawableUtil {
                 parent.addOnLayoutChangeListener(parentSizeListener);
             }
             setOnApplyWindowInsetsListener((v, insets) -> {
-                post(this::snapToEdgeNow);
+                // 弹簧回弹中不要被 insets 回调打断，否则看起来像「闪一下」没有阻尼
+                if (!springRunning && !dragging) {
+                    post(() -> snapToEdgeNow(false));
+                }
                 return insets;
             });
             measureRetry = 0;
-            post(this::snapToEdgeNow);
+            post(() -> snapToEdgeNow(true));
         }
 
         @Override
         protected void onDetachedFromWindow() {
+            stopSpring();
             setOnApplyWindowInsetsListener(null);
             if (sizeListenParent != null) {
                 sizeListenParent.removeOnLayoutChangeListener(parentSizeListener);
@@ -716,6 +791,7 @@ public class OverlayTextDrawableUtil {
             }
             switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
+                    stopSpring();
                     downRawX = event.getRawX();
                     downRawY = event.getRawY();
                     downViewX = getX();
@@ -740,15 +816,7 @@ public class OverlayTextDrawableUtil {
                     parent.requestDisallowInterceptTouchEvent(false);
                     if (dragging) {
                         dragging = false;
-                        sFloatStickRight = getX() + buttonWidth() / 2f >= parent.getWidth() / 2f;
-                        float[] yRange = verticalDragRange(parent);
-                        float span = yRange[1] - yRange[0];
-                        if (span > 0f) {
-                            sFloatYRatio = Math.min(1f, Math.max(0f,
-                                    (getY() - yRange[0]) / span));
-                        }
-                        sFloatPosInitialized = true;
-                        snapToEdgeNow();
+                        startEdgeSpring(parent);
                     } else if (event.getActionMasked() == MotionEvent.ACTION_UP) {
                         toggleLabelsVisible();
                     }
@@ -778,11 +846,78 @@ public class OverlayTextDrawableUtil {
             sFloatPosInitialized = true;
         }
 
-        /** 立刻吸到记住的左右边，Y 按比例并硬夹在父布局内。 */
+        private void stopSpring() {
+            springRunning = false;
+            springVelocity = 0f;
+            edgeAnimPhase = 0;
+            removeCallbacks(springTick);
+        }
+
+        private void finishEdgeAnim(@NonNull ViewGroup parent) {
+            springRunning = false;
+            springVelocity = 0f;
+            edgeAnimPhase = 0;
+            setX(clampX(springTargetX, parent));
+            setY(clampY(getY(), parent));
+            persistRelativePosition();
+            snappedParentW = parent.getWidth();
+            snappedParentH = parent.getHeight();
+        }
+
+        /**
+         * 拖拽松手：水平匀速吸边（远近同速），撞边后欠阻尼多次回弹，竖直保持并夹紧。
+         */
+        private void startEdgeSpring(@NonNull ViewGroup parent) {
+            ensureMeasured();
+            int bw = buttonWidth();
+            if (bw <= 0 || parent.getWidth() <= 0) {
+                snapToEdgeNow(true);
+                return;
+            }
+            float centerX = getX() + bw / 2f;
+            sFloatStickRight = centerX >= parent.getWidth() / 2f;
+            float[] yRange = verticalDragRange(parent);
+            float span = yRange[1] - yRange[0];
+            if (span > 0f) {
+                sFloatYRatio = Math.min(1f, Math.max(0f, (getY() - yRange[0]) / span));
+            }
+            sFloatPosInitialized = true;
+            springTargetX = clampX(
+                    sFloatStickRight
+                            ? parent.getWidth() - bw - endMargin(parent)
+                            : startMargin(parent),
+                    parent);
+            setY(clampY(getY(), parent));
+            // 已在边上则无需动画
+            if (Math.abs(getX() - springTargetX) < 1f) {
+                finishEdgeAnim(parent);
+                return;
+            }
+            edgeDir = springTargetX >= getX() ? 1f : -1f;
+            edgeAnimPhase = 0;
+            springVelocity = 0f;
+            springRunning = true;
+            removeCallbacks(springTick);
+            postOnAnimation(springTick);
+        }
+
+        /** 立刻吸到记住的左右边（横竖屏/首次进入），不走弹簧。 */
         private void snapToEdgeNow() {
+            snapToEdgeNow(false);
+        }
+
+        /**
+         * @param force true=尺寸变化等必须立刻贴边，可打断弹簧；
+         *              false=普通纠偏，弹簧回弹中不打断
+         */
+        private void snapToEdgeNow(boolean force) {
             if (dragging) {
                 return;
             }
+            if (springRunning && !force) {
+                return;
+            }
+            stopSpring();
             ViewGroup parent = (ViewGroup) getParent();
             if (parent == null || parent.getWidth() <= 0 || parent.getHeight() <= 0) {
                 return;
@@ -793,7 +928,7 @@ public class OverlayTextDrawableUtil {
             if (bw <= 0 || bh <= 0) {
                 if (measureRetry < MAX_MEASURE_RETRY) {
                     measureRetry++;
-                    post(this::snapToEdgeNow);
+                    post(() -> snapToEdgeNow(force));
                 }
                 return;
             }
